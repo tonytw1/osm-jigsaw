@@ -19,7 +19,17 @@ class OsmSink extends Sink {
     val adminLevel = tags.find(t => t.getKey == "admin_level").map(tn => tn.getValue)
 
     name.map { _ =>
-      println(i + ": " + name + " " + adminLevel)
+      if (adminLevel == Some("2")) {
+
+        val boundaryTag = tags.find(t => t.getKey == "boundary" && t.getValue == "administrative")
+        boundaryTag.map { b =>
+          val typeTag =  tags.find(t => t.getKey == "type" && t.getValue == "boundary")
+          typeTag.map { t =>
+            println(i + ": " + name + " " + adminLevel)
+            println(tags)
+          }
+        }
+      }
     }
 
     i = i + 1
