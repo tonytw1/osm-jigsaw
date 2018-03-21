@@ -72,12 +72,13 @@ class OsmSinkSpec extends FlatSpec {
       (r, boundingBox)
     }
 
-
     val london = (51.506, -0.106)
     val twickenham = (51.450, -0.33)
     val bournmouth = (50.720, -1.879)
+    val lyndhurst = (50.8703, -1.5942)
+    val edinburgh = (55.9518, -3.1840)
 
-    Seq(london, twickenham, bournmouth).map { location =>
+    Seq(london, twickenham, bournmouth, lyndhurst, edinburgh).map { location =>
       val components = Range(1, 11).map { i =>
         val bound = boundedRelations.find { b =>
           val r = b._1
