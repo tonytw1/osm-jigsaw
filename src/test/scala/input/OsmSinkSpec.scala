@@ -71,7 +71,7 @@ class OsmSinkSpec extends FlatSpec {
       }
 
       adminLevelRelations.map { r =>
-        val outerNodes = outerNodesFor(r, ways, nodes)
+        val outerNodes = new OuterNodeMapper(ways, nodes).outerNodesFor(r)
         val latitudes = outerNodes.map(n => n.getLatitude)
         val longitudes = outerNodes.map(n => n.getLongitude)
         val boundingBox = ((latitudes.max, longitudes.max), (latitudes.min, longitudes.min))
@@ -81,27 +81,6 @@ class OsmSinkSpec extends FlatSpec {
     }
 
     succeed
-  }
-
-  def outerNodesFor(r: Relation, ways: Map[Long, Way], nodes: Map[Long, Node]): Seq[Node] = {
-    val relationMembers = r.getMembers.asScala
-    val nonNodes = relationMembers.filter(rm => rm.getMemberType != EntityType.Node)
-    val outerWays = nonNodes.filter(rm => rm.getMemberRole == "outer" && rm.getMemberType == EntityType.Way)
-
-    val allWaysFound = outerWays.forall(w => ways.keySet.contains(w.getMemberId))
-
-    val outerNodesIds = outerWays.map { rm =>
-      val nodeIds = ways.get(rm.getMemberId).map { w => // TODO handle missing Way
-        w.getWayNodes.asScala.map(wn => wn.getNodeId)
-      }
-      nodeIds
-    }.flatten.flatten
-
-    val missingNodes = outerNodesIds.filter(n => !nodes.keySet.contains(n))
-
-    outerNodesIds.map { nid =>
-      nodes.get(nid)
-    }.flatten
   }
 
   def allRels(entity: Entity): Boolean = {
