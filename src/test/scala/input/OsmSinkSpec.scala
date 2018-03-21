@@ -7,56 +7,115 @@ import scala.collection.JavaConverters._
 
 class OsmSinkSpec extends FlatSpec {
 
-  val EUROPE_LATEST = "europe-latest.osm.pbf"
+  val EUROPE = "europe-latest.osm.pbf"
   val GREAT_BRITAIN = "great-britain-latest.osm.pbf"
   val IRELAND = "ireland-and-northern-ireland-latest.osm.pbf"
+  val deferencedOutputFile = "/tmp/out.pbf"
 
-  val reader = new OsmReader(GREAT_BRITAIN)
+  def all(entity: Entity): Boolean = true
 
-  "osm sink" should "read pdf file" in {
-    val found = reader.read(thirdLevelRelations)
-    found.map { f =>
-      println("Found: " + f.getId + f.getType + " " + f.getTags.asScala.find(t =>t.getKey == "name").map(t => t.getValue))
+
+  "osm parser" should "extract high level relations from OSM file and deferences those resolve the nodes needed to outline those relations" in {
+    val inputFilePath = GREAT_BRITAIN
+    val reader = new OsmReader(inputFilePath)
+
+    val found = reader.read(allAdminBoundaries)
+    found.map { entity =>
+      println("Found: " + entity.getId + entity.getType + " " + entity.getTags.asScala.find(t =>t.getKey == "name").map(t => t.getValue))
     }
-    var cleaned = found
-    while(cleaned.exists(e => e.getType != EntityType.Node)) {
-      cleaned = dereference(cleaned)
-    }
 
-    // in theory cleaned now contains all of the nodes required to draw the shapes of the top level relations
+    var deferenced = new RelationDeferencer().dereference(found.toSet, inputFilePath)
+
+    // In theory found now contains a list of interesting relations and deferenced contains all of the nodes required to draw the shapes of those relations
+    // If we can dump these to disk that would allow faster iteration of the next step
+    new OsmWriter(deferencedOutputFile).write(deferenced.toSeq)
+
     succeed
   }
 
-  case class OsmId(entityType: EntityType, id: Long)
+  "osm parser" should "build bounding boxes for relations" in {
+    val entities = new OsmReader(deferencedOutputFile).read(all)
 
-  def dereference(entites: Seq[Entity]): Seq[Entity] = {
-    val flattenings: Set[OsmId] = entites.flatMap { e =>
+    val relations = entities.map { e =>
       e match {
-        case r: Relation =>
-          r.getMembers.asScala.map { rm =>
-            OsmId(rm.getMemberType, rm.getMemberId)
-          }
-        case w: Way =>
-          w.getWayNodes.asScala.map { wn =>
-            OsmId(EntityType.Node, wn.getNodeId)
-          }
-        case n: Node =>
-          Seq(OsmId(EntityType.Node, n.getId))
-        case _ =>
-          Seq()
+        case r: Relation => Some(r)
+        case _ => None
       }
-    }.toSet
+    }.flatten
 
-    println("Entities flatten to: " + flattenings.size)
+    val ways = entities.map { e =>
+      e match {
+        case w: Way => Some(w)
+        case _ => None
+      }
+    }.flatten.map { i =>
+      (i.getId, i)
+    }.toMap
 
-    def theseEntites(entity: Entity): Boolean = {
-      flattenings.contains(OsmId(entity.getType, entity.getId))
+    val nodes = entities.map { e =>
+      e match {
+        case n: Node => Some(n)
+        case _ => None
+      }
+    }.flatten.map { i =>
+      (i.getId, i)
+    }.toMap
+
+    println("Found " + relations.size + " relations to process")
+
+    Range(1, 11).map { i =>
+      println(i + " --------------------------------------------------------")
+
+      val adminLevelRelations = relations.filter { r =>
+        r.getTags.asScala.exists(t => t.getKey == "admin_level" && t.getValue == i.toString)
+      }
+
+      adminLevelRelations.map { r =>
+        val outerNodes = outerNodesFor(r, ways, nodes)
+        val latitudes = outerNodes.map(n => n.getLatitude)
+        val longitudes = outerNodes.map(n => n.getLongitude)
+        val boundingBox = ((latitudes.max, longitudes.max), (latitudes.min, longitudes.min))
+
+        println(r.getTags.asScala.find(t => t.getKey == "name").map(t => t.getValue) + ": " + boundingBox)
+      }
     }
 
-    val found = reader.read(theseEntites)
-    println("Found " + found.size + " flattened entities")
-    found
+    succeed
   }
+
+  def outerNodesFor(r: Relation, ways: Map[Long, Way], nodes: Map[Long, Node]): Seq[Node] = {
+    val relationMembers = r.getMembers.asScala
+    val nonNodes = relationMembers.filter(rm => rm.getMemberType != EntityType.Node)
+    val outerWays = nonNodes.filter(rm => rm.getMemberRole == "outer" && rm.getMemberType == EntityType.Way)
+
+    val allWaysFound = outerWays.forall(w => ways.keySet.contains(w.getMemberId))
+
+    val outerNodesIds = outerWays.map { rm =>
+      val nodeIds = ways.get(rm.getMemberId).map { w => // TODO handle missing Way
+        w.getWayNodes.asScala.map(wn => wn.getNodeId)
+      }
+      nodeIds
+    }.flatten.flatten
+
+    val missingNodes = outerNodesIds.filter(n => !nodes.keySet.contains(n))
+
+    outerNodesIds.map { nid =>
+      nodes.get(nid)
+    }.flatten
+  }
+
+  def allRels(entity: Entity): Boolean = {
+    topLevelRelations(entity) || secondLevelRelations(entity) || thirdLevelRelations(entity) || levelEight(entity)
+  }
+
+  def allAdminBoundaries(entity: Entity): Boolean = {
+    val tags = entity.getTags.asScala
+    val isAdminLevel= tags.exists(t => t.getKey == "admin_level")
+    val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
+    val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
+    entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag
+  }
+
 
   def topLevelRelations(entity: Entity): Boolean = {
     val tags = entity.getTags.asScala
@@ -74,6 +133,15 @@ class OsmSinkSpec extends FlatSpec {
     entity.getType == EntityType.Relation && isAdminLevelFour && isBoundary && isBoundaryAdministrativeTag
   }
 
+  def levelEight(entity: Entity): Boolean = {
+    val tags = entity.getTags.asScala
+    val isAdminLevelFour = tags.exists(t => t.getKey == "admin_level" && t.getValue == "8")
+    val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
+    val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
+    entity.getType == EntityType.Relation && isAdminLevelFour && isBoundary && isBoundaryAdministrativeTag
+  }
+
+
   def thirdLevelRelations(entity: Entity): Boolean = {
     val tags = entity.getTags.asScala
     val isAdminLevelFour = tags.exists(t => t.getKey == "admin_level" && t.getValue == "6")
@@ -82,8 +150,14 @@ class OsmSinkSpec extends FlatSpec {
     entity.getType == EntityType.Relation && isAdminLevelFour && isBoundary && isBoundaryAdministrativeTag
   }
 
-  def isleOfMan(entity: Entity): Boolean = {
-    entity.getId == 62269 && entity.getType == EntityType.Relation
+  def missingNode(entity: Entity): Boolean = {
+    entity.getId == 2081060315 && entity.getType == EntityType.Node
+  }
+
+  def suburb(entity: Entity): Boolean = {
+    val tags = entity.getTags.asScala
+    val isSuburb = tags.exists(t => t.getKey == "place" && t.getValue == "suburb")
+    isSuburb
   }
 
 }
