@@ -63,24 +63,45 @@ class OsmSinkSpec extends FlatSpec {
 
     println("Found " + relations.size + " relations to process")
 
-    Range(1, 11).map { i =>
-      println(i + " --------------------------------------------------------")
+    val boundedRelations = relations.map { r =>
+      val outerNodes = new OuterNodeMapper(ways, nodes).outerNodesFor(r)
+      val latitudes = outerNodes.map(n => n.getLatitude)
+      val longitudes = outerNodes.map(n => n.getLongitude)
+      val boundingBox = ((latitudes.max, longitudes.max), (latitudes.min, longitudes.min))
+      // println(r.getTags.asScala.find(t => t.getKey == "name").map(t => t.getValue) + ": " + boundingBox)
+      (r, boundingBox)
+    }
 
-      val adminLevelRelations = relations.filter { r =>
-        r.getTags.asScala.exists(t => t.getKey == "admin_level" && t.getValue == i.toString)
-      }
 
-      adminLevelRelations.map { r =>
-        val outerNodes = new OuterNodeMapper(ways, nodes).outerNodesFor(r)
-        val latitudes = outerNodes.map(n => n.getLatitude)
-        val longitudes = outerNodes.map(n => n.getLongitude)
-        val boundingBox = ((latitudes.max, longitudes.max), (latitudes.min, longitudes.min))
+    val london = (51.506, -0.106)
+    val twickenham = (51.450, -0.33)
+    val bournmouth = (50.720, -1.879)
 
-        println(r.getTags.asScala.find(t => t.getKey == "name").map(t => t.getValue) + ": " + boundingBox)
-      }
+    Seq(london, twickenham, bournmouth).map { location =>
+      val components = Range(1, 11).map { i =>
+        val bound = boundedRelations.find { b =>
+          val r = b._1
+          val adminLevel = r.getTags.asScala.find(t => t.getKey == "admin_level").map(t => t.getValue)
+
+          val boundingBox = b._2
+          val latInside = location._1 < boundingBox._1._1 && location._1 > boundingBox._2._1
+          val lonInSide = location._2 < boundingBox._1._2 && location._2 > boundingBox._2._2
+
+          // println(adminLevel + " " + boundingBox + latInside + " " +lonInSide)
+
+          adminLevel == Some(i.toString) && latInside && lonInSide
+        }
+        bound
+      }.flatten.map(_._1).reverse
+
+      println(components.map(r => render(r)).mkString(", "))
     }
 
     succeed
+  }
+
+  def render(entity: Entity): String = {
+    entity.getTags.asScala.find(t =>t.getKey == "name").map(t => t.getValue).getOrElse(entity.getId + entity.getType.toString)
   }
 
   def allRels(entity: Entity): Boolean = {
