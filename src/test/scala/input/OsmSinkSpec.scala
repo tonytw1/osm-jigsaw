@@ -16,7 +16,6 @@ class OsmSinkSpec extends FlatSpec {
 
   def all(entity: Entity): Boolean = true
 
-  /*
   "osm parse" should "can fit all relations, Way members and Node postions in RAM" in {
     val inputFilePath = GREAT_BRITAIN
     val sink = new OsmRelationCachingSink(all)
@@ -25,18 +24,8 @@ class OsmSinkSpec extends FlatSpec {
     val allRelations = sink.relations
     println("Cached " + allRelations.size + " relations")
 
-    val sink2 = new OsmEntitySink(allAdminBoundaries)
-    val reader2 = new OsmReader(inputFilePath, sink2)
-    reader2.read
-    val found = sink2.found
-    println("Found " + found.size + " admin boundaries")
-
-    val foundRelations = found.map { e =>
-      e match {
-        case r: Relation => Some(r)
-        case _ => None
-      }
-    }.flatten
+    val foundRelations: Set[Relation] = allRelations.values.filter(allAdminBoundaries).toSet
+    println("Found " + foundRelations.size + " admin boundaries")
 
     def resolveOuterWays(r: Relation): Set[Long] = {
       val members = r.getMembers.asScala
@@ -63,7 +52,6 @@ class OsmSinkSpec extends FlatSpec {
       y.toSet
     }
 
-    println("Found " + found.size + " admin boundary relations")
     val wayIds = foundRelations.map { r =>
       resolveOuterWays(r)
     }.flatten
@@ -98,7 +86,6 @@ class OsmSinkSpec extends FlatSpec {
     println("Dumped found relations and resolved components to: " + deferencedOutputFile)
     succeed
   }
-  */
 
   /*
   "osm parser" should "extract high level relations from OSM file and deferences those resolve the nodes needed to outline those relations" in {
@@ -140,6 +127,7 @@ class OsmSinkSpec extends FlatSpec {
   }
   */
 
+  /*
   "osm parser" should "build bounding boxes for relations" in {
     val sink = new OsmEntitySink(all)
     new OsmReader(deferencedOutputFile, sink).read
@@ -218,6 +206,7 @@ class OsmSinkSpec extends FlatSpec {
 
     succeed
   }
+  */
 
 
   def render(entity: Entity): String = {
