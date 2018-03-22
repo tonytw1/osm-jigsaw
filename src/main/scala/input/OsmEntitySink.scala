@@ -10,12 +10,12 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink
 
 import scala.collection.mutable
 
-class OsmSink(predicate: Entity => Boolean) extends Sink {
+class OsmEntitySink(predicate: Entity => Boolean) extends Sink {
 
   val step = 10000000
   val nf = new DecimalFormat()
 
-  var i = 0
+  var i = 0L
   var j = 0
   var found = mutable.Set[Entity]()
   var low = DateTime.now()

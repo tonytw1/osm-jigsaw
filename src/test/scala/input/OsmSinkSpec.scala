@@ -1,9 +1,11 @@
 package input
 
+import com.esri.core.geometry._
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class OsmSinkSpec extends FlatSpec {
 
@@ -14,12 +16,98 @@ class OsmSinkSpec extends FlatSpec {
 
   def all(entity: Entity): Boolean = true
 
+  /*
+  "osm parse" should "can fit all relations, Way members and Node postions in RAM" in {
+    val inputFilePath = GREAT_BRITAIN
+    val sink = new OsmRelationCachingSink(all)
+    val reader = new OsmReader(inputFilePath, sink)
+    reader.read
+    val allRelations = sink.relations
+    println("Cached " + allRelations.size + " relations")
 
+    val sink2 = new OsmEntitySink(allAdminBoundaries)
+    val reader2 = new OsmReader(inputFilePath, sink2)
+    reader2.read
+    val found = sink2.found
+    println("Found " + found.size + " admin boundaries")
+
+    val foundRelations = found.map { e =>
+      e match {
+        case r: Relation => Some(r)
+        case _ => None
+      }
+    }.flatten
+
+    def resolveOuterWays(r: Relation): Set[Long] = {
+      val members = r.getMembers.asScala
+      val outers = members.filter(rm => rm.getMemberRole == "outer")
+      val y = outers.map { rm =>
+        val z = rm.getMemberType match {
+          case EntityType.Way =>
+            Seq(rm.getMemberId)
+          case EntityType.Relation =>
+            val rel = allRelations.get(rm.getMemberId)
+            println("Relation " + r + " has sub rel " + rm.getMemberId + ": " + rel)
+            rel.map { r2 =>
+              val ws = resolveOuterWays(r2)
+              println("Resolved relation " + r2 + " to ways: " + ws)
+              ws
+            }.getOrElse {
+              Seq()
+            }
+          case _ =>
+            Seq()
+        }
+        z.toSet
+      }.flatten
+      y.toSet
+    }
+
+    println("Found " + found.size + " admin boundary relations")
+    val wayIds = foundRelations.map { r =>
+      resolveOuterWays(r)
+    }.flatten
+
+    println("Need " + wayIds.size + " ways to bound relations")
+    def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && wayIds.contains(entity.getId)
+
+    val sink3 = new OsmEntitySink(requiredWays)
+    val reader3 = new OsmReader(inputFilePath, sink3)
+    reader3.read
+    val ways = sink3.found
+    println("Found " + ways.size + " ways")
+
+    val nodeIds: mutable.Set[Long] = ways.map { e =>
+      e match {
+        case w: Way =>
+          w.getWayNodes.asScala.map(wn => wn.getNodeId).toSet
+        case _ => Set()
+      }
+    }.flatten
+
+    println("Need " + nodeIds.size + " nodes to bound relations")
+    def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
+
+    val sink4 = new OsmEntitySink(requiredNodes)
+    val reader4 = new OsmReader(inputFilePath, sink4)
+    reader4.read
+    val nodes = sink4.found
+    println("Found " + nodes.size + " nodes")
+
+    new OsmWriter(deferencedOutputFile).write(foundRelations.toSeq ++ ways.toSeq ++ nodes.toSeq)
+    println("Dumped found relations and resolved components to: " + deferencedOutputFile)
+    succeed
+  }
+  */
+
+  /*
   "osm parser" should "extract high level relations from OSM file and deferences those resolve the nodes needed to outline those relations" in {
     val inputFilePath = GREAT_BRITAIN
-    val reader = new OsmReader(inputFilePath)
+    val sink = new OsmEntitySink(allAdminBoundaries)
+    val reader = new OsmReader(inputFilePath, sink)
 
-    val found = reader.read(allAdminBoundaries)
+    reader.read
+    val found = sink.found
     found.map { entity =>
       println("Found: " + entity.getId + entity.getType + " " + entity.getTags.asScala.find(t =>t.getKey == "name").map(t => t.getValue))
     }
@@ -32,9 +120,30 @@ class OsmSinkSpec extends FlatSpec {
 
     succeed
   }
+  */
+
+  /*
+  "osm parser" should "meh" in {
+
+    val pt = new Point(0.5, 0.5)
+
+    val area = new Polygon()
+    area.startPath(0, 0)
+    area.lineTo(0, 1)
+    area.lineTo(1, 1)
+    area.lineTo(1, 0)
+    println(area)
+
+    val sr: SpatialReference = SpatialReference.create(1)
+    val contains: Boolean = OperatorContains.local().execute(area, pt, sr, null)
+    println(contains)
+  }
+  */
 
   "osm parser" should "build bounding boxes for relations" in {
-    val entities = new OsmReader(deferencedOutputFile).read(all)
+    val sink = new OsmEntitySink(all)
+    new OsmReader(deferencedOutputFile, sink).read
+    val entities = sink.found
 
     val relations = entities.map { e =>
       e match {
@@ -65,15 +174,20 @@ class OsmSinkSpec extends FlatSpec {
 
     val boundedRelations = relations.map { r =>
       val outerNodes = new OuterNodeMapper(ways, nodes).outerNodesFor(r)
-      val latitudes = outerNodes.map(n => n.getLatitude)
-      val longitudes = outerNodes.map(n => n.getLongitude)
-      val boundingBox = ((latitudes.max, longitudes.max), (latitudes.min, longitudes.min))
-      // println(r.getTags.asScala.find(t => t.getKey == "name").map(t => t.getValue) + ": " + boundingBox)
-      (r, boundingBox)
-    }
+      outerNodes.headOption.map { h =>
+        val area = new Polygon()
+        area.startPath(h.getLatitude, h.getLongitude)
+        outerNodes.drop(1).map { on =>
+          val pt = new Point(on.getLatitude, on.getLongitude)
+          area.lineTo(pt)
+        }
+        (r, area)
+      }
+
+    }.flatten
 
     val london = (51.506, -0.106)
-    val twickenham = (51.450, -0.33)
+    val twickenham = (51.4282594, -0.3244692)
     val bournmouth = (50.720, -1.879)
     val lyndhurst = (50.8703, -1.5942)
     val edinburgh = (55.9518, -3.1840)
@@ -84,22 +198,24 @@ class OsmSinkSpec extends FlatSpec {
           val r = b._1
           val adminLevel = r.getTags.asScala.find(t => t.getKey == "admin_level").map(t => t.getValue)
 
-          val boundingBox = b._2
-          val latInside = location._1 < boundingBox._1._1 && location._1 > boundingBox._2._1
-          val lonInSide = location._2 < boundingBox._1._2 && location._2 > boundingBox._2._2
+          val area = b._2
+          val pt = new Point(location._1, location._2)
 
-          // println(adminLevel + " " + boundingBox + latInside + " " +lonInSide)
 
-          adminLevel == Some(i.toString) && latInside && lonInSide
+          val sr: SpatialReference = SpatialReference.create(1)
+          val contains: Boolean = OperatorContains.local().execute(area, pt, sr, null)
+
+          adminLevel == Some(i.toString) && contains
         }
         bound
       }.flatten.map(_._1).reverse
 
-      println(components.map(r => render(r)).mkString(", "))
+      println(location + ": " + components.map(r => render(r)).mkString(", "))
     }
 
     succeed
   }
+
 
   def render(entity: Entity): String = {
     entity.getTags.asScala.find(t =>t.getKey == "name").map(t => t.getValue).getOrElse(entity.getId + entity.getType.toString)
@@ -109,6 +225,8 @@ class OsmSinkSpec extends FlatSpec {
     topLevelRelations(entity) || secondLevelRelations(entity) || thirdLevelRelations(entity) || levelEight(entity)
   }
 
+  def outOfOrderRelationId = 7181767
+
   def allAdminBoundaries(entity: Entity): Boolean = {
     val tags = entity.getTags.asScala
     val isAdminLevel= tags.exists(t => t.getKey == "admin_level")
@@ -116,7 +234,6 @@ class OsmSinkSpec extends FlatSpec {
     val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
     entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag
   }
-
 
   def topLevelRelations(entity: Entity): Boolean = {
     val tags = entity.getTags.asScala
@@ -155,10 +272,15 @@ class OsmSinkSpec extends FlatSpec {
     entity.getId == 2081060315 && entity.getType == EntityType.Node
   }
 
+  def richmond(entity: Entity): Boolean = {
+    entity.getId == 151795 && entity.getType == EntityType.Relation
+  }
+
   def suburb(entity: Entity): Boolean = {
     val tags = entity.getTags.asScala
     val isSuburb = tags.exists(t => t.getKey == "place" && t.getValue == "suburb")
     isSuburb
   }
+
 
 }

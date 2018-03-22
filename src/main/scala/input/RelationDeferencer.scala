@@ -6,7 +6,6 @@ import scala.collection.JavaConverters._
 class RelationDeferencer {
 
   def dereference(entites: Set[Entity], inputFilePath: String): Set[Entity] = {
-    val reader = new OsmReader(inputFilePath)
 
     val alreadyOk = entites.filter(e => e.getType == EntityType.Node)
 
@@ -32,7 +31,12 @@ class RelationDeferencer {
     } else {
       println("Entities to resolve: " + toResolve.size)
       def theseEntites(entity: Entity): Boolean = toResolve.contains(OsmId(entity.getType, entity.getId))
-      val resolved = reader.read(theseEntites)
+
+      val sink = new OsmEntitySink(theseEntites)
+      val reader = new OsmReader(inputFilePath, sink)
+      reader.read
+      val resolved = sink.found
+
       println("Found " + resolved.size + " resolved entities")
 
       entites ++ dereference(resolved.toSet, inputFilePath)
