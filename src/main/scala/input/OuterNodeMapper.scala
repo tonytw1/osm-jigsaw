@@ -28,57 +28,33 @@ class OuterNodeMapper(ways: Map[Long, Way], nodes: Map[Long, Node]) {
 
       val outerWays: Seq[Option[Way]] = resolveWaysFor(outerWayRelationMembers)
 
-      val wayGroups: Seq[mutable.Seq[Long]] = outerWays.flatten.map { w =>
-
-        val nodes: mutable.Seq[Long] = w.getWayNodes.asScala.map(wn => wn.getNodeId)
+      val wayGroups: Seq[Seq[Long]] = outerWays.flatten.map { w =>
+        val nodes: Seq[Long] = w.getWayNodes.asScala.map(wn => wn.getNodeId)
         nodes
       }.filter(wg => wg.nonEmpty)
 
-      val joinedNodeIds = if (wayGroups.size < 2) {
-        val x = wayGroups.map(i => i).flatten
-        x
+      val joinedNodeIds = {
 
-      } else {
+        val meh: mutable.Set[Seq[Long]] = mutable.Set() ++ wayGroups
 
-        val headGroup = wayGroups(0)
-        val secondGroup = wayGroups(1)
+        val first: Seq[Long] = meh.head
+        var joined: Seq[Seq[Long]] = Seq(first)
+        meh.remove(first)
 
-        val first = headGroup.head
-        val last = headGroup.last
+        val q = meh.exists(wg => wg.head == joined.last.last || wg.last == joined.last.last)
 
-
-
-        var outerNodeIds = if (!(secondGroup.contains(last))) {
-          wayGroups(0).reverse
-        } else {
-          wayGroups(0)
-        }
-
-
-
-        wayGroups.drop(1).map { wg =>
-          val z = outerNodeIds.lastOption.map { l =>
-            //println(l + " v " + wg.head + " / " + wg.last)
-
-            if (l != wg.head && l != wg.last) {
-              throw new RuntimeException("Can join ways; no common nodes when joining: " + wg)
-            }
-
-            if (wg.head == l) {
-              outerNodeIds = outerNodeIds ++ wg
-
-            } else {
-              //println("!!!!!!!!! Nose to tail way join detected")
-              outerNodeIds = outerNodeIds ++ wg.reverse
-
-            }
-
+        while (meh.nonEmpty && meh.exists(wg => wg.head == joined.last.last || wg.last == joined.last.last)) {
+          val next = meh.find(wg => wg.head == joined.last.last  || wg.last == joined.last.last).get
+          if (next.head == joined.last.last) {
+            joined = joined :+ next
+          } else {
+            joined = joined :+ next.reverse
           }
-          z
-
+          meh.remove(next)
         }
-        outerNodeIds
-      }
+        joined
+
+      }.flatten
 
       joinedNodeIds.map { nid =>
         nodes.get(nid)

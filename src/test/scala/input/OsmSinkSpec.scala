@@ -191,8 +191,11 @@ class OsmSinkSpec extends FlatSpec {
     val bournmouth = (50.720, -1.879)
     val lyndhurst = (50.8703, -1.5942)
     val edinburgh = (55.9518, -3.1840)
+    val newport = (50.6995, -1.2935)
+    val pembroke = (51.6756, -4.9122)
+    val leeds = (53.7868, -1.5528)
 
-    Seq(london, twickenham, bournmouth, lyndhurst, edinburgh).map { location =>
+    Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds).map { location =>
       val components = Range(1, 11).map { i =>
         val bound = boundedRelations.find { b =>
           val r = b._1
