@@ -1,11 +1,11 @@
 ## None persisted OpenSteetMap geocoding spike
 
+Gecoding is the art turning a location point into a human readable sentence (and vice versa).
+(ie. 51.0, -0.3 <--> London, United Kingdon).
+
 The OpenStreetMap data model is a fairly unstructured, flat format.
 The implied structure comes from a loosely applied hierarchy of tags.
 A full dataset contains around 5 billion entities and is in the region of 60Gb compressed and unindexed.
-
-Gecoding is the art turning a location point into a human readable sentence (and vice versa).
-(ie. 51.0, -0.3 <--> London, United Kingdon).
 
 Nominatim is the default geocoding solution for OpenStreetMap.
 It does are really great job of interpreting an implied structure and using it to construct sensible geocodings.
