@@ -11,7 +11,6 @@ class RelationResolver {
 
     def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, Node]) = {
 
-
       val outerNodes = outerNodeMapper.outlineNodesFor(r, allRelations, ways, nodes)
       outerNodes.headOption.map { h =>
         val area = new Polygon()

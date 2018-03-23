@@ -4,6 +4,7 @@ import input.sinks.OsmEntitySink
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, EntityType, Relation, Way}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class RelationDeferencer {
 
@@ -34,14 +35,17 @@ class RelationDeferencer {
       println("Entities to resolve: " + toResolve.size)
       def theseEntites(entity: Entity): Boolean = toResolve.contains(OsmId(entity.getType, entity.getId))
 
-      val sink = new OsmEntitySink(theseEntites)
+      val found = mutable.Set[Entity]()
+      def callback(entity: Entity) = found.add(entity)
+
+      val sink = new OsmEntitySink(theseEntites, callback)
       val reader = new OsmReader(inputFilePath, sink)
       reader.read
-      val resolved = sink.found
+      val resolved = found.toSet
 
       println("Found " + resolved.size + " resolved entities")
 
-      entites ++ dereference(resolved.toSet, inputFilePath)
+      entites ++ dereference(resolved, inputFilePath)
     }
   }
 

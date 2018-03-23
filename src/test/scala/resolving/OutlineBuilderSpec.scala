@@ -1,13 +1,10 @@
 package resolving
 
-import input.{OsmReader, TestValues}
-import input.sinks.OsmEntitySink
+import input.TestValues
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, Node, Relation, Way}
 import org.scalatest.FlatSpec
 
-import scala.collection.mutable
-
-class OutlineBuilderSpec extends FlatSpec with TestValues {
+class OutlineBuilderSpec extends FlatSpec with TestValues with LoadTestEntities {
 
   val outlineBuilder = new OutlineBuilder()
 
@@ -43,14 +40,10 @@ class OutlineBuilderSpec extends FlatSpec with TestValues {
 
     assert(outline.size == 1671)
   }
-  
-  def loadTestData(): mutable.Set[Entity] = {
-    def all(entity: Entity): Boolean = true
 
-    val sink = new OsmEntitySink(all)
-    val reader = new OsmReader("richmond.pbf", sink)
-    reader.read
-    sink.found
+  def loadTestData(): Seq[Entity] = {
+    def all(entity: Entity): Boolean = true // TODO how to inline a closure in Scala?
+    loadEntities("richmond.pbf", all)
   }
 
 }

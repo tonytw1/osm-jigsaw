@@ -1,9 +1,10 @@
 package input
 
-import input.sinks.{OsmEntitySink, OsmRelationCachingSink}
-import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, EntityType, Relation, Way}
+import input.sinks.OsmEntitySink
+import org.openstreetmap.osmosis.core.domain.v0_6._
 import resolving.RelationWayResolver
 
+import scala.collection.mutable
 import scala.collection.JavaConverters._
 
 class RelationExtractor {
@@ -14,10 +15,17 @@ class RelationExtractor {
 
     def all(entity: Entity): Boolean  = true
 
-    val sink = new OsmRelationCachingSink(all)
+    var relations = mutable.Map[Long, Relation]()
+
+    def addToAllRelations(entity: Entity) = entity match {
+      case r: Relation => relations.put(r.getId, r)
+      case _ =>
+    }
+
+    val sink = new OsmEntitySink(all, addToAllRelations)
     val reader = new OsmReader(inputFilePath, sink)
     reader.read
-    val allRelations = sink.relations.toMap
+    val allRelations = relations.toMap
     println("Cached " + allRelations.size + " relations")
 
     val foundRelations = allRelations.values.filter(predicate).toSet
@@ -31,10 +39,13 @@ class RelationExtractor {
 
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && wayIds.contains(entity.getId)
 
-    val sink3 = new OsmEntitySink(requiredWays)
+    val foundWays = mutable.Set[Entity]()
+    def addToFoundWays(entity: Entity) = foundWays.add(entity)
+
+    val sink3 = new OsmEntitySink(requiredWays, addToFoundWays)
     val reader3 = new OsmReader(inputFilePath, sink3)
     reader3.read
-    val ways = sink3.found.toSet
+    val ways: Set[Entity] = foundWays.toSet
     println("Found " + ways.size + " ways")
 
     val nodeIds = ways.flatMap { e =>
@@ -44,13 +55,14 @@ class RelationExtractor {
     }
 
     println("Need " + nodeIds.size + " nodes to resolve relation ways")
-
     def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
+    val foundNodes = mutable.Set[Entity]()
+    def addToFoundNodes(entity: Entity) = foundNodes.add(entity)
 
-    val sink4 = new OsmEntitySink(requiredNodes)
+    val sink4 = new OsmEntitySink(requiredNodes, addToFoundNodes)
     val reader4 = new OsmReader(inputFilePath, sink4)
     reader4.read
-    val nodes = sink4.found.toSet
+    val nodes = foundNodes.toSet
     println("Found " + nodes.size + " nodes")
 
     (foundRelations, ways, nodes)

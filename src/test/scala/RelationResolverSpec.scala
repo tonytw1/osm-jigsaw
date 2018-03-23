@@ -6,6 +6,7 @@ import org.scalatest.FlatSpec
 import resolving.RelationResolver
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering {
 
@@ -14,9 +15,12 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
   "relation resolver" should "build bounding areas for each extracted relation" in {
     def all(entity: Entity): Boolean  = true
 
-    val sink = new OsmEntitySink(all)
+    val allFound = mutable.Set[Entity]()
+    def addToFound(entity: Entity) = allFound.add(entity)
+
+    val sink = new OsmEntitySink(all, addToFound)
     new OsmReader(deferencedOutputFile, sink).read
-    val entities = sink.found
+    val entities = allFound.toSet
 
     val relations = entities.flatMap { e =>
       e match {
