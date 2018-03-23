@@ -27,33 +27,8 @@ class OsmSinkSpec extends FlatSpec {
     val foundRelations: Set[Relation] = allRelations.values.filter(allAdminBoundaries).toSet
     println("Found " + foundRelations.size + " admin boundaries")
 
-    def resolveOuterWays(r: Relation): Set[Long] = {
-      val members = r.getMembers.asScala
-      val outers = members.filter(rm => rm.getMemberRole == "outer")
-      val y = outers.map { rm =>
-        val z = rm.getMemberType match {
-          case EntityType.Way =>
-            Seq(rm.getMemberId)
-          case EntityType.Relation =>
-            val rel = allRelations.get(rm.getMemberId)
-            println("Relation " + r + " has sub rel " + rm.getMemberId + ": " + rel)
-            rel.map { r2 =>
-              val ws = resolveOuterWays(r2)
-              println("Resolved relation " + r2 + " to ways: " + ws)
-              ws
-            }.getOrElse {
-              Seq()
-            }
-          case _ =>
-            Seq()
-        }
-        z.toSet
-      }.flatten
-      y.toSet
-    }
-
     val wayIds = foundRelations.map { r =>
-      resolveOuterWays(r)
+      new RelationResolver().resolveOuterWays(r)
     }.flatten
 
     println("Need " + wayIds.size + " ways to bound relations")
