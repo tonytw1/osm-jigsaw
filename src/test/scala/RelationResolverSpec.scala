@@ -1,15 +1,17 @@
-import com.esri.core.geometry._
+import java.io.{FileOutputStream, ObjectOutputStream}
+
 import input.{SinkRunner, TestValues}
+import model.Area
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
 import resolving.RelationResolver
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering {
 
   val deferencedOutputFile = "/tmp/out.pbf"
+  var areasOutputFile = "/tmp/areas.ser"
 
   "relation resolver" should "build bounding areas for each extracted relation" in {
     def all(entity: Entity): Boolean  = true
@@ -49,29 +51,15 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
     println("Found " + relations.size + " relations to process")
 
     val relationResolver = new RelationResolver()
-    val boundedRelations = relationResolver.resolve(relations, allRelations, ways, nodes)
-    println(boundedRelations)
 
-    Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
-      val components = Range(1, 11).flatMap { i =>
-        val bound = boundedRelations.find { b =>
-          val r = b._1
-          val adminLevel = r.getTags.asScala.find(t => t.getKey == "admin_level").map(t => t.getValue)
+    val areas: Set[Area] = relationResolver.resolve(relations, allRelations, ways, nodes)
+    println("Produced " + areas.size + " relation shapes")
 
-          val area = b._2
-          val pt = new Point(location._1, location._2)
-
-
-          val sr: SpatialReference = SpatialReference.create(1)
-          val contains: Boolean = OperatorContains.local().execute(area, pt, sr, null)
-
-          adminLevel == Some(i.toString) && contains
-        }
-        bound
-      }.map(_._1).reverse
-
-      println(location + ": " + components.map(r => render(r)).mkString(", "))
-    }
+    // TODO serialize to disk for quick interation of the next step
+    val oos = new ObjectOutputStream(new FileOutputStream(areasOutputFile))
+    oos.writeObject(areas)
+    oos.close
+    println("Dumped areas to file: " + areasOutputFile)
 
     succeed
   }

@@ -1,15 +1,16 @@
 package resolving
 
 import com.esri.core.geometry.{Point, Polygon}
+import model.Area
 import org.openstreetmap.osmosis.core.domain.v0_6.{Node, Relation, Way}
 
 class RelationResolver {
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolve(relations: Set[Relation], allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, Node]): Set[(Relation, Polygon)] = {
+  def resolve(relations: Set[Relation], allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, Node]): Set[Area] = {
 
-    def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, Node]) = {
+    def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, Node]): Option[Area] = {
 
       val outerNodes = outerNodeMapper.outlineNodesFor(r, allRelations, ways, nodes)
       outerNodes.headOption.map { h =>
@@ -19,7 +20,7 @@ class RelationResolver {
           val pt = new Point(on.getLatitude, on.getLongitude)
           area.lineTo(pt)
         }
-        (r, area)
+        Area(r.getId.toString, area)
       }
     }
 
