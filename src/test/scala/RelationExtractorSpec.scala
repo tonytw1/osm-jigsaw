@@ -36,7 +36,7 @@ class RelationExtractorSpec extends FlatSpec with TestValues {
     val isAdminLevel = tags.exists(t => t.getKey == "admin_level")
     val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
     val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
-    entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag
+    entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag  // TODO ensure type is tested before more expensive tag operations
   }
 
 }

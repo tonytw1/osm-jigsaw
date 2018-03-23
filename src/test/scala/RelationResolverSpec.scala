@@ -1,6 +1,5 @@
 import com.esri.core.geometry._
-import input.sinks.OsmEntitySink
-import input.{OsmReader, TestValues}
+import input.{SinkRunner, TestValues}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
 import resolving.RelationResolver
@@ -17,9 +16,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
 
     val allFound = mutable.Buffer[Entity]()
     def addToFound(entity: Entity) = allFound.+=:(entity)
-
-    val sink = new OsmEntitySink(all, addToFound)
-    new OsmReader(deferencedOutputFile, sink).read
+    new SinkRunner(deferencedOutputFile, all, addToFound).run
 
     val relations: Set[Relation] = allFound.flatMap { e =>
       e match {
