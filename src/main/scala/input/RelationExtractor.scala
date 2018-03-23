@@ -14,28 +14,28 @@ class RelationExtractor {
 
     def all(entity: Entity): Boolean  = true
 
-    var relations = mutable.Map[Long, Relation]()
+    val allRelations = mutable.Buffer[Relation]()
     def addToAllRelations(entity: Entity) = entity match {
-      case r: Relation => relations.put(r.getId, r)
+      case r: Relation => allRelations.+=:(r)
       case _ =>
     }
     new SinkRunner(inputFilePath, all, addToAllRelations).run
-    val allRelations = relations.toMap
     println("Cached " + allRelations.size + " relations")
 
-    val foundRelations = allRelations.values.filter(predicate).toSet
+    val foundRelations = allRelations.filter(predicate).toSet
     println("Found " + foundRelations.size + " admin boundaries")
 
+    val relationsLookUpMap = allRelations.map(r => r.getId -> r).toMap
     val wayIds = foundRelations.flatMap(r =>
-      relationWayResolver.resolveOuterWayIdsFor(r, allRelations)
+      relationWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap)
     )
 
     println("Need " + wayIds.size + " ways to resolve relations")
 
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && wayIds.contains(entity.getId)
 
-    val foundWays = mutable.Set[Entity]()
-    def addToFoundWays(entity: Entity) = foundWays.add(entity)
+    val foundWays = mutable.Buffer[Entity]()
+    def addToFoundWays(entity: Entity) = foundWays.+=:(entity)
     new SinkRunner(inputFilePath, requiredWays, addToFoundWays).run
     val ways = foundWays.toSet
     println("Found " + ways.size + " ways")
@@ -48,8 +48,8 @@ class RelationExtractor {
 
     println("Need " + nodeIds.size + " nodes to resolve relation ways")
     def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
-    val foundNodes = mutable.Set[Entity]()
-    def addToFoundNodes(entity: Entity) = foundNodes.add(entity)
+    val foundNodes = mutable.Buffer[Entity]()
+    def addToFoundNodes(entity: Entity) = foundNodes.+=:(entity)
     new SinkRunner(inputFilePath, requiredNodes, addToFoundNodes)
     val nodes = foundNodes.toSet
     println("Found " + nodes.size + " nodes")
