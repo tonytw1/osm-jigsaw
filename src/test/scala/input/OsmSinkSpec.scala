@@ -7,7 +7,7 @@ import org.scalatest.FlatSpec
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class OsmSinkSpec extends FlatSpec {
+class OsmSinkSpec extends FlatSpec with TestValues {
 
   val EUROPE = "europe-latest.osm.pbf"
   val GREAT_BRITAIN = "great-britain-latest.osm.pbf"
@@ -240,7 +240,7 @@ class OsmSinkSpec extends FlatSpec {
   }
 
   def richmond(entity: Entity): Boolean = {
-    entity.getId == 151795 && entity.getType == EntityType.Relation
+    entity.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES._1 && entity.getType == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES._2
   }
 
   def suburb(entity: Entity): Boolean = {
