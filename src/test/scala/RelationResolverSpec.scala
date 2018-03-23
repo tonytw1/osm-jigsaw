@@ -17,7 +17,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
     def all(entity: Entity): Boolean  = true
 
     val allFound = mutable.Buffer[Entity]()
-    def addToFound(entity: Entity) = allFound.+=:(entity)
+    def addToFound(entity: Entity) = allFound.+=(entity)
     new SinkRunner(deferencedOutputFile, all, addToFound).run
 
     val relations: Set[Relation] = allFound.flatMap { e =>

@@ -35,7 +35,7 @@ class RelationExtractor {
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && wayIds.contains(entity.getId)
 
     val foundWays = mutable.Buffer[Entity]()
-    def addToFoundWays(entity: Entity) = foundWays.+=:(entity)
+    def addToFoundWays(entity: Entity) = foundWays.+=(entity)
     new SinkRunner(inputFilePath, requiredWays, addToFoundWays).run
     val ways = foundWays.toSet
     println("Found " + ways.size + " ways")
@@ -49,8 +49,8 @@ class RelationExtractor {
     println("Need " + nodeIds.size + " nodes to resolve relation ways")
     def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
     val foundNodes = mutable.Buffer[Entity]()
-    def addToFoundNodes(entity: Entity) = foundNodes.+=:(entity)
-    new SinkRunner(inputFilePath, requiredNodes, addToFoundNodes)
+    def addToFoundNodes(entity: Entity) = foundNodes.+=(entity)
+    new SinkRunner(inputFilePath, requiredNodes, addToFoundNodes).run
     val nodes = foundNodes.toSet
     println("Found " + nodes.size + " nodes")
 
