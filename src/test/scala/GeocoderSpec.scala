@@ -2,7 +2,7 @@ import java.io.{FileInputStream, ObjectInputStream}
 
 import com.esri.core.geometry._
 import input.TestValues
-import model.Area
+import model.{Area, EntityRendering}
 import org.scalatest.FlatSpec
 
 class GeocoderSpec extends FlatSpec with TestValues with EntityRendering {
@@ -12,19 +12,25 @@ class GeocoderSpec extends FlatSpec with TestValues with EntityRendering {
     var areasOutputFile = "/tmp/areas.ser"
 
     val ois = new ObjectInputStream(new FileInputStream(areasOutputFile))
-    val areas = ois.readObject.asInstanceOf[Seq[Area]]
+    val areas = ois.readObject.asInstanceOf[Set[Area]]
     ois.close
+
+    println("Checking locations against " + areas.size + " areas")
+    val sr = SpatialReference.create(1)
 
     Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
       val pt = new Point(location._1, location._2)
 
-      val areasContainingLocation: Seq[Area] = areas.filter { a =>
-        val area = a.polygon
-        val sr = SpatialReference.create(1)
-        OperatorContains.local().execute(area, pt, sr, null)
+      val areasContainingLocation = areas.filter { a =>
+        OperatorContains.local().execute(a.polygon, pt, sr, null)
+      }.toSeq
+
+
+      val sorted = areasContainingLocation.sortWith{(a, b) =>
+        OperatorContains.local().execute(b.polygon, a.polygon, sr, null)
       }
 
-      println(location + ": " + areasContainingLocation.map(a => a.name).mkString(", "))
+      println(location + ": " + sorted.map(a => a.name).mkString(", "))
     }
 
     succeed

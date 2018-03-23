@@ -1,7 +1,7 @@
 import java.io.{FileOutputStream, ObjectOutputStream}
 
 import input.{SinkRunner, TestValues}
-import model.Area
+import model.EntityRendering
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
 import resolving.RelationResolver
@@ -52,7 +52,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
 
     val relationResolver = new RelationResolver()
 
-    val areas: Set[Area] = relationResolver.resolve(relations, allRelations, ways, nodes)
+    val areas = relationResolver.resolve(relations, allRelations, ways, nodes)
     println("Produced " + areas.size + " relation shapes")
 
     // TODO serialize to disk for quick interation of the next step

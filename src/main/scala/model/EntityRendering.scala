@@ -1,4 +1,7 @@
+package model
+
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity
+
 import scala.collection.JavaConverters._
 
 trait EntityRendering {
