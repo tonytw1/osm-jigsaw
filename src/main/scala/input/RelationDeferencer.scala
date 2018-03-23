@@ -1,6 +1,8 @@
 package input
 
+import input.sinks.OsmEntitySink
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, EntityType, Relation, Way}
+
 import scala.collection.JavaConverters._
 
 class RelationDeferencer {
