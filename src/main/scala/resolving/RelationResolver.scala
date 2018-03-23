@@ -23,9 +23,9 @@ class RelationResolver {
       }
     }
 
-    relations.toSeq.map { r =>
+    relations.map { r =>
       resolveRelation(r, allRelations, ways, nodes)
-    }.flatten.toSet
+    }.flatten
   }
 
 }
