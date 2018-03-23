@@ -15,21 +15,20 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
   "relation resolver" should "build bounding areas for each extracted relation" in {
     def all(entity: Entity): Boolean  = true
 
-    val allFound = mutable.Set[Entity]()
-    def addToFound(entity: Entity) = allFound.add(entity)
+    val allFound = mutable.Buffer[Entity]()
+    def addToFound(entity: Entity) = allFound.+=:(entity)
 
     val sink = new OsmEntitySink(all, addToFound)
     new OsmReader(deferencedOutputFile, sink).read
-    val entities = allFound.toSet
 
-    val relations = entities.flatMap { e =>
+    val relations: Set[Relation] = allFound.flatMap { e =>
       e match {
         case r: Relation => Some(r)
         case _ => None
       }
     }.toSet
 
-    val ways: Map[Long, Way] = entities.flatMap { e =>
+    val ways: Map[Long, Way] = allFound.flatMap { e =>
       e match {
         case w: Way => Some(w)
         case _ => None
@@ -38,7 +37,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
       (i.getId, i)
     }.toMap
 
-    val nodes = entities.flatMap { e =>
+    val nodes = allFound.flatMap { e =>
       e match {
         case n: Node => Some(n)
         case _ => None
