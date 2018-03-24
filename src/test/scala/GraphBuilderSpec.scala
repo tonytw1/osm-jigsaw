@@ -15,17 +15,20 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
     val areas = ois.readObject.asInstanceOf[Set[Area]]
     ois.close
 
-    val first = areas.find(a => a.name == "United Kingdom").get
-    println(first)
-    val withOutFirst = areas - first
 
-    val head = GraphNode(first, None)
-    println(head)
+    val earthArea = new Polygon()
+    earthArea.startPath(-180, -90)
+    earthArea.lineTo(180, -90)
+    earthArea.lineTo(180, 90)
+    earthArea.lineTo(-180, 90)
+    val earth = Area(name = "Earth", earthArea)
+    var head = GraphNode(earth, None)
 
     var i = 0
     var j = 0
-    withOutFirst.map { a =>
+    areas.map { a =>
       head.insert(a)
+
       i = i + 1
       j = j + 1
       if (j == 100) {
@@ -38,18 +41,17 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
 
     println(head.render())
 
-
-    def meh(node: GraphNode): Unit = {
+    def dump(node: GraphNode): Unit = {
       if (node.children.nonEmpty) {
         node.children.map { c =>
-          meh(c)
+          dump(c)
         }
       }
       println(node.render())
     }
 
     println("_________________")
-    meh(head)
+    dump(head)
 
     succeed
   }
@@ -60,31 +62,47 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
 
     override def hashCode(): Int = area.hashCode()
 
-    def insert(value: Area): Unit = {
-      val contains = OperatorContains.local().execute(area.polygon, value.polygon, sr, null)
-      if (contains) {
-        // println(this.area.name + " contains " + value.name)
+    override def toString: String = "MEH"
 
-        val childWhoEncloses = children.find { c =>
-          val contains = OperatorContains.local().execute(c.area.polygon, value.polygon, sr, null)
-          contains
-        }
 
-        childWhoEncloses.map { ec =>
-          // println("Sifting " + value.name + " down to child: " + c.area.name)
-          ec.insert(value)
+    def insert(newArea: Area): GraphNode = {
 
-        }.getOrElse {
-          // println("Inserting " + value.name + " into: " + this.area.name)
-          children = children.+(GraphNode(value, Some(this)))
-        }
+      val existingChildWhichNewValueWouldFitIn = children.find { c =>
+        OperatorContains.local().execute(c.area.polygon, newArea.polygon, sr, null)
       }
+
+      existingChildWhichNewValueWouldFitIn.map { c =>
+        // println("Found existing child which new value would fit in")
+        c.insert(newArea)
+
+      }.getOrElse {
+        // println("Inserted " + newArea.name + " into " + this.area.name)
+
+        val siblingsWhichFitInsideNewValeu = this.children.filter { c =>
+          OperatorContains.local().execute(newArea.polygon, c.area.polygon, sr, null)
+        }
+
+        var newNode = GraphNode(newArea, Some(this))
+        children = children.+(newNode)
+
+        if (siblingsWhichFitInsideNewValeu.nonEmpty) {
+          println("Found " + siblingsWhichFitInsideNewValeu.size + " siblings to sift down into new value " + newArea.name + " " +
+            "(" + siblingsWhichFitInsideNewValeu.map(s => s.area.name).mkString(", ") + ")")
+          children = children.--(siblingsWhichFitInsideNewValeu)
+          siblingsWhichFitInsideNewValeu.map { s =>
+            newNode.insert(s.area)
+          }
+
+        }
+
+      }
+
+      this
     }
 
     def render(): String = {
       area.name + parent.map(p => " / " + p.render()).getOrElse("")
     }
-
 
   }
 
