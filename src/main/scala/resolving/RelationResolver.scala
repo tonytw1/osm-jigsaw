@@ -25,9 +25,19 @@ class RelationResolver extends EntityRendering {
       }
     }
 
-    relations.map { r =>
+    var i = 0L
+    var j = 0
+
+    relations.flatMap { r =>
+      i = i + 1
+      j = j + 1
+      if (j == 1000) {
+        j = 0
+        println(i)
+      }
+
       resolveRelation(r, allRelations, ways, nodes)
-    }.flatten
+    }
   }
 
 }
