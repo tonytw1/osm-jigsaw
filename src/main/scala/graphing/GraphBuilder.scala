@@ -72,34 +72,3 @@ class GraphBuilder {
   }
 
 }
-
-
-/*
-
-
- val existingChildWhichNewValueWouldFitIn = children.find { c =>
-      OperatorContains.local().execute(c.area.polygon, newArea.polygon, sr, null)
-    }
-
-    existingChildWhichNewValueWouldFitIn.map { c =>
-      // println("Found existing child which new value would fit in")
-      c.insert(newArea)
-
-    }.getOrElse {
-     // println("Inserted " + newArea.name + " into " + this.area.name)
-
-      val siblingsWhichFitInsideNewValue = this.children.filter { c =>
-        OperatorContains.local().execute(newArea.polygon, c.area.polygon, sr, null)
-      }
-
-
-
-      if (siblingsWhichFitInsideNewValue.nonEmpty) {
-        println("Found " + siblingsWhichFitInsideNewValue.size + " siblings to sift down into new value " + newArea.name + " " +
-          "(" + siblingsWhichFitInsideNewValue.map(s => s.area.name).mkString(", ") + ")")
-        children = children.--(siblingsWhichFitInsideNewValue)
-        siblingsWhichFitInsideNewValue.map { s =>
-          newNode.insert(s.area)
-        }
-      }
- */
