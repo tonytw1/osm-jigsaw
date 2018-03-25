@@ -1,6 +1,7 @@
 import java.io.{FileInputStream, ObjectInputStream}
 
 import com.esri.core.geometry._
+import graphing.GraphReader
 import input.TestValues
 import model.{Area, EntityRendering, GraphNode}
 import org.joda.time.{DateTime, Duration}
@@ -23,20 +24,8 @@ class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
     Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
       val pt = new Point(location._1, location._2)
 
-      def find(pt: Point, node: GraphNode, seenSoFar: mutable.Buffer[GraphNode]): mutable.Buffer[GraphNode] = {
-        val childEnclosingPoint = node.children.find(c => OperatorContains.local().execute(c.area.polygon, pt, sr, null))
-        childEnclosingPoint.map { c =>
-          find(pt, c, seenSoFar.+=:(node))
-        }.getOrElse {
-          if (OperatorContains.local().execute(node.area.polygon, pt, sr, null)) {
-            seenSoFar.+=:(node)
-          } else {
-            seenSoFar
-          }
-        }
-      }
+      var pathToSmallestEnclosingArea = new GraphReader().find(pt, head, mutable.Buffer())
 
-      var pathToSmallestEnclosingArea = find(pt, head, mutable.Buffer())
       println(pt + ": " + pathToSmallestEnclosingArea.map(n => n.area.name).mkString(", "))
     }
 

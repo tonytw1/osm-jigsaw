@@ -8,7 +8,6 @@ class GraphBuilder {
   val sr = SpatialReference.create(1)
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
-
     var i = 0
     var j = 0
 
