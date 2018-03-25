@@ -5,7 +5,7 @@ import input.TestValues
 import model.{Area, EntityRendering}
 import org.scalatest.FlatSpec
 
-class GeocoderSpec extends FlatSpec with TestValues with EntityRendering {
+class BruteForceAreaGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
 
   "geocode" should "build readable place names for point locations" in {
 

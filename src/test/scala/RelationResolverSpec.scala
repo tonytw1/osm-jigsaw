@@ -55,7 +55,6 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
     val areas = relationResolver.resolve(relations, allRelations, ways, nodes)
     println("Produced " + areas.size + " relation shapes")
 
-    // TODO serialize to disk for quick interation of the next step
     val oos = new ObjectOutputStream(new FileOutputStream(areasOutputFile))
     oos.writeObject(areas)
     oos.close
