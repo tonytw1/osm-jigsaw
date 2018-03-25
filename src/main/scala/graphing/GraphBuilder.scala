@@ -22,10 +22,10 @@ class GraphBuilder {
     }
 
     val earthArea = new Polygon()
-    earthArea.startPath(-180, -90)
-    earthArea.lineTo(180, -90)
-    earthArea.lineTo(180, 90)
-    earthArea.lineTo(-180, 90)
+    earthArea.startPath(-90, -180)
+    earthArea.lineTo(90, -180)
+    earthArea.lineTo(90, 180)
+    earthArea.lineTo(-90, 180)
     val earth = Area(name = "Earth", earthArea)
     var head = GraphNode(earth, None)
 
@@ -33,7 +33,6 @@ class GraphBuilder {
       siftDown(head, head.insert(a))
       showProgress
     }
-
 
     head
   }
