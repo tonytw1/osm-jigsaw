@@ -31,7 +31,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
     assert(empty.children.size == 0)
   }
 
-
   "graph builder" should "insert nodes as children of head" in {
     val graph = graphBuilder.buildGraph(Seq(large))
 

@@ -45,13 +45,11 @@ class RelationResolverSpec extends FlatSpec with TestValues with EntityRendering
       (i.getId, i)
     }.toMap
 
-
     val allRelations = relations.map( r => (r.getId, r)).toMap  // TODO Does this contain all of the subrelations?
-
     println("Found " + relations.size + " relations to process")
 
+    println("Resolving areas")
     val relationResolver = new RelationResolver()
-
     val areas = relationResolver.resolve(relations, allRelations, ways, nodes)
     println("Produced " + areas.size + " relation shapes")
 
