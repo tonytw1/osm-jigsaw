@@ -8,7 +8,6 @@ import org.scalatest.FlatSpec
 
 class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
 
-
   val graphBuilder = new GraphBuilder()
 
   val largeArea = new Polygon()
@@ -39,7 +38,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
     assert(graph.children.size == 1)
   }
 
-  "graph builder" should "shift new nodes down into enclosing siblings" in {
+  "graph builder" should "sift new nodes down into enclosing siblings" in {
     val graph = graphBuilder.buildGraph(Seq(large, small))
 
     assert(graph.children.size == 1)
@@ -48,7 +47,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
     assert(graph.children.head.children.head.area.name == "Small")
   }
 
-  "graph builder" should "meh" in {
+  "graph builder" should "sift existing nodes down into enclosing siblings which are inserted after them" in {
     val graph = graphBuilder.buildGraph(Seq(small, large))
 
     assert(graph.children.size == 1)
@@ -56,7 +55,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
     assert(graph.children.head.children.size == 1)
     assert(graph.children.head.children.head.area.name == "Small")
   }
-
 
   "graph builder" should "sort areas into an ordered graph" in {
 
@@ -83,7 +81,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
 
     println("_________________")
     dump(head, "")
-
 
     // Dump graph to disk
     val oos = new ObjectOutputStream(new FileOutputStream(graphOutputFile))
