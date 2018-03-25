@@ -7,6 +7,8 @@ import org.scalatest.FlatSpec
 
 class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
 
+  val sr = SpatialReference.create(1)
+
   "geocode" should "build readable place names for point locations" in {
 
     var graphFile = "/tmp/graph.ser"
@@ -18,16 +20,19 @@ class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
     println(head.area.name)
     println(head.children.map(n => n.area.name).mkString(", "))
 
+
     Seq(lyndhurst).map { location =>
       val pt = new Point(location._1, location._2)
 
+
       def find(pt: Point, node: GraphNode): Option[GraphNode] = {
-        val child = node.children.find(c => c.contains(pt))
+        val child = node.children.find(c => OperatorContains.local().execute(c.area.polygon, pt, sr, null))
         child.map { c =>
           println(c.area.name)
           find(pt, c)
+
         }.getOrElse{
-          if (node.contains(pt)) {
+          if (OperatorContains.local().execute(node.area.polygon, pt, sr, null)) {
             Some(node)
           } else {
             None
@@ -41,5 +46,7 @@ class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
 
     succeed
   }
+
+
 
 }
