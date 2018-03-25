@@ -7,7 +7,7 @@ lazy val root = (project in file(".")).
       scalaVersion := "2.12.3",
       version      := "0.1.0-SNAPSHOT"
     )),
-    name := "Hello",
+    name := "osm-parsing",
     libraryDependencies += "org.openstreetmap.osmosis" % "osmosis-pbf" % "0.46",
     libraryDependencies += "joda-time" % "joda-time" % "2.9.9",
     libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.1.0",
