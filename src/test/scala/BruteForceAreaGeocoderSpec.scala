@@ -3,6 +3,7 @@ import java.io.{FileInputStream, ObjectInputStream}
 import com.esri.core.geometry._
 import input.TestValues
 import model.{Area, EntityRendering}
+import org.joda.time.{DateTime, Duration}
 import org.scalatest.FlatSpec
 
 class BruteForceAreaGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
@@ -21,6 +22,9 @@ class BruteForceAreaGeocoderSpec extends FlatSpec with TestValues with EntityRen
     Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
       val pt = new Point(location._1, location._2)
 
+
+      val start = DateTime.now
+
       val areasContainingLocation = areas.filter { a =>
         OperatorContains.local().execute(a.polygon, pt, sr, null)
       }.toSeq
@@ -31,6 +35,7 @@ class BruteForceAreaGeocoderSpec extends FlatSpec with TestValues with EntityRen
       }
 
       println(location + ": " + sorted.map(a => a.name).mkString(", "))
+      println(new Duration(start, DateTime.now).getMillis)
     }
 
     succeed

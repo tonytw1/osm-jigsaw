@@ -3,6 +3,7 @@ import java.io.{FileInputStream, ObjectInputStream}
 import com.esri.core.geometry._
 import input.TestValues
 import model.{Area, EntityRendering, GraphNode}
+import org.joda.time.{DateTime, Duration}
 import org.scalatest.FlatSpec
 
 class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
@@ -21,7 +22,7 @@ class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
     println(head.children.map(n => n.area.name).mkString(", "))
 
 
-    Seq(lyndhurst).map { location =>
+    Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
       val pt = new Point(location._1, location._2)
 
 
@@ -40,8 +41,9 @@ class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
         }
       }
 
-      println(find(pt, head).map(n =>
-        n.area.name))
+      val start = DateTime.now
+      println(find(pt, head).map(n => n.area.name))
+      println(new Duration(start, DateTime.now).getMillis)
     }
 
     succeed
