@@ -6,6 +6,8 @@ import model.{Area, EntityRendering, GraphNode}
 import org.joda.time.{DateTime, Duration}
 import org.scalatest.FlatSpec
 
+import scala.collection.mutable
+
 class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
 
   val sr = SpatialReference.create(1)
@@ -18,37 +20,27 @@ class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
     val head = ois.readObject.asInstanceOf[GraphNode]
     ois.close
 
-    println(head.area.name)
-    println(head.children.map(n => n.area.name).mkString(", "))
-
-
     Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
       val pt = new Point(location._1, location._2)
 
-
-      def find(pt: Point, node: GraphNode): Option[GraphNode] = {
-        val child = node.children.find(c => OperatorContains.local().execute(c.area.polygon, pt, sr, null))
-        child.map { c =>
-          println(c.area.name)
-          find(pt, c)
-
-        }.getOrElse{
+      def find(pt: Point, node: GraphNode, seenSoFar: mutable.Buffer[GraphNode]): mutable.Buffer[GraphNode] = {
+        val childEnclosingPoint = node.children.find(c => OperatorContains.local().execute(c.area.polygon, pt, sr, null))
+        childEnclosingPoint.map { c =>
+          find(pt, c, seenSoFar.+=:(node))
+        }.getOrElse {
           if (OperatorContains.local().execute(node.area.polygon, pt, sr, null)) {
-            Some(node)
+            seenSoFar.+=:(node)
           } else {
-            None
+            seenSoFar
           }
         }
       }
 
-      val start = DateTime.now
-      println(find(pt, head).map(n => n.area.name))
-      println(new Duration(start, DateTime.now).getMillis)
+      var pathToSmallestEnclosingArea = find(pt, head, mutable.Buffer())
+      println(pt + ": " + pathToSmallestEnclosingArea.map(n => n.area.name).mkString(", "))
     }
 
     succeed
   }
-
-
 
 }
