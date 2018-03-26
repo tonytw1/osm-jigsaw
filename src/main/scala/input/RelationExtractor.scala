@@ -13,7 +13,7 @@ class RelationExtractor {
 
   def extract(inputFilePath: String, predicate: Entity => Boolean, outputFilepath: String) = {
 
-    def all(entity: Entity): Boolean  = true
+    def all(entity: Entity): Boolean = true
 
     val writer = new OsmWriter(outputFilepath)
 
@@ -40,31 +40,26 @@ class RelationExtractor {
     val wayIds = foundRelations.flatMap(r =>
       relationWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap)
     )
-
     println("Need " + wayIds.size + " ways to resolve relations")
-    println("Reading required ways")
+
+    println("Reading required ways to determine required nodes")
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && wayIds.contains(entity.getId)
-    val foundWays = mutable.Buffer[Entity]()
-    def addToFoundWays(entity: Entity) = foundWays.+=(entity)
-    new SinkRunner(inputFilePath, requiredWays, addToFoundWays).run
-    val ways = foundWays.toSet
-    println("Found " + ways.size + " ways")
 
-    println("Writing ways to output file")
-    writer.write(ways.toSeq)
-    println("Finished writing ways")
-
-    println("Extract node ids required to resolve ways")
-    val nodeIds = ways.flatMap { e =>
-      e match {
-        case w: Way => w.getWayNodes.asScala.map(wn => wn.getNodeId).toSet
+    val nodeIds = mutable.Buffer[Long]()
+    def persistWayAndExpandNodeIds(entity: Entity) = {
+      entity match {
+        case w: Way =>
+          writer.write(w)
+          val ns = w.getWayNodes.asScala.map(wn => wn.getNodeId)
+          nodeIds.++=(ns)
       }
     }
+    new SinkRunner(inputFilePath, requiredWays, persistWayAndExpandNodeIds).run
+    println("Found ways contains " + nodeIds.size + " nodes")
+
     println("Need " + nodeIds.size + " nodes to resolve relation ways")
-
-    println("Loading required nodes") // TODO could pass this through straight to output file
+    println("Loading required nodes")
     def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
-
     var foundNodes = 0L
     def addToFoundNodes(entity: Entity) = {
       writer.write(entity)
