@@ -98,10 +98,6 @@ object Main {
     oos.writeObject(areas)
     oos.close
 
-    areas.map { a =>
-      println(a.boundingBox)
-    }
-
     println("Dumped areas to file: " + outputFilepath)
   }
 

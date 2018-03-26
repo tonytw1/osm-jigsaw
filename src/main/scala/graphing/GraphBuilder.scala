@@ -9,20 +9,16 @@ class GraphBuilder extends BoundingBox {
   val sr = SpatialReference.create(1)
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
-
-    /*
     println("Presorting by area to assist sift down effectiveness")
     var c = 0
     val sorted = areas.sortBy { a =>
-      val area: Double = a.polygon.calculateArea2D()
-      println(a.name + ": " + area)
-      area
+      a.polygon.calculateArea2D()
     }
     println("Finished sorting")
-    sorted.map { s =>
+    sorted.reverse.map { s =>
       println(s.name)
     }
-    */
+
 
     var i = 0
     var j = 0
@@ -44,7 +40,7 @@ class GraphBuilder extends BoundingBox {
       }
     }
 
-    areas.map { a =>
+    sorted.map { a =>
       siftDown(head, head.insert(a))
       showProgress
     }
