@@ -12,10 +12,10 @@ class GraphReader {
   def find(pt: Point, node: GraphNode, seenSoFar: mutable.Buffer[GraphNode]): mutable.Buffer[GraphNode] = {
     val childEnclosingPoint = node.children.find(c => OperatorContains.local().execute(c.area.polygon, pt, sr, null))
     childEnclosingPoint.map { c =>
-      find(pt, c, seenSoFar.+=:(node))
+      find(pt, c, seenSoFar.+=(node))
     }.getOrElse {
       if (OperatorContains.local().execute(node.area.polygon, pt, sr, null)) {
-        seenSoFar.+=:(node)
+        seenSoFar.+=(node)
       } else {
         seenSoFar
       }

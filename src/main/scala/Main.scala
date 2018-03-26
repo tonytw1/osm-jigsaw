@@ -5,7 +5,6 @@ import input.{RelationExtractor, SinkRunner}
 import model.{Area, GraphNode}
 import org.apache.commons.cli._
 import org.openstreetmap.osmosis.core.domain.v0_6._
-import output.OsmWriter
 import resolving.RelationResolver
 
 import scala.collection.JavaConverters._
@@ -55,57 +54,46 @@ object Main {
       entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag // TODO ensure type is tested before more expensive tag operations
     }
 
-    val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, allAdminBoundaries)
+    val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, allAdminBoundaries, outputFilepath)
 
-    val relations = extractedRelationsWithComponents._1
-    val ways = extractedRelationsWithComponents._2
-    val nodes = extractedRelationsWithComponents._3
-
-    new OsmWriter(outputFilepath).write(relations.toSeq ++ ways.toSeq ++ nodes.toSeq)
-    println("Dumped selected relations and resolved components to: " + outputFilepath)
+    println("Done")
   }
-
 
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
     def all(entity: Entity): Boolean  = true
 
-    val allFound = mutable.Buffer[Entity]()
-    def addToFound(entity: Entity) = allFound.+=(entity)
+    val relations = mutable.Buffer[Relation]()
+    val ways = mutable.Buffer[Way]()
+    val nodes = mutable.Buffer[(Long, Double, Double)]()
+
+    def addToFound(entity: Entity) = {
+      entity match {
+        case r: Relation => relations.+=(r)
+        case w: Way => ways.+=(w)
+        case n: Node => nodes.+=((n.getId, n.getLatitude, n.getLatitude))
+        case _ =>
+      }
+    }
+
+    println("Loading entities")
     new SinkRunner(inputFilepath, all, addToFound).run
+    println("Finished loading entities")
 
-    val relations: Set[Relation] = allFound.flatMap { e =>
-      e match {
-        case r: Relation => Some(r)
-        case _ => None
-      }
-    }.toSet
-
-    val ways: Map[Long, Way] = allFound.flatMap { e =>
-      e match {
-        case w: Way => Some(w)
-        case _ => None
-      }
-    }.map { i =>
-      (i.getId, i)
-    }.toMap
-
-    val nodes = allFound.flatMap { e =>
-      e match {
-        case n: Node => Some(n)
-        case _ => None
-      }
-    }.map { i =>
-      (i.getId, i)
-    }.toMap
-
-    val allRelations = relations.map( r => (r.getId, r)).toMap  // TODO Does this contain all of the subrelations?
     println("Found " + relations.size + " relations to process")
+
+    println("Building relations lookup map")
+    val relationsMap = relations.map( r => (r.getId, r)).toMap  // TODO Does this contain all of the subrelations?
+    println("Building ways lookup map")
+    val waysMap = ways.map(w => w.getId -> w).toMap
+    println("Building nodes lookup map")
+    val nodesMap = nodes.map(n => n._1 -> n).toMap
 
     println("Resolving areas")
     val relationResolver = new RelationResolver()
-    val areas = relationResolver.resolve(relations, allRelations, ways, nodes)
+    val areas = relationResolver.resolve(relations.toSet, relationsMap, waysMap, nodesMap)
     println("Produced " + areas.size + " relation shapes")
 
+    println("Dumping areas to file")
     val oos = new ObjectOutputStream(new FileOutputStream(outputFilepath))
     oos.writeObject(areas)
     oos.close

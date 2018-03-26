@@ -13,20 +13,24 @@ class OsmWriter(outputFilePath: String) {
   val relationContainerFactory = new RelationContainerFactory()
   val wayContainerFactory = new WayContainerFactory()
 
-  def write(entities: Seq[Entity]) = {
-    val out = new FileOutputStream(outputFilePath)
-    var blockOutputStream: BlockOutputStream = new BlockOutputStream(out)
+  val out = new FileOutputStream(outputFilePath)
+  var blockOutputStream: BlockOutputStream = new BlockOutputStream(out)
 
-    val serializer = new OsmosisSerializer(blockOutputStream)
+  val serializer = new OsmosisSerializer(blockOutputStream)
 
-    entities.map { e =>
-      e match {
-        case n: Node => serializer.process(nodeContainerFactory.createContainer(n))
-        case r: Relation => serializer.process(relationContainerFactory.createContainer(r))
-        case w: Way => serializer.process(wayContainerFactory.createContainer(w))
-      }
+  def write(entities: Seq[Entity]): Unit = {
+    entities.map(e => write(e))
+  }
+
+  def write(entity: Entity): Unit = {
+    entity match {
+      case n: Node => serializer.process(nodeContainerFactory.createContainer(n))
+      case r: Relation => serializer.process(relationContainerFactory.createContainer(r))
+      case w: Way => serializer.process(wayContainerFactory.createContainer(w))
     }
+  }
 
+  def close(): Unit = {
     serializer.complete()
     serializer.close()
   }

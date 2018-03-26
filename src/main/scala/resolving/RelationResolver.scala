@@ -8,17 +8,17 @@ class RelationResolver extends EntityRendering {
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolve(relations: Set[Relation], allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, Node]): Set[Area] = {
+  def resolve(relations: Set[Relation], allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Long, Double, Double)]): Set[Area] = {
 
-    def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, Node]): Option[Area] = {
+    def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Long, Double, Double)]): Option[Area] = {
 
       val outerNodes = outerNodeMapper.outlineNodesFor(r, allRelations, ways, nodes)
 
-      outerNodes.headOption.map { h =>
+      outerNodes.headOption.map { n =>
         val area = new Polygon()
-        area.startPath(h.getLatitude, h.getLongitude)
+        area.startPath(n._2, n._3)
         outerNodes.drop(1).map { on =>
-          val pt = new Point(on.getLatitude, on.getLongitude)
+          val pt = new Point(on._2, on._3)
           area.lineTo(pt)
         }
         Area(render(r), area)
@@ -28,12 +28,13 @@ class RelationResolver extends EntityRendering {
     var i = 0L
     var j = 0
 
+    val total = relations.size
     relations.flatMap { r =>
       i = i + 1
       j = j + 1
       if (j == 1000) {
         j = 0
-        println(i)
+        println(i + " / " + total)
       }
 
       resolveRelation(r, allRelations, ways, nodes)

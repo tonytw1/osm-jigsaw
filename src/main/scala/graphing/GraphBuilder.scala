@@ -8,17 +8,21 @@ class GraphBuilder {
   val sr = SpatialReference.create(1)
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
+
+    println("Presorting by area to assist sift down effectiveness")
+    var c = 0
+    val sorted = areas.sortBy { a =>
+      val area: Double = a.polygon.calculateArea2D()
+      println(a.name + ": " + area)
+      area
+    }
+    println("Finished sorting")
+    sorted.map { s =>
+      println(s.name)
+    }
+
     var i = 0
     var j = 0
-
-    def showProgress: Unit = {
-      i = i + 1
-      j = j + 1
-      if (j == 100) {
-        println(i)
-        j = 0
-      }
-    }
 
     val earthArea = new Polygon()
     earthArea.startPath(-90, -180)
@@ -28,7 +32,17 @@ class GraphBuilder {
     val earth = Area(name = "Earth", earthArea)
     var head = GraphNode(earth, None)
 
-    areas.map { a =>
+    def showProgress: Unit = {
+      i = i + 1
+      j = j + 1
+      if (j == 100) {
+        println(i + ": " + head.children.size)
+        j = 0
+      }
+    }
+
+    sorted.map { a =>
+      println(a.name)
       siftDown(head, head.insert(a))
       showProgress
     }
@@ -58,7 +72,7 @@ class GraphBuilder {
     }
 
     existingSiblingWhichNewValueWouldFitIn.map { c =>
-      // println("Found sibling which new value " + b.area.name + " would fit in: " + c.area.name)
+      println("Found sibling which new value " + b.area.name + " would fit in: " + c.area.name)
       a.children = a.children - b
       c.children = c.children + b
       siftDown(c, b)  // TODO test case needed
