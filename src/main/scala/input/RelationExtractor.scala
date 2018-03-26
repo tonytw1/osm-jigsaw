@@ -29,20 +29,17 @@ class RelationExtractor {
     println("Cached " + allRelations.size + " relations")
 
     println("Extracting admin boundaries from all relations")
-    val foundRelations = allRelations.filter(predicate).toSet
+    val foundRelations = allRelations.filter(predicate)
     println("Found " + foundRelations.size + " admin boundaries")
 
     println("Writing relations to output file")
-    writer.write(foundRelations.toSeq)
+    writer.write(foundRelations)
     println("Finished writing relations")
 
+    println("Resolving relation ways")
     println("Creating relation lookup map")
     val relationsLookUpMap = allRelations.map(r => r.getId -> r).toMap
-
-    println("Resolving relation ways")
-    val wayIds = foundRelations.flatMap(r =>
-      relationWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap)
-    )
+    val wayIds = foundRelations.flatMap(r => relationWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap))
     println("Need " + wayIds.size + " ways to resolve relations")
 
     println("Reading required ways to determine required nodes")
@@ -53,8 +50,7 @@ class RelationExtractor {
       entity match {
         case w: Way =>
           writer.write(w)
-          val ns = w.getWayNodes.asScala.map(wn => wn.getNodeId)
-          nodeIds.++=(ns)
+          nodeIds.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
       }
     }
     new SinkRunner(inputFilePath, requiredWays, persistWayAndExpandNodeIds).run
