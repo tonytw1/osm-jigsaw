@@ -70,7 +70,7 @@ object Main {
       entity match {
         case r: Relation => relations.+=(r)
         case w: Way => ways.+=(w)
-        case n: Node => nodes.+=((n.getId, n.getLatitude, n.getLatitude))
+        case n: Node => nodes.+=((n.getId, n.getLatitude, n.getLongitude))
         case _ =>
       }
     }
@@ -97,6 +97,10 @@ object Main {
     val oos = new ObjectOutputStream(new FileOutputStream(outputFilepath))
     oos.writeObject(areas)
     oos.close
+
+    areas.map { a =>
+      println(a.boundingBox)
+    }
 
     println("Dumped areas to file: " + outputFilepath)
   }

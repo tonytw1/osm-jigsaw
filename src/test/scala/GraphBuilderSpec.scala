@@ -5,8 +5,9 @@ import graphing.GraphBuilder
 import input.TestValues
 import model.{Area, EntityRendering, GraphNode}
 import org.scalatest.FlatSpec
+import resolving.BoundingBox
 
-class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
+class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering with BoundingBox {
 
   val graphBuilder = new GraphBuilder()
 
@@ -15,14 +16,14 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering {
   largeArea.lineTo(10, -10)
   largeArea.lineTo(10, 10)
   largeArea.lineTo(-10, 10)
-  val large = Area(name = "Large", largeArea)
+  val large = Area(name = "Large", largeArea, boundingBoxFor(largeArea))
 
   val smallArea = new Polygon()
   smallArea.startPath(-1, -1)
   smallArea.lineTo(1, -1)
   smallArea.lineTo(1, 1)
   smallArea.lineTo(-1, 1)
-  val small = Area(name = "Small", smallArea)
+  val small = Area(name = "Small", smallArea, boundingBoxFor(smallArea))
 
   "graph builder" should "provide empty head node" in {
     val empty = graphBuilder.buildGraph(Seq())

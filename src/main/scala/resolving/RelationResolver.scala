@@ -4,7 +4,7 @@ import com.esri.core.geometry.{Point, Polygon}
 import model.{Area, EntityRendering}
 import org.openstreetmap.osmosis.core.domain.v0_6.{Node, Relation, Way}
 
-class RelationResolver extends EntityRendering {
+class RelationResolver extends EntityRendering with BoundingBox {
 
   val outerNodeMapper = new OutlineBuilder()
 
@@ -18,10 +18,10 @@ class RelationResolver extends EntityRendering {
         val area = new Polygon()
         area.startPath(n._2, n._3)
         outerNodes.drop(1).map { on =>
-          val pt = new Point(on._2, on._3)
-          area.lineTo(pt)
+          area.lineTo(new Point(on._2, on._3))
         }
-        Area(render(r), area)
+
+        Area(render(r), area, boundingBoxFor(area))
       }
     }
 

@@ -12,7 +12,7 @@ trait EntityRendering {
     val name = tags.find(t => t.getKey == "name")
 
     val flatten = Seq(nameEn, name).flatten
-    flatten.headOption.getOrElse(entity.getId + entity.getType.toString)
+    flatten.headOption.map(_.getValue).getOrElse(entity.getId + entity.getType.toString)
   }
 
 }

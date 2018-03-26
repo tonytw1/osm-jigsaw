@@ -2,13 +2,15 @@ package graphing
 
 import com.esri.core.geometry.{OperatorContains, Polygon, SpatialReference}
 import model.{Area, GraphNode}
+import resolving.BoundingBox
 
-class GraphBuilder {
+class GraphBuilder extends BoundingBox {
 
   val sr = SpatialReference.create(1)
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
 
+    /*
     println("Presorting by area to assist sift down effectiveness")
     var c = 0
     val sorted = areas.sortBy { a =>
@@ -20,6 +22,7 @@ class GraphBuilder {
     sorted.map { s =>
       println(s.name)
     }
+    */
 
     var i = 0
     var j = 0
@@ -29,7 +32,7 @@ class GraphBuilder {
     earthArea.lineTo(90, -180)
     earthArea.lineTo(90, 180)
     earthArea.lineTo(-90, 180)
-    val earth = Area(name = "Earth", earthArea)
+    val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth, None)
 
     def showProgress: Unit = {
@@ -41,8 +44,7 @@ class GraphBuilder {
       }
     }
 
-    sorted.map { a =>
-      println(a.name)
+    areas.map { a =>
       siftDown(head, head.insert(a))
       showProgress
     }
@@ -54,7 +56,7 @@ class GraphBuilder {
     var siblings = a.children.filter(c => c != b)
 
     val siblingsWhichFitInsideNewNode = siblings.filter { c =>
-      OperatorContains.local().execute(b.area.polygon, c.area.polygon, sr, null)
+      areaContains(b.area, c.area)
     }
 
     if (siblingsWhichFitInsideNewNode.nonEmpty) {
@@ -66,13 +68,11 @@ class GraphBuilder {
     }
 
     val existingSiblingWhichNewValueWouldFitIn = a.children.filter(c => c != b).filter { c =>
-      val r = OperatorContains.local().execute(c.area.polygon,  b.area.polygon, sr, null)
-      //println(c.area + " contains " + b.area + ": " + r)
-      r
+      areaContains(c.area, b.area)
     }
 
     existingSiblingWhichNewValueWouldFitIn.map { c =>
-      println("Found sibling which new value " + b.area.name + " would fit in: " + c.area.name)
+      //println("Found sibling which new value " + b.area.name + " would fit in: " + c.area.name)
       a.children = a.children - b
       c.children = c.children + b
       siftDown(c, b)  // TODO test case needed
@@ -82,6 +82,14 @@ class GraphBuilder {
 
   private def render(nodes: Set[GraphNode]): String = {
     nodes.map(s => s.area.name).mkString(", ")
+  }
+
+  private def areaContains(a: Area, b: Area) = {
+    if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
+      false
+    } else {
+      OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+    }
   }
 
 }
