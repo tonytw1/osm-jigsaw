@@ -12,6 +12,7 @@ class OsmReader(extractFilePath: String, sink: Sink) {
     val reader = new OsmosisReader(inputStream)
     reader.setSink(sink)
     reader.run()
+    println("Closing read")
     inputStream.close
   }
 
