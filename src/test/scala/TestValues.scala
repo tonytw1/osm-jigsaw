@@ -30,6 +30,10 @@ trait TestValues {
   val pembroke = (51.6756, -4.9122)
   val leeds = (53.7868, -1.5528)
 
+  val dublin = (53.34261, -6.25411)
+  val paris = (48.85433, 2.34859)
+  val granada = (37.17700, -3.58966)
+
   val newYork = (40.7583041,-74.0038414)
   val halfDome = (37.7459620, -119.5330757)
 

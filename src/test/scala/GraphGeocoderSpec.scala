@@ -15,18 +15,19 @@ class GraphGeocoderSpec extends FlatSpec with TestValues with EntityRendering {
 
   "geocode" should "build readable place names for point locations" in {
 
-    var graphFile = "/tmp/graph.ser"
-
+    var graphFile = "europe.graph.ser"
+    println("Loading graph")
     val ois = new ObjectInputStream(new FileInputStream(graphFile))
     val head = ois.readObject.asInstanceOf[GraphNode]
     ois.close
+    println("Loaded graph")
 
-    Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
+    Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, dublin, paris, granada, newYork, halfDome).map { location =>
       val pt = new Point(location._1, location._2)
 
       var pathToSmallestEnclosingArea = new GraphReader().find(pt, head, mutable.Buffer())
 
-      println(pt + ": " + pathToSmallestEnclosingArea.map(n => n.area.name).mkString(", "))
+      println(pt + ": " + pathToSmallestEnclosingArea.reverse.map(n => n.area.name).mkString(", "))
     }
 
     succeed
