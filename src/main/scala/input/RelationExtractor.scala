@@ -11,6 +11,9 @@ class RelationExtractor {
 
   private val relationWayResolver = new RelationWayResolver()
 
+  // Given an OSM pbf extract file and a predicate describing the relations we are interested in,
+  // scan the input and extract the relations. Resolve the sub relations, ways and nodes required to build
+  // these relations. Filter this entities into the output file.
   def extract(inputFilePath: String, predicate: Entity => Boolean, outputFilepath: String) = {
 
     def all(entity: Entity): Boolean = true
@@ -67,8 +70,9 @@ class RelationExtractor {
     }
     new SinkRunner(inputFilePath, requiredNodes, addToFoundNodes).run
     println("Found " + foundNodes + " nodes")
+    writer.close()
 
-    println("Finished output selected relations and resolved components to: " + outputFilepath)
+    println("Finished outputing selected relations and resolved components to: " + outputFilepath)
   }
 
 }
