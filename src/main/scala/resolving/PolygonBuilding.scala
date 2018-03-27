@@ -9,7 +9,7 @@ trait PolygonBuilding {
     polygon.startPath(topLeft._1, topLeft._2)
     polygon.lineTo(topLeft._1, bottomRight._2)
     polygon.lineTo(bottomRight._1, bottomRight._2)
-    polygon.lineTo(bottomRight._1, topLeft._1)
+    polygon.lineTo(bottomRight._1, topLeft._2)
     polygon
   }
 

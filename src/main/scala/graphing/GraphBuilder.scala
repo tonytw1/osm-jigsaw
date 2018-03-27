@@ -2,9 +2,9 @@ package graphing
 
 import com.esri.core.geometry.{OperatorContains, Polygon, SpatialReference}
 import model.{Area, GraphNode}
-import resolving.BoundingBox
+import resolving.{BoundingBox, PolygonBuilding}
 
-class GraphBuilder extends BoundingBox {
+class GraphBuilder extends BoundingBox with PolygonBuilding {
 
   val sr = SpatialReference.create(1)
 
@@ -22,11 +22,7 @@ class GraphBuilder extends BoundingBox {
     var j = 0
     val total = sorted.size
 
-    val earthArea = new Polygon()
-    earthArea.startPath(-90, -180)
-    earthArea.lineTo(90, -180)
-    earthArea.lineTo(90, 180)
-    earthArea.lineTo(-90, 180)
+    val earthArea = makePolygon((-180, 90),(180, -90))
     val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth, None)
 

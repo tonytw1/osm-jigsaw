@@ -22,4 +22,15 @@ class GraphReader {
     }
   }
 
+  def dump(node: GraphNode, soFar: String): Unit = {
+    val path = soFar + " / " + node.area.name
+    if (node.children.nonEmpty) {
+      node.children.map { c =>
+        dump(c, path)
+      }
+    } else {
+      println(path)
+    }
+  }
+
 }

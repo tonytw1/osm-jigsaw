@@ -15,7 +15,7 @@ class RelationResolver extends EntityRendering with BoundingBox {
       val outerNodes = outerNodeMapper.outlineNodesFor(r, allRelations, ways, nodes)
 
       outerNodes.headOption.map { n =>
-        val area = new Polygon()
+        val area = new Polygon()  // TODO push to trait
         area.startPath(n._2, n._3)
         outerNodes.drop(1).map { on =>
           area.lineTo(new Point(on._2, on._3))

@@ -1,15 +1,10 @@
 package resolving
 
-import com.esri.core.geometry._
 import org.scalatest.FlatSpec
 
-class BoundingBoxSpec extends FlatSpec with BoundingBox {
+class BoundingBoxSpec extends FlatSpec with BoundingBox with PolygonBuilding {
 
-  val largeArea = new Polygon()
-  largeArea.startPath(-8, -5)
-  largeArea.lineTo(10, -5)
-  largeArea.lineTo(10, 10)
-  largeArea.lineTo(-8, 10)
+  val largeArea = makePolygon((-8, 10), (10, -5))
 
   "bounding box" should "calculate bounding box for polygon" in {
     val box = boundingBoxFor(largeArea)
