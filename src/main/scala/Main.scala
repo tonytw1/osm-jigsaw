@@ -1,8 +1,8 @@
 import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
 
-import graphing.GraphBuilder
+import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
-import model.{Area, GraphNode}
+import model.Area
 import org.apache.commons.cli._
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import resolving.RelationResolver
@@ -108,19 +108,8 @@ object Main {
 
     val head = new GraphBuilder().buildGraph(areas.toSeq)
 
-    def dump(node: GraphNode, soFar: String): Unit = {
-      val path = soFar + " / " + node.area.name
-      if (node.children.nonEmpty) {
-        node.children.map { c =>
-          dump(c, path)
-        }
-      } else {
-        println(path)
-      }
-    }
-
     println("_________________")
-    dump(head, "")
+    new GraphReader().dump(head, "")
 
     // Dump graph to disk
     val oos = new ObjectOutputStream(new FileOutputStream(outputFilename))
