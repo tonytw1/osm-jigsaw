@@ -12,7 +12,7 @@ class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEnti
     val relation = loadTestEntity(LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION, "richmond.pbf").get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
-    val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(relation, allRelations)
+    val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
 
     assert(outerWayIds.length == 14)
   }
@@ -21,7 +21,7 @@ class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEnti
     val relation = loadTestEntity(NEW_YORK_CITY, "new-york-city.pbf").get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
-    val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(relation, allRelations)
+    val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
 
     assert(outerWayIds.contains(444034102L))
     assert(outerWayIds.contains(61602969L))

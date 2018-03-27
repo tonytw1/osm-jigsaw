@@ -10,7 +10,7 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink
 
 class OsmEntitySink(predicate: Entity => Boolean, callback: Entity => Unit) extends Sink {
 
-  val step = 1000000
+  val step = 10000000
   val nf = new DecimalFormat()
 
   var i = 0L

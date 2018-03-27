@@ -43,7 +43,8 @@ class OutlineBuilder {
     }
 
     try {
-      val outerWays = relationResolver.resolveOuterWayIdsFor(r, allRelations).map { wid =>
+      val rs = relationResolver.expandRelation(r, allRelations)
+      val outerWays = relationResolver.resolveOuterWayIdsFor(rs, allRelations).map { wid =>
         ways.get(wid)
       }.flatten // TODO handle missing ways
 
