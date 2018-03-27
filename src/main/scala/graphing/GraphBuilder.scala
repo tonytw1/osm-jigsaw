@@ -9,19 +9,18 @@ class GraphBuilder extends BoundingBox {
   val sr = SpatialReference.create(1)
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
+    println("Building graph from " + areas.size + " areas")
     println("Presorting by area to assist sift down effectiveness")
     var c = 0
     val sorted = areas.sortBy { a =>
-      a.polygon.calculateArea2D()
+      areaOf(a)
     }
+    val inOrder = sorted.reverse
     println("Finished sorting")
-    sorted.reverse.map { s =>
-      println(s.name)
-    }
-
 
     var i = 0
     var j = 0
+    val total = sorted.size
 
     val earthArea = new Polygon()
     earthArea.startPath(-90, -180)
@@ -35,12 +34,12 @@ class GraphBuilder extends BoundingBox {
       i = i + 1
       j = j + 1
       if (j == 100) {
-        println(i + ": " + head.children.size)
+        println(i + "/" + total + ": " + head.children.size)
         j = 0
       }
     }
 
-    sorted.map { a =>
+    inOrder.map { a =>
       siftDown(head, head.insert(a))
       showProgress
     }
@@ -86,6 +85,10 @@ class GraphBuilder extends BoundingBox {
     } else {
       OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
     }
+  }
+
+  def areaOf(area: Area): Double = {
+    Math.abs(area.polygon.calculateArea2D())
   }
 
 }

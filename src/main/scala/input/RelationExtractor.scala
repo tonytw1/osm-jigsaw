@@ -21,9 +21,11 @@ class RelationExtractor {
     val writer = new OsmWriter(outputFilepath)
 
     val allRelations = mutable.Buffer[Relation]()
-    def addToAllRelations(entity: Entity) = entity match {
-      case r: Relation => allRelations.+=(r)
-      case _ =>
+    def addToAllRelations(entity: Entity) = {
+        entity match {
+          case r: Relation => allRelations.+=(r)
+          case _ =>
+      }
     }
     new SinkRunner(inputFilePath, all, addToAllRelations).run
     println("Cached " + allRelations.size + " relations")
@@ -39,25 +41,27 @@ class RelationExtractor {
     println("Resolving relation ways")
     println("Creating relation lookup map")
     val relationsLookUpMap = allRelations.map(r => r.getId -> r).toMap
-    val wayIds = foundRelations.flatMap(r => relationWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap))
+    val wayIds = foundRelations.flatMap(r => relationWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap)).toSet
     println("Need " + wayIds.size + " ways to resolve relations")
 
     println("Reading required ways to determine required nodes")
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && wayIds.contains(entity.getId)
 
-    val nodeIds = mutable.Buffer[Long]()
+    val nodeIds = mutable.Set[Long]()
     def persistWayAndExpandNodeIds(entity: Entity) = {
-      entity match {
-        case w: Way =>
-          writer.write(w)
-          nodeIds.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
-      }
+        entity match {
+          case w: Way =>
+            writer.write(w)
+            val ids = w.getWayNodes.asScala.map(wn => wn.getNodeId)
+            nodeIds.++=(ids)
+        }
     }
     new SinkRunner(inputFilePath, requiredWays, persistWayAndExpandNodeIds).run
     println("Found ways contains " + nodeIds.size + " nodes")
 
     println("Need " + nodeIds.size + " nodes to resolve relation ways")
     println("Loading required nodes")
+
     def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
     var foundNodes = 0L
     def addToFoundNodes(entity: Entity) = {
