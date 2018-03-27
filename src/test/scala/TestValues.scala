@@ -5,7 +5,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 trait TestValues {
 
   // Correctly formed with some convex bits
-  val LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION = (151795, EntityType.Relation)
+  val LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION = (151795L, EntityType.Relation)
 
   // Relation with out of order outer ways
   val TODMORDEN_RELATION = (7181767, EntityType.Relation)
@@ -14,7 +14,7 @@ trait TestValues {
   val NAYARIT = (7695827, EntityType.Relation)
 
   // Has several small island rings which could be trumping the main area
-  val NEW_YORK_CITY = (175905, EntityType.Relation)
+  val NEW_YORK_CITY = (175905L, EntityType.Relation)
 
   // Okmulgee 184191 broken relation -all inners
   // California (165475) first way is part of santa rosa island - hence the state ring is probably ignored

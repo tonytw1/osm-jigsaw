@@ -1,7 +1,7 @@
 package resolving
 
 import input.TestValues
-import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, Relation}
+import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, EntityType, Relation}
 import org.scalatest.FlatSpec
 
 class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEntities {
@@ -9,7 +9,7 @@ class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEnti
   val relationWayResolver = new RelationWayResolver()
 
   "relation resolver" should "return all outer way ids for a simple relation" in {
-    val relation = loadTestEntity().get.asInstanceOf[Relation]
+    val relation = loadTestEntity(LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION, "richmond.pbf").get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
     val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(relation, allRelations)
@@ -17,10 +17,22 @@ class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEnti
     assert(outerWayIds.length == 14)
   }
 
-  def loadTestEntity(): Option[Entity] = {
-    def richmond(entity: Entity): Boolean = entity.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1 &&
-      entity.getType == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._2
-    loadEntities("richmond.pbf", richmond).headOption
+  "relation resolver" should "deal with a relation with more than one ring" in {
+    val relation = loadTestEntity(NEW_YORK_CITY, "new-york-city.pbf").get.asInstanceOf[Relation]
+    val allRelations = Map(relation.getId -> relation)
+
+    val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(relation, allRelations)
+
+    assert(outerWayIds.contains(444034102L))
+    assert(outerWayIds.contains(61602969L))
+
+    // Should not contain the Liberty Island way
+    assert(!outerWayIds.contains(4820654L))
+  }
+
+  def loadTestEntity(target: (Long, EntityType), file: String): Option[Entity] = {
+    def predicate(entity: Entity): Boolean = entity.getId == target._1 && entity.getType == target._2
+    loadEntities(file, predicate).headOption
   }
 
 }
