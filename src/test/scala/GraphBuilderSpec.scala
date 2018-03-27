@@ -1,28 +1,17 @@
-import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
-
-import com.esri.core.geometry._
 import graphing.GraphBuilder
 import input.TestValues
-import model.{Area, EntityRendering, GraphNode}
+import model.{Area, EntityRendering}
 import org.scalatest.FlatSpec
-import resolving.BoundingBox
+import resolving.{BoundingBox, PolygonBuilding}
 
-class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering with BoundingBox {
+class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering with BoundingBox with PolygonBuilding {
 
   val graphBuilder = new GraphBuilder()
 
-  val largeArea = new Polygon()
-  largeArea.startPath(-10, -10)
-  largeArea.lineTo(10, -10)
-  largeArea.lineTo(10, 10)
-  largeArea.lineTo(-10, 10)
+  val largeArea = makePolygon((-10, 10), (10, -10))
   val large = Area(name = "Large", largeArea, boundingBoxFor(largeArea))
 
-  val smallArea = new Polygon()
-  smallArea.startPath(-1, -1)
-  smallArea.lineTo(1, -1)
-  smallArea.lineTo(1, 1)
-  smallArea.lineTo(-1, 1)
+  val smallArea = makePolygon((-1, 1), (1, -1))
   val small = Area(name = "Small", smallArea, boundingBoxFor(smallArea))
 
   "graph builder" should "provide empty head node" in {

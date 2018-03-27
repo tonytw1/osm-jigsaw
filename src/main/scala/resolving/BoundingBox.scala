@@ -21,4 +21,5 @@ trait BoundingBox {
 
     (minX, maxY, maxX, minY)
   }
+
 }
