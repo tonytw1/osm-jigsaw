@@ -56,40 +56,4 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(graph.children.head.children.head.area.name == "Small")
   }
 
-  "graph builder" should "sort areas into an ordered graph" in {
-
-    var areasOutputFile = "/tmp/areas.ser"
-    var graphOutputFile = "/tmp/graph.ser"
-
-    val ois = new ObjectInputStream(new FileInputStream(areasOutputFile))
-    val areas: Set[Area] = ois.readObject.asInstanceOf[Set[Area]] // TODO order?
-    ois.close
-
-
-    val head = new GraphBuilder().buildGraph(areas.toSeq)
-
-    def dump(node: GraphNode, soFar: String): Unit = {
-      val path = soFar + " / " + node.area.name
-      if (node.children.nonEmpty) {
-        node.children.map { c =>
-          dump(c, path)
-        }
-      } else {
-        println(path)
-      }
-    }
-
-    println("_________________")
-    dump(head, "")
-
-    // Dump graph to disk
-    val oos = new ObjectOutputStream(new FileOutputStream(graphOutputFile))
-    oos.writeObject(head)
-    oos.close
-    println("Dumped graph to file: " + graphOutputFile)
-
-    succeed
-  }
-
-
 }
