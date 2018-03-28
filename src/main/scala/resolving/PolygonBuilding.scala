@@ -1,6 +1,6 @@
 package resolving
 
-import com.esri.core.geometry.Polygon
+import com.esri.core.geometry.{Point, Polygon}
 
 trait PolygonBuilding {
 
@@ -11,6 +11,17 @@ trait PolygonBuilding {
     polygon.lineTo(bottomRight._1, bottomRight._2)
     polygon.lineTo(bottomRight._1, topLeft._2)
     polygon
+  }
+
+  def areaForPoints(outerPoints: Seq[(Double, Double)]): Option[Polygon] = {
+    outerPoints.headOption.map { n =>
+      val area = new Polygon()
+      area.startPath(n._1, n._2)
+      outerPoints.drop(1).map { on =>
+        area.lineTo(new Point(on._1, on._2))
+      }
+      area
+    }
   }
 
 }
