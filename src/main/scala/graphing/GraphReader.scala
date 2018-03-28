@@ -22,8 +22,8 @@ class GraphReader {
     }
   }
 
-  def dump(node: GraphNode, soFar: String): Unit = {
-    val path = soFar + " / " + node.area.name
+  def dump(node: GraphNode, soFar: String = ""): Unit = {
+    val path = soFar + " / " + node.area.name + node.area.osmId
     if (node.children.nonEmpty) {
       node.children.map { c =>
         dump(c, path)

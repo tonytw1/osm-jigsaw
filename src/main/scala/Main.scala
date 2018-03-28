@@ -2,7 +2,7 @@ import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutp
 
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
-import model.Area
+import model.{Area, GraphNode}
 import org.apache.commons.cli._
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import resolving.RelationResolver
@@ -26,19 +26,11 @@ object Main {
     val outputFilepath = cmd.getArgList.get(1) // TODO validatio required
 
     step match {
-      case "extract" =>
-        extract(inputFilepath, outputFilepath)
-
-      case "areas" =>
-        resolveAreas(inputFilepath, outputFilepath)
-
-      case "graph" =>
-        buildGraph(inputFilepath, outputFilepath)
-
-      case _ => {
-        println("Unknown step")
-        // TODO exit code
-      }
+      case "extract" => extract(inputFilepath, outputFilepath)
+      case "areas" => resolveAreas(inputFilepath, outputFilepath)
+      case "graph" => buildGraph(inputFilepath, outputFilepath)
+      case "dump" => dumpGraph(inputFilepath)
+      case _ => println("Unknown step") // TODO exit code
     }
   }
 
@@ -103,7 +95,7 @@ object Main {
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
     val ois = new ObjectInputStream(new FileInputStream(inputFilename))
-    val areas: Set[Area] = ois.readObject.asInstanceOf[Set[Area]] // TODO order?
+    val areas = ois.readObject.asInstanceOf[Set[Area]] // TODO order?
     ois.close
 
     val head = new GraphBuilder().buildGraph(areas.toSeq)
@@ -117,6 +109,14 @@ object Main {
     oos.close
 
     println("Dumped graph to file: " + outputFilename)
+  }
+
+  def dumpGraph(inputFilename: String) = {
+    val ois = new ObjectInputStream(new FileInputStream(inputFilename))
+    val graph = ois.readObject.asInstanceOf[GraphNode]
+    ois.close
+
+    new GraphReader().dump(graph)
   }
 
 }
