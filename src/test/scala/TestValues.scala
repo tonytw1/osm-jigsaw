@@ -16,9 +16,24 @@ trait TestValues {
   // Has several small island rings which could be trumping the main area
   val NEW_YORK_CITY = (175905L, EntityType.Relation)
 
+  // Has a subarea
+  val BOURNEMOUTH = (130884L, EntityType.Relation)
+
   // Okmulgee 184191 broken relation -all inners
   // California (165475) first way is part of santa rosa island - hence the state ring is probably ignored
   // Cruz de los Esteros (5349509 Closed loop but ways have no roles
+
+  /* Europe - recursive loop
+  Relation 6483281 has 2 relation members which are relations
+  Recursing to resolve subrelation: RelationMember(Relation with id 5400348 in the role 'subarea')
+  Relation 5400348 has 4 relation members which are relations
+  Recursing to resolve subrelation: RelationMember(Relation with id 6483276 in the role 'subarea')
+  Recursing to resolve subrelation: RelationMember(Relation with id 6483277 in the role 'subarea')
+  Recursing to resolve subrelation: RelationMember(Relation with id 6483278 in the role 'subarea')
+  Recursing to resolve subrelation: RelationMember(Relation with id 6483281 in the role 'subarea')
+  Relation 6483281 has 2 relation members which are relations
+  */
+  val VILLA_NOVA_DA_BARQUINHA = (6483281L, EntityType.Relation) // Lists it's parent as a subarea
 
   // Known location points
   val london = (51.506, -0.106)

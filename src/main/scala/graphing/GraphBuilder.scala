@@ -44,29 +44,30 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
-    var siblings = a.children.filter(c => c != b)
-
-    val siblingsWhichFitInsideNewNode = siblings.filter { c =>
-      areaContains(b.area, c.area)
+    var siblings = a.children
+    val siblingsWhichFitInsideNewNode = siblings.filter(c => c != b).filter { s =>
+      areaContains(b.area, s.area)
     }
 
     if (siblingsWhichFitInsideNewNode.nonEmpty) {
-      println("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
+      println("Found " + siblingsWhichFitInsideNewNode.size +  siblingsWhichFitInsideNewNode.map(i => i.area.name) + " siblings to sift down into new value " + b.area.name + " " +
         "(" + render(siblingsWhichFitInsideNewNode) + ")")
 
       a.children = a.children -- siblingsWhichFitInsideNewNode
-      b.children = b.children ++ siblingsWhichFitInsideNewNode
+      b.children = b.children ++ siblingsWhichFitInsideNewNode  // TODO parent not set
     }
 
-    val existingSiblingWhichNewValueWouldFitIn = a.children.filter(c => c != b).filter { c =>
-      areaContains(c.area, b.area)
+    val existingSiblingWhichNewValueWouldFitIn = a.children.filter(c => c != b).find { s =>
+      areaContains(s.area, b.area)
     }
 
-    existingSiblingWhichNewValueWouldFitIn.map { c =>
-      //println("Found sibling which new value " + b.area.name + " would fit in: " + c.area.name)
+    existingSiblingWhichNewValueWouldFitIn.map { s =>
+      println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
       a.children = a.children - b
-      c.children = c.children + b
-      siftDown(c, b)  // TODO test case needed
+      s.children = s.children + b
+      siftDown(s, b)  // TODO test case needed
+
+
     }
 
   }
@@ -76,11 +77,13 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
   }
 
   private def areaContains(a: Area, b: Area) = {
-    if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
-      false
-    } else {
-      OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
-    }
+   // if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
+    //  false
+    //} else {
+      val r = OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+   // println("!!!! " + a.name + " v " + b.name + ": " + r)
+      r
+    //}
   }
 
   def areaOf(area: Area): Double = {

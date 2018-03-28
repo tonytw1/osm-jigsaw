@@ -15,9 +15,6 @@ class RelationExtractor {
   // scan the input and extract the relations. Resolve the sub relations, ways and nodes required to build
   // these relations. Filter this entities into the output file.
   def extract(inputFilePath: String, predicate: Entity => Boolean, outputFilepath: String) = {
-
-    def all(entity: Entity): Boolean = true
-
     val writer = new OsmWriter(outputFilepath)
 
     val allRelations = mutable.Buffer[Relation]()
@@ -27,6 +24,7 @@ class RelationExtractor {
           case _ =>
       }
     }
+    def all(entity: Entity): Boolean = true
     new SinkRunner(inputFilePath, all, addToAllRelations).run
     println("Cached " + allRelations.size + " relations")
 

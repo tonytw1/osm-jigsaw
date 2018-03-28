@@ -22,6 +22,17 @@ class GraphReader {
     }
   }
 
+  def all(node: GraphNode, output: mutable.Buffer[Seq[GraphNode]], parents: Seq[GraphNode] = Seq()): Unit = {
+    val path: Seq[GraphNode] = parents :+ node
+    if (node.children.isEmpty) {
+      output.+=(path)
+    } else {
+      node.children.map { c =>
+        all(c, output, path)
+      }
+    }
+  }
+
   def dump(node: GraphNode, soFar: String = ""): Unit = {
     val path = soFar + " / " + node.area.name + node.area.osmId
     if (node.children.nonEmpty) {

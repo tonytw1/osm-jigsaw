@@ -1,4 +1,4 @@
-import graphing.GraphBuilder
+import graphing.{GraphBuilder, GraphReader}
 import input.TestValues
 import model.{Area, EntityRendering}
 import org.scalatest.FlatSpec
@@ -10,6 +10,9 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
 
   val largeArea = makePolygon((-10, 10), (10, -10))
   val large = Area(name = "Large", largeArea, boundingBoxFor(largeArea))
+
+  val mediumArea = makePolygon((-2, 2), (2, -2))
+  val medium = Area(name = "Medium", mediumArea, boundingBoxFor(mediumArea))
 
   val smallArea = makePolygon((-1, 1), (1, -1))
   val small = Area(name = "Small", smallArea, boundingBoxFor(smallArea))
@@ -44,5 +47,43 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(graph.children.head.children.size == 1)
     assert(graph.children.head.children.head.area.name == "Small")
   }
+
+  "graph builder" should "trickle down" in {
+    val graph = graphBuilder.buildGraph(Seq(large, medium, small))
+
+    assert(graph.children.size == 1)
+    assert(graph.children.head.area.name == "Large")
+    assert(graph.children.head.children.size == 1)
+    assert(graph.children.head.children.head.area.name == "Medium")
+    assert(graph.children.head.children.size == 1)
+    assert(graph.children.head.children.head.children.head.area.name == "Small")
+  }
+
+  "graph builder" should "trickle up" in {
+    val graph = graphBuilder.buildGraph(Seq(small, medium, large))
+
+    new GraphReader().dump(graph)
+
+    assert(graph.children.size == 1)
+    assert(graph.children.head.area.name == "Large")
+    assert(graph.children.head.children.size == 1)
+    assert(graph.children.head.children.head.area.name == "Medium")
+    assert(graph.children.head.children.size == 1)
+    assert(graph.children.head.children.head.children.head.area.name == "Small")
+  }
+
+  "graph builder" should "trickle up2" in {
+    val graph = graphBuilder.buildGraph(Seq(small, large, medium))
+
+    new GraphReader().dump(graph)
+
+    assert(graph.children.size == 1)
+    assert(graph.children.head.area.name == "Large")
+    assert(graph.children.head.children.size == 1)
+    assert(graph.children.head.children.head.area.name == "Medium")
+    assert(graph.children.head.children.size == 1)
+    assert(graph.children.head.children.head.children.head.area.name == "Small")
+  }
+
 
 }

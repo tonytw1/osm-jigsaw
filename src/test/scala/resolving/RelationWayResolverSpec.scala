@@ -30,6 +30,19 @@ class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEnti
     assert(!outerWayIds.contains(4820654L))
   }
 
+  "relation resolver" should "deal with relation with a subarea" in {
+
+    val relation = loadTestEntity(BOURNEMOUTH, "bournemouth.pbf").get.asInstanceOf[Relation]
+    val allRelations = Map(relation.getId -> relation)
+
+    val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
+    println(outerWayIds)
+    println(outerWayIds.size)
+
+    assert(!outerWayIds.contains(265287540L))
+    assert(outerWayIds.contains(199769970L))
+  }
+
   def loadTestEntity(target: (Long, EntityType), file: String): Option[Entity] = {
     def predicate(entity: Entity): Boolean = entity.getId == target._1 && entity.getType == target._2
     loadEntities(file, predicate).headOption
