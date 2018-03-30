@@ -9,7 +9,7 @@ class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEnti
   val relationWayResolver = new RelationWayResolver()
 
   "relation resolver" should "return all outer way ids for a simple relation" in {
-    val relation = loadTestEntity(LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION, "richmond.pbf").get.asInstanceOf[Relation]
+    val relation = loadTestEntity(LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION, "gb-test-data.pbf").get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
     val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
@@ -31,7 +31,7 @@ class RelationWayResolverSpec extends FlatSpec with TestValues with LoadTestEnti
   }
 
   "relation resolver" should "deal with relation with a subarea" in {
-    val relation = loadTestEntity(BOURNEMOUTH, "bournemouth.pbf").get.asInstanceOf[Relation]
+    val relation = loadTestEntity(BOURNEMOUTH, "gb-test-data.pbf").get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
     val outerWayIds = relationWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
