@@ -23,13 +23,16 @@ object Main {
     val step = cmd.getOptionValue(STEP)
 
     val inputFilepath = cmd.getArgList.get(0) // TODO validation required
-    val outputFilepath = cmd.getArgList.get(1) // TODO validatio required
 
     step match {
-      case "extract" => extract(inputFilepath, outputFilepath)
-      case "areas" => resolveAreas(inputFilepath, outputFilepath)
-      case "graph" => buildGraph(inputFilepath, outputFilepath)
+      case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
+      case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
+      case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "dump" => dumpGraph(inputFilepath)
+      case "rels" => {
+        val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
+        extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
+      }
       case _ => println("Unknown step") // TODO exit code
     }
   }
@@ -47,6 +50,18 @@ object Main {
     }
 
     val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, allAdminBoundaries, outputFilepath)
+
+    println("Done")
+  }
+
+  def extractRelations(inputFilepath: String, outputFilepath: String, relationIds: Seq[Long]): Unit = {
+    println(relationIds)
+
+    def selectedRelations(entity: Entity): Boolean = {
+      entity.getType == EntityType.Relation && relationIds.contains(entity.getId)
+    }
+
+    val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, selectedRelations, outputFilepath)
 
     println("Done")
   }
