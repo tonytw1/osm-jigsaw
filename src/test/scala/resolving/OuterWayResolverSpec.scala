@@ -36,6 +36,7 @@ class OuterWayResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
 
+    assert(outerWayIds.size == 59)
     assert(outerWayIds.contains(444034102L))
     assert(outerWayIds.contains(61602969L))
 
