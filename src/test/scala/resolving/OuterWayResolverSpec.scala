@@ -24,9 +24,8 @@ class OuterWayResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     val allRelations = Map(relation.getId -> relation)
 
     val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
-    println(outerWayIds)
-    println(outerWayIds.size)
 
+    assert(outerWayIds.size == 17)
     assert(!outerWayIds.contains(265287540L))
     assert(outerWayIds.contains(199769970L))
   }
