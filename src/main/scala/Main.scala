@@ -100,14 +100,10 @@ object Main {
 
     val head = new GraphBuilder().buildGraph(areas.toSeq)
 
-    println("_________________")
-    new GraphReader().dump(head, "")
-
     // Dump graph to disk
     val oos = new ObjectOutputStream(new FileOutputStream(outputFilename))
     oos.writeObject(head)
     oos.close
-
     println("Dumped graph to file: " + outputFilename)
   }
 
