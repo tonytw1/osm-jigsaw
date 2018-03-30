@@ -7,7 +7,9 @@ import scala.collection.mutable
 
 trait LoadTestEntities {
 
-  def loadEntities(filepath: String, predicate: Entity => Boolean): Seq[Entity] = {
+  private def all(entity: Entity): Boolean = true
+
+  def loadEntities(filepath: String, predicate: Entity => Boolean = all): Seq[Entity] = {
     var found = mutable.Buffer[Entity]()
     def addToBuffer(entity: Entity) = found = found.+=(entity)
     new SinkRunner(filepath, predicate, addToBuffer).run
