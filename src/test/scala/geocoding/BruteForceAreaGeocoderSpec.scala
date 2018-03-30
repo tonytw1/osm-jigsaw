@@ -1,3 +1,5 @@
+package geocoding
+
 import java.io.{FileInputStream, ObjectInputStream}
 
 import com.esri.core.geometry._
@@ -21,7 +23,6 @@ class BruteForceAreaGeocoderSpec extends FlatSpec with TestValues with EntityRen
 
     Seq(london, twickenham, bournmouth, lyndhurst, edinburgh, newport, pembroke, leeds, newYork, halfDome).map { location =>
       val pt = new Point(location._1, location._2)
-
 
       val start = DateTime.now
 

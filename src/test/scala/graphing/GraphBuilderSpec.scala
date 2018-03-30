@@ -1,4 +1,5 @@
-import graphing.{GraphBuilder, GraphReader}
+package graphing
+
 import input.TestValues
 import model.{Area, EntityRendering}
 import org.scalatest.FlatSpec
