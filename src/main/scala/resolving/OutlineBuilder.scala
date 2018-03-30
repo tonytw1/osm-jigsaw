@@ -34,6 +34,10 @@ class OutlineBuilder {
           }
           available.remove(next)
         }
+
+        if (available.nonEmpty) {
+          println("Relation " + r.getId + " had " + available.size + " available way groups after joining ways")
+        }
         joined
 
       } else {
