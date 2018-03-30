@@ -19,6 +19,9 @@ trait TestValues {
   // Has a subarea
   val BOURNEMOUTH = (130884L, EntityType.Relation)
 
+  // Has two non overlapping rings
+  //251411
+
   // Okmulgee 184191 broken relation -all inners
   // California (165475) first way is part of santa rosa island - hence the state ring is probably ignored
   // Cruz de los Esteros (5349509 Closed loop but ways have no roles
