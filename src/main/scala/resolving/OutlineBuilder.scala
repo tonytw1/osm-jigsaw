@@ -7,7 +7,8 @@ import scala.collection.mutable
 
 class OutlineBuilder {
 
-  val relationResolver = new RelationWayResolver()
+  val relationExpander = new RelationExpander()
+  val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
   def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Long, Double, Double)]): Seq[(Long, Double, Double)] = { // TODO handle missing Ways and nodes
@@ -47,8 +48,8 @@ class OutlineBuilder {
     }
 
     try {
-      val rs = relationResolver.expandRelation(r, allRelations)
-      val outerWays = relationResolver.resolveOuterWayIdsFor(rs, allRelations).map { wid =>
+      val rs = relationExpander.expandRelation(r, allRelations)
+      val outerWays = outerWayResolver.resolveOuterWayIdsFor(rs, allRelations).map { wid =>
         ways.get(wid)
       }.flatten // TODO handle missing ways
 

@@ -2,14 +2,15 @@ package input
 
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.RelationWayResolver
+import resolving.{OuterWayResolver, RelationExpander}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class RelationExtractor {
 
-  private val relationWayResolver = new RelationWayResolver()
+  private val relationExpander = new RelationExpander()
+  private val outerWayResolver = new OuterWayResolver()
 
   // Given an OSM pbf extract file and a predicate describing the relations we are interested in,
   // scan the input and extract the relations. Resolve the sub relations, ways and nodes required to build
@@ -36,10 +37,10 @@ class RelationExtractor {
     println("Creating relation lookup map")
     val relationsLookUpMap = allRelations.map(r => r.getId -> r).toMap
 
-    val wayIds = foundRelations.flatMap{ r =>
-      val expanded = relationWayResolver.expandRelation(r, relationsLookUpMap)
+    val wayIds = foundRelations.flatMap { r =>
+      val expanded = relationExpander.expandRelation(r, relationsLookUpMap)
       writer.write(expanded)
-      relationWayResolver.resolveOuterWayIdsFor(expanded, relationsLookUpMap)
+      outerWayResolver.resolveOuterWayIdsFor(expanded, relationsLookUpMap)
     }.toSet
 
     println("Need " + wayIds.size + " ways to resolve relations")

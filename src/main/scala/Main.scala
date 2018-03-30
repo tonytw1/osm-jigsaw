@@ -82,7 +82,7 @@ object Main {
 
     println("Resolving areas")
     val relationResolver = new RelationResolver()
-    val areas = relationResolver.resolve(relations.toSet, relationsMap, waysMap, nodesMap)
+    val areas = relationResolver.resolveAreas(relations.toSet, relationsMap, waysMap, nodesMap)
     println("Produced " + areas.size + " relation shapes")
 
     println("Dumping areas to file")
