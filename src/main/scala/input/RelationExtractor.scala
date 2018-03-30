@@ -40,7 +40,9 @@ class RelationExtractor {
     val wayIds = foundRelations.flatMap { r =>
       val expanded = relationExpander.expandRelation(r, relationsLookUpMap)
       writer.write(expanded)
-      outerWayResolver.resolveOuterWayIdsFor(expanded, relationsLookUpMap)
+      expanded.flatMap { r =>
+        outerWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap)
+      }
     }.toSet
 
     println("Need " + wayIds.size + " ways to resolve relations")

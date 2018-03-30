@@ -6,12 +6,12 @@ import scala.collection.JavaConverters._
 
 class OuterWayResolver {
 
-  def resolveOuterWayIdsFor(rs: Seq[Relation], allRelations: Map[Long, Relation]): Seq[Long] = { // TODO want test case for this
-    val outers = rs.map(r => r.getMembers.asScala.filter(rm => rm.getMemberRole == "outer")).flatten
+  def resolveOuterWayIdsFor(r: Relation, allRelations: Map[Long, Relation]): Seq[Long] = { // TODO want test case for this
+    val outers = r.getMembers.asScala.filter(rm => rm.getMemberRole == "outer")
     outers.flatMap { rm =>
       rm.getMemberType match {
-        case EntityType.Way =>
-          Seq(rm.getMemberId)
+        case EntityType.Way => Seq(rm.getMemberId)
+        case EntityType.Relation  => Seq()  // TODO recurse when an example is found
         case _ => Seq()
       }
     }

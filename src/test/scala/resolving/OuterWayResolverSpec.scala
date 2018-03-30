@@ -14,7 +14,7 @@ class OuterWayResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     val relation = loadTestEntity(LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION, testDataFile).get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
-    val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
+    val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(relation, allRelations)
 
     assert(outerWayIds.length == 14)
   }
@@ -23,7 +23,7 @@ class OuterWayResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     val relation = loadTestEntity(BOURNEMOUTH, testDataFile).get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
-    val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
+    val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(relation, allRelations)
 
     assert(outerWayIds.size == 17)
     assert(!outerWayIds.contains(265287540L))
@@ -34,7 +34,7 @@ class OuterWayResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     val relation = loadTestEntity(NEW_YORK_CITY, "new-york-city.pbf").get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
-    val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(Seq(relation), allRelations)
+    val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(relation, allRelations)
 
     assert(outerWayIds.size == 59)
     assert(outerWayIds.contains(444034102L))
