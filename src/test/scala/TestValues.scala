@@ -19,6 +19,9 @@ trait TestValues {
   // Has a subarea
   val BOURNEMOUTH = (130884L, EntityType.Relation)
 
+  // Western Isles - collection of islands
+  // 1959008
+
   // Has two non overlapping rings
   //251411
 
