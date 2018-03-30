@@ -86,5 +86,4 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(graph.children.head.children.head.children.head.area.name == "Small")
   }
 
-
 }
