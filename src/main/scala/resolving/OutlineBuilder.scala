@@ -26,8 +26,10 @@ class OutlineBuilder {
         var joined = Seq(first)
         available.remove(first)
 
-        while (available.nonEmpty && available.exists(wg => wg.head == joined.last.last || wg.last == joined.last.last)) {
-          val next = available.find(wg => wg.head == joined.last.last || wg.last == joined.last.last).get
+        def nextAttactment(wg: Seq[Long]): Boolean = wg.head == joined.last.last || wg.last == joined.last.last
+
+        while (available.nonEmpty && available.exists(nextAttactment)) {
+          val next = available.find(nextAttactment).get
           if (next.head == joined.last.last) {
             joined = joined :+ next
           } else {
