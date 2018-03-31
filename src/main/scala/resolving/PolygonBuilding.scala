@@ -23,12 +23,13 @@ trait PolygonBuilding {
       area
     }
 
+    /*
     val c = polygon.map { p =>
       import com.esri.core.geometry.OperatorSimplifyOGC
       val simplePolygon: Polygon = OperatorSimplifyOGC.local.execute(p, null, true, null).asInstanceOf[Polygon]
-      println(simplePolygon.getPathCount)
       simplePolygon
     }
+    */
 
     polygon
   }

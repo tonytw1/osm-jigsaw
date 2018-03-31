@@ -54,7 +54,26 @@ class OutlineBuilder {
         ways.get(wid)
       }.flatten // TODO handle missing ways
 
-      joinWays(outerWays).flatten.map { nid =>
+      val waysToUse = if (outerWays.size > 1) {
+        // TODO exclude closed ring ways
+        val closedWays = outerWays.filter { w =>
+          w.getWayNodes.asScala.head.getNodeId == w.getWayNodes.asScala.last.getNodeId
+        }
+
+        closedWays.map { c =>
+          println("Closed way: " + c)
+        }
+
+        val excludingClosedWays = outerWays.filterNot(w =>
+          closedWays.contains(w)
+        )
+        excludingClosedWays
+
+      } else {
+        outerWays
+      }
+
+      joinWays(waysToUse).flatten.map { nid =>
         nodes.get(nid)
       }.flatten
 
