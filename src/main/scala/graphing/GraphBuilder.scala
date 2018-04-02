@@ -50,7 +50,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
     }
 
     if (siblingsWhichFitInsideNewNode.nonEmpty) {
-      println("Found " + siblingsWhichFitInsideNewNode.size +  siblingsWhichFitInsideNewNode.map(i => i.area.name) + " siblings to sift down into new value " + b.area.name + " " +
+      println("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
         "(" + render(siblingsWhichFitInsideNewNode) + ")")
 
       a.children = a.children -- siblingsWhichFitInsideNewNode
@@ -62,7 +62,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
     }
 
     existingSiblingWhichNewValueWouldFitIn.map { s =>
-      println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
+      // println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
       a.children = a.children - b
       s.children = s.children + b
       siftDown(s, b)  // TODO test case needed

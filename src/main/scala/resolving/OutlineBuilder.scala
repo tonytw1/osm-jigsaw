@@ -1,16 +1,17 @@
 package resolving
 
+import model.EntityRendering
 import org.openstreetmap.osmosis.core.domain.v0_6._
 
 import scala.collection.mutable
 
-class OutlineBuilder {
+class OutlineBuilder extends EntityRendering {
 
   val relationExpander = new RelationExpander()
   val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
-  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Seq[Long]], nodes: Map[Long, (Double, Double)]): Seq[(Double, Double)] = { // TODO handle missing Ways and nodes
+  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Seq[Long]], nodes: Map[Long, (Double, Double)]): Seq[(String, Seq[(Double, Double)])] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
     def joinWays(ways: Seq[Seq[Long]]): Seq[Seq[Long]] = {
@@ -51,12 +52,12 @@ class OutlineBuilder {
         ways.get(wid)
       }.flatten // TODO handle missing ways
 
+      val closedWays = outerWays.filter { w =>
+        w.head == w.last
+      }
+
       val waysToUse = if (outerWays.size > 1) {
         // TODO exclude closed ring ways
-        val closedWays = outerWays.filter { w =>
-          w.head == w.last
-        }
-
         val excludingClosedWays = outerWays.filterNot(w =>
           closedWays.contains(w)
         )
@@ -66,9 +67,14 @@ class OutlineBuilder {
         outerWays
       }
 
-      joinWays(waysToUse).flatten.map { nid =>
-        nodes.get(nid)
-      }.flatten
+      val z = closedWays.map { cw =>
+        cw.map(nid => nodes.get(nid)).flatten
+        ("Closed way from " + render(r), cw.map(nid => nodes.get(nid)).flatten)  // TODO way name
+      }
+
+
+      val mainWay: (String, Seq[(Double, Double)]) = (render(r), joinWays(waysToUse).flatten.map { nid => nodes.get(nid) }.flatten)
+      z :+ mainWay
 
     } catch {
       case e: Exception =>

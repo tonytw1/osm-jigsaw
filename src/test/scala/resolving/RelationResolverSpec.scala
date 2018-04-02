@@ -37,7 +37,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     assert(areas.size == 1)
   }
 
-  "relation resolver" should "ignore closed loop outer ways which are part of the relation" in {
+  "relation resolver" should "include closed loop outer ways which are part of the relation" in {
     val entities = loadEntities("new-york-city.pbf")
 
     val rs = mutable.Set[Relation]()
@@ -60,7 +60,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val areas = relationResolver.resolveAreas(Set(newYorkCity), relationsMap, ways, nodes)
 
-    assert(areas.size == 1)
+    assert(areas.size == 3)
   }
 
 }
