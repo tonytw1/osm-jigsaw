@@ -7,9 +7,9 @@ class RelationResolver extends EntityRendering with BoundingBox with PolygonBuil
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolveAreas(relations: Set[Relation], allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Long, Double, Double)]): Set[Area] = {
+  def resolveAreas(relations: Set[Relation], allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
 
-    def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Long, Double, Double)]): Option[Area] = {
+    def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Double, Double)]): Option[Area] = {
       val outerNodes= outerNodeMapper.outlineNodesFor(r, allRelations, ways, nodes)
       val outerPoints = outerNodes.map(n => (n._2, n._3))
 

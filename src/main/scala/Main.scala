@@ -71,13 +71,13 @@ object Main {
 
     val relations = mutable.Buffer[Relation]()
     val ways = mutable.Map[Long, Way]()
-    val nodes = mutable.Map[Long, (Long, Double, Double)]()
+    val nodes = mutable.Map[Long, (Double, Double)]()
 
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations.+=(r)
         case w: Way => ways.+= (w.getId -> w)
-        case n: Node => nodes.+=(n.getId -> (n.getId, n.getLatitude, n.getLongitude))
+        case n: Node => nodes.+=(n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
       }
     }

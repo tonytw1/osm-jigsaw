@@ -25,7 +25,7 @@ class OutlineBuilderSpec extends FlatSpec with TestValues with LoadTestEntities 
 
   val relations = rs.toSet
   val ways = ws.map { i => (i.getId, i) }.toMap
-  val nodes = ns.map { i => (i.getId, (i.getId, i.getLatitude, i.getLongitude)) }.toMap
+  val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
   val relationsMap = relations.map(r => r.getId -> r).toMap
 
   "outline builder" should "assemble the outer ways of a relation into a consecutive list of points" in {

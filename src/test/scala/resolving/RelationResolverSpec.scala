@@ -26,7 +26,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val relations = rs.toSet
     val ways = ws.map { i => (i.getId, i) }.toMap
-    val nodes = ns.map { i => (i.getId, (i.getId, i.getLatitude, i.getLongitude)) }.toMap
+    val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
     val richmond = relations.find(r => r.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1).head
@@ -52,7 +52,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val relations = rs.toSet
     val ways = ws.map { i => (i.getId, i) }.toMap
-    val nodes = ns.map { i => (i.getId, (i.getId, i.getLatitude, i.getLongitude)) }.toMap
+    val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
     val newYorkCity = relations.find(r => r.getId == NEW_YORK_CITY._1).head
