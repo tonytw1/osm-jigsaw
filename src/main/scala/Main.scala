@@ -8,6 +8,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import resolving.RelationResolver
 
 import scala.collection.JavaConverters._
+import scala.collection.immutable.LongMap
 
 object Main {
 
@@ -68,9 +69,9 @@ object Main {
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
     def all(entity: Entity): Boolean  = true
 
-    var relations: Map[Long, Relation] = Map[Long, Relation]()
-    var ways = Map[Long, Seq[Long]]()
-    var nodes = Map[Long, (Double, Double)]()
+    var relations = LongMap[Relation]()
+    var ways = LongMap[Seq[Long]]()
+    var nodes = LongMap[(Double, Double)]()
 
     def addToFound(entity: Entity) = {
       entity match {
