@@ -23,12 +23,23 @@ class GraphReader {
   }
 
   def all(node: GraphNode, output: mutable.Buffer[Seq[GraphNode]], parents: Seq[GraphNode] = Seq()): Unit = {
-    val path: Seq[GraphNode] = parents :+ node
+    val path = parents :+ node
     if (node.children.isEmpty) {
       output.+=(path)
     } else {
       node.children.map { c =>
         all(c, output, path)
+      }
+    }
+  }
+
+  def search(node: GraphNode, q: String, output: mutable.Buffer[Seq[GraphNode]], parents: Seq[GraphNode] = Seq()): Unit = {
+    val path = parents :+ node
+    if (node.area.name == q) {
+      output.+=(path)
+    } else {
+      node.children.map { c =>
+        search(c, q, output, parents)
       }
     }
   }
