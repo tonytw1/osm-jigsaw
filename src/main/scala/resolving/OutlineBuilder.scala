@@ -11,7 +11,7 @@ class OutlineBuilder {
   val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
-  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Double, Double)]): Seq[(Long, Double, Double)] = { // TODO handle missing Ways and nodes
+  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Double, Double)]): Seq[(Double, Double)] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
     def joinWays(ways: Seq[Way]): Seq[Seq[Long]] = {
@@ -74,7 +74,7 @@ class OutlineBuilder {
       }
 
       joinWays(waysToUse).flatten.map { nid =>
-        nodes.get(nid).map (i => (nid, i._1, i._2))
+        nodes.get(nid)
       }.flatten
 
     } catch {
