@@ -2,7 +2,7 @@ import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutp
 
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
-import model.{Area, GraphNode}
+import model.{Area, EntityRendering, GraphNode}
 import org.apache.commons.cli._
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import resolving.RelationResolver
@@ -10,7 +10,7 @@ import resolving.RelationResolver
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 
-object Main {
+object Main extends EntityRendering {
 
   private val STEP = "s"
 
@@ -70,13 +70,13 @@ object Main {
     def all(entity: Entity): Boolean  = true
 
     var relations = LongMap[Relation]()
-    var ways = LongMap[Seq[Long]]()
+    var ways = LongMap[(String, String, Seq[Long])]()
     var nodes = LongMap[(Double, Double)]()
 
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations = relations + (r.getId -> r)
-        case w: Way => ways = ways + (w.getId -> w.getWayNodes.asScala.map(wn => wn.getNodeId))
+        case w: Way => ways = ways + (w.getId -> (w.getId + "Way", render(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
         case n: Node => nodes = nodes + (n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
       }
