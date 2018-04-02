@@ -72,7 +72,6 @@ object Main {
     var ways = Map[Long, Seq[Long]]()
     var nodes = Map[Long, (Double, Double)]()
 
-    var j = 0
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations = relations + (r.getId -> r)
@@ -80,11 +79,6 @@ object Main {
         case n: Node => nodes = nodes + (n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
       }
-      if (j == 1000) {
-        j = 0
-        println(relations.size + " / " + ways.size + " / " + nodes.size)
-      }
-      j = j + 1
     }
 
     println("Loading entities")
