@@ -70,14 +70,14 @@ object Main {
     def all(entity: Entity): Boolean  = true
 
     val relations = mutable.Buffer[Relation]()
-    val ways = mutable.Map[Long, Way]()
-    val nodes = mutable.Map[Long, (Long, Double, Double)]()
+    val ways = mutable.Buffer[Way]()
+    val nodes = mutable.Buffer[(Long, Double, Double)]()
 
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations.+=(r)
-        case w: Way => ways.+= (w.getId -> w)
-        case n: Node => nodes.+=(n.getId -> (n.getId, n.getLatitude, n.getLongitude))
+        case w: Way => ways.+=(w)
+        case n: Node => nodes.+=((n.getId, n.getLatitude, n.getLongitude))
         case _ =>
       }
     }
@@ -90,10 +90,14 @@ object Main {
 
     println("Building relations lookup map")
     val relationsMap = relations.map( r => (r.getId, r)).toMap  // TODO Does this contain all of the subrelations?
+    println("Building ways lookup map")
+    val waysMap = ways.map(w => w.getId -> w).toMap
+    println("Building nodes lookup map")
+    val nodesMap = nodes.map(n => n._1 -> n).toMap
 
     println("Resolving areas")
     val relationResolver = new RelationResolver()
-    val areas = relationResolver.resolveAreas(relations.toSet, relationsMap, ways.toMap, nodes.toMap)
+    val areas = relationResolver.resolveAreas(relations.toSet, relationsMap, waysMap, nodesMap)
     println("Produced " + areas.size + " relation shapes")
 
     println("Dumping areas to file")
