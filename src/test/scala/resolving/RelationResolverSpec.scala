@@ -5,6 +5,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
 
 import scala.collection.mutable
+import scala.collection.JavaConverters._
 
 class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntities {
 
@@ -25,7 +26,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     }
 
     val relations = rs.toSet
-    val ways = ws.map { i => (i.getId, i) }.toMap
+    val ways = ws.map(i => (i.getId -> i.getWayNodes.asScala.map(_.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
@@ -51,7 +52,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     }
 
     val relations = rs.toSet
-    val ways = ws.map { i => (i.getId, i) }.toMap
+    val ways = ws.map(i => (i.getId -> i.getWayNodes.asScala.map(_.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 

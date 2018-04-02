@@ -2,7 +2,6 @@ package resolving
 
 import org.openstreetmap.osmosis.core.domain.v0_6._
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class OutlineBuilder {
@@ -11,13 +10,11 @@ class OutlineBuilder {
   val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
-  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Way], nodes: Map[Long, (Double, Double)]): Seq[(Double, Double)] = { // TODO handle missing Ways and nodes
+  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, Seq[Long]], nodes: Map[Long, (Double, Double)]): Seq[(Double, Double)] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
-    def joinWays(ways: Seq[Way]): Seq[Seq[Long]] = {
-      val nonEmptyWayGroups = ways.map { w =>
-        w.getWayNodes.asScala.map(wn => wn.getNodeId)
-      }.filter(wg => wg.nonEmpty)
+    def joinWays(ways: Seq[Seq[Long]]): Seq[Seq[Long]] = {
+      val nonEmptyWayGroups = ways.filter(wg => wg.nonEmpty)
 
       if (nonEmptyWayGroups.nonEmpty) {
         val available = mutable.Set() ++ nonEmptyWayGroups // TODO what of relationship has multiple rings; available will not be fully consumed
@@ -57,11 +54,7 @@ class OutlineBuilder {
       val waysToUse = if (outerWays.size > 1) {
         // TODO exclude closed ring ways
         val closedWays = outerWays.filter { w =>
-          w.getWayNodes.asScala.head.getNodeId == w.getWayNodes.asScala.last.getNodeId
-        }
-
-        closedWays.map { c =>
-          println("Closed way: " + c)
+          w.head == w.last
         }
 
         val excludingClosedWays = outerWays.filterNot(w =>

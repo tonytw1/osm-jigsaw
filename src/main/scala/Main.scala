@@ -8,7 +8,6 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import resolving.RelationResolver
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 object Main {
 
@@ -69,17 +68,23 @@ object Main {
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
     def all(entity: Entity): Boolean  = true
 
-    val relations = mutable.Buffer[Relation]()
-    val ways = mutable.Map[Long, Way]()
-    val nodes = mutable.Map[Long, (Double, Double)]()
+    var relations: Map[Long, Relation] = Map[Long, Relation]()
+    var ways = Map[Long, Seq[Long]]()
+    var nodes = Map[Long, (Double, Double)]()
 
+    var j = 0
     def addToFound(entity: Entity) = {
       entity match {
-        case r: Relation => relations.+=(r)
-        case w: Way => ways.+= (w.getId -> w)
-        case n: Node => nodes.+=(n.getId -> (n.getLatitude, n.getLongitude))
+        case r: Relation => relations = relations + (r.getId -> r)
+        case w: Way => ways = ways + (w.getId -> w.getWayNodes.asScala.map(wn => wn.getNodeId))
+        case n: Node => nodes = nodes + (n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
       }
+      if (j == 1000) {
+        j = 0
+        println(relations.size + " / " + ways.size + " / " + nodes.size)
+      }
+      j = j + 1
     }
 
     println("Loading entities")
@@ -88,12 +93,9 @@ object Main {
 
     println("Found " + relations.size + " relations to process")
 
-    println("Building relations lookup map")
-    val relationsMap = relations.map( r => (r.getId, r)).toMap  // TODO Does this contain all of the subrelations?
-
     println("Resolving areas")
     val relationResolver = new RelationResolver()
-    val areas = relationResolver.resolveAreas(relations.toSet, relationsMap, ways.toMap, nodes.toMap)
+    val areas = relationResolver.resolveAreas(relations.values.toSet, relations, ways, nodes)
     println("Produced " + areas.size + " relation shapes")
 
     println("Dumping areas to file")
