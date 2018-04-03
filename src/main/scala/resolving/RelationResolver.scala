@@ -1,7 +1,8 @@
 package resolving
 
 import model.{Area, EntityRendering}
-import org.openstreetmap.osmosis.core.domain.v0_6.{Relation, Way}
+import org.openstreetmap.osmosis.core.domain.v0_6.Relation
+import progress.ProgressCounter
 
 class RelationResolver extends EntityRendering with BoundingBox with PolygonBuilding {
 
@@ -21,19 +22,9 @@ class RelationResolver extends EntityRendering with BoundingBox with PolygonBuil
       areas.flatten
     }
 
-    var i = 0L
-    var j = 0
-
-    val total = relations.size
+    val counter = new ProgressCounter(1000)
     relations.flatMap { r =>
-      i = i + 1
-      j = j + 1
-      if (j == 1000) {
-        j = 0
-        println(i + " / " + total)
-      }
-
-      resolveRelation(r, allRelations, ways, nodes)
+      counter.withProgress(resolveRelation(r, allRelations, ways, nodes))
     }
   }
 
