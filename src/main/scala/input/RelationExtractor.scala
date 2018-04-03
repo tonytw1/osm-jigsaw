@@ -5,6 +5,7 @@ import output.OsmWriter
 import resolving.{OuterWayResolver, RelationExpander}
 
 import scala.collection.JavaConverters._
+import scala.collection.immutable.LongMap
 import scala.collection.mutable
 
 class RelationExtractor {
@@ -18,10 +19,10 @@ class RelationExtractor {
   def extract(inputFilePath: String, predicate: Entity => Boolean, outputFilepath: String) = {
     val writer = new OsmWriter(outputFilepath)
 
-    val allRelations = mutable.Buffer[Relation]()
+    var allRelations = LongMap[Relation]()
     def addToAllRelations(entity: Entity) = {
         entity match {
-          case r: Relation => allRelations.+=(r)
+          case r: Relation => allRelations = allRelations + (r.getId -> r)
           case _ =>
       }
     }
@@ -30,18 +31,17 @@ class RelationExtractor {
     println("Cached " + allRelations.size + " relations")
 
     println("Extracting admin boundaries from all relations")
-    val foundRelations = allRelations.filter(predicate)
+    val foundRelations = allRelations.values.filter(predicate)
     println("Found " + foundRelations.size + " admin boundaries")
 
     println("Resolving relation ways")
     println("Creating relation lookup map")
-    val relationsLookUpMap = allRelations.map(r => r.getId -> r).toMap
 
     val wayIds = foundRelations.flatMap { r =>
-      val expanded = relationExpander.expandRelation(r, relationsLookUpMap)
+      val expanded = relationExpander.expandRelation(r, allRelations)
       writer.write(expanded)
       expanded.flatMap { r =>
-        outerWayResolver.resolveOuterWayIdsFor(r, relationsLookUpMap)
+        outerWayResolver.resolveOuterWayIdsFor(r, allRelations)
       }
     }.toSet
 
