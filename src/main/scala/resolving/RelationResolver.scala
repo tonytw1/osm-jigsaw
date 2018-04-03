@@ -12,10 +12,10 @@ class RelationResolver extends EntityRendering with BoundingBox with PolygonBuil
     def resolveRelation(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, (String, String, Seq[Long])], nodes: Map[Long, (Double, Double)]): Seq[Area] = {
       val outerNodes = outerNodeMapper.outlineNodesFor(r, allRelations, ways, nodes)
       val areas = outerNodes.map { on =>
-        val outerPoints = on._2.map(n => (n._1, n._2))
+        val outerPoints = on._3.map(n => (n._1, n._2))
         areaForPoints(outerPoints).map { a =>
           val areaName = on._1
-          Area(areaName, a, boundingBoxFor(a), Some(r.getId + r.getType.toString))
+          Area(areaName, a, boundingBoxFor(a), Some(on._2))
         }
       }
       areas.flatten

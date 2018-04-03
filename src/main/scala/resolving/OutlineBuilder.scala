@@ -11,7 +11,7 @@ class OutlineBuilder extends EntityRendering {
   val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
-  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, (String, String, Seq[Long])], nodes: Map[Long, (Double, Double)]): Seq[(String, Seq[(Double, Double)])] = { // TODO handle missing Ways and nodes
+  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, (String, String, Seq[Long])], nodes: Map[Long, (Double, Double)]): Seq[(String, String, Seq[(Double, Double)])] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
     def joinWays(ways: Seq[Seq[Long]]): Seq[Seq[Long]] = {
@@ -57,7 +57,6 @@ class OutlineBuilder extends EntityRendering {
       }
 
       val waysToUse: Seq[(String, String, Seq[Long])] = if (outerWays.size > 1) {
-        // TODO exclude closed ring ways
         val excludingClosedWays = outerWays.filterNot(w =>
           closedWays.contains(w)
         )
@@ -69,11 +68,11 @@ class OutlineBuilder extends EntityRendering {
 
       val z = closedWays.map { cw =>
         cw._3.map(nid => nodes.get(nid)).flatten
-        (cw._1, cw._3.map(nid => nodes.get(nid)).flatten)
+        (cw._1, cw._2, cw._3.map(nid => nodes.get(nid)).flatten)
       }
 
 
-      val mainWay: (String, Seq[(Double, Double)]) = (render(r), joinWays(waysToUse.map(i => i._3)).flatten.map { nid => nodes.get(nid) }.flatten)
+      val mainWay: (String, String, Seq[(Double, Double)]) = (render(r), r.getId() + "Relation", joinWays(waysToUse.map(i => i._3)).flatten.map { nid => nodes.get(nid) }.flatten)
       z :+ mainWay
 
     } catch {

@@ -45,11 +45,9 @@ class GraphReader {
   }
 
   def dump(node: GraphNode, soFar: String = ""): Unit = {
-    val path = soFar + " / " + node.area.name + node.area.osmId
+    val path = soFar + " / " + node.area.name + node.area.osmId.map(o => " (" + o + ")").getOrElse("")
     if (node.children.nonEmpty) {
-      node.children.map { c =>
-        dump(c, path)
-      }
+      node.children.map( c => dump(c, path))
     } else {
       println(path)
     }
