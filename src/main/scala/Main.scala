@@ -70,13 +70,13 @@ object Main extends EntityRendering {
     def all(entity: Entity): Boolean  = true
 
     var relations = LongMap[Relation]()
-    var ways = LongMap[(String, String, Seq[Long])]()
+    var ways = LongMap[model.Way]()
     var nodes = LongMap[(Double, Double)]()
 
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations = relations + (r.getId -> r)
-        case w: Way => ways = ways + (w.getId -> (w.getId + "Way", render(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
+        case w: Way => ways = ways + (w.getId -> model.Way(w.getId, w.getId + "Way", render(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
         case n: Node => nodes = nodes + (n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
       }

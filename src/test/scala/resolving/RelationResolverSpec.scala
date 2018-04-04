@@ -27,7 +27,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     }
 
     val relations = rs.toSet
-    val ways = ws.map(i => (i.getId -> (i.getId + "Way", render(i), i.getWayNodes.asScala.map(_.getNodeId)))).toMap
+    val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getId + "Way", render(w), w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
@@ -53,7 +53,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     }
 
     val relations = rs.toSet
-    val ways = ws.map(i => (i.getId -> (i.getId + "Way", render(i), i.getWayNodes.asScala.map(_.getNodeId)))).toMap
+    val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getId + "Way", render(w), w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
@@ -79,7 +79,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     }
 
     val relations = rs.toSet
-    val ways = ws.map(i => (i.getId -> (i.getId + "Way", render(i), i.getWayNodes.asScala.map(_.getNodeId)))).toMap
+    val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getId + "Way", render(w), w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
