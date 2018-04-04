@@ -1,59 +1,62 @@
 package resolving
 
-import model.EntityRendering
+import model.{EntityRendering, JoinedWay}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 
 import scala.collection.mutable
 
-class OutlineBuilder extends EntityRendering {
+class OutlineBuilder extends EntityRendering with WayJoining {
 
   val relationExpander = new RelationExpander()
   val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
-  def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[(String, String, Seq[(Double, Double)])] = { // TODO handle missing Ways and nodes
+  def outlineRings(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[Seq[JoinedWay]] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
-    def joinWays(ways: Seq[model.Way]): Seq[Seq[Seq[Long]]] = {
-      val nonEmptyWays = ways.filter(w => w.nodes.nonEmpty)
+    def joinWays(ways: Seq[model.Way]) = {
+      val nonEmptyWays: Seq[model.Way] = ways.filter(w => w.nodes.nonEmpty)
 
       if (nonEmptyWays.nonEmpty) {
         val available = mutable.Set() ++ nonEmptyWays
 
-        def buildRingFromAvailable: Seq[Seq[Long]] = {
+        def buildRingFromAvailable: Seq[JoinedWay] = {
           val first = available.head
-          var joined = Seq(first.nodes)   // TODO incorrectly allows non closed areas
+          var joined = Seq(JoinedWay(first, false)) // TODO incorrectly allows non closed areas
           available.remove(first)
 
-          def nextAttachment(wg: model.Way): Boolean = wg.nodes.head == joined.last.last || wg.nodes.last == joined.last.last
+          var lastNode = nodesFor(Seq(joined.last)).last
+
+          def nextAttachment(wg: model.Way): Boolean = wg.nodes.head == lastNode || wg.nodes.last == lastNode
 
           while (available.nonEmpty && available.exists(nextAttachment)) {
             val next = available.find(nextAttachment).get
-            if (next.nodes.head == joined.last.last) {
-              joined = joined :+ next.nodes
+
+            if (next.nodes.head == lastNode) {
+              joined = joined :+ JoinedWay(next, false)
             } else {
-              joined = joined :+ next.nodes.reverse
+              joined = joined :+ JoinedWay(next, true)
             }
+
             available.remove(next)
+            lastNode = nodesFor(Seq(joined.last)).last
           }
 
           joined
         }
 
-        var foundRings = Seq[Seq[Seq[Long]]]()
+        var foundRings = Seq[Seq[JoinedWay]]()
         while (available.nonEmpty) {
-          val found: Seq[Seq[Long]] = buildRingFromAvailable
-
-          val isClosed = found.flatten.head == found.flatten.last
+          val found = buildRingFromAvailable
+          val nodes = nodesFor(found)
+          val isClosed = nodes.head == nodes.last
           if (isClosed) {
             foundRings = foundRings :+ found
           } else {
-            println("Not closed while outinging relation " + r + ": " + found)
+            println("Not closed while outing relation: " + found)
           }
         }
-
         foundRings
-
 
       } else {
         println("Relation has no non empty outers: " + r.getId)
@@ -61,43 +64,11 @@ class OutlineBuilder extends EntityRendering {
       }
     }
 
-    try {
-      val outerWays: Seq[model.Way] = outerWayResolver.resolveOuterWayIdsFor(r, allRelations).map { wid =>
-        ways.get(wid)
-      }.flatten // TODO handle missing ways
+    val outerWays: Seq[model.Way] = outerWayResolver.resolveOuterWayIdsFor(r, allRelations).map { wid =>
+      ways.get(wid)
+    }.flatten // TODO handle missing ways
 
-      /*
-      val closedWays = outerWays.filter { w =>
-        w._3.head == w._3.last
-      }
-
-      val waysToUse: Seq[(String, String, Seq[Long])] = if (outerWays.size > 1) {
-        val excludingClosedWays = outerWays.filterNot(w =>
-          closedWays.contains(w)
-        )
-        excludingClosedWays
-
-      } else {
-        outerWays
-      }
-
-      val z = closedWays.map { cw =>
-        cw._3.map(nid => nodes.get(nid)).flatten
-        (cw._1, cw._2, cw._3.map(nid => nodes.get(nid)).flatten)
-      }
-      */
-
-      val rings = joinWays(outerWays).map { x =>
-        (render(r), r.getId() + "Relation", x.flatten.map { nid => nodes.get(nid) }.flatten)
-      }
-
-      rings
-
-    } catch {
-      case e: Exception =>
-        println("Failed to compose relation: " + r.getId, e.getMessage)
-        throw (e)
-    }
+    joinWays(outerWays)
   }
 
 }

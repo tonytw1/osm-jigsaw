@@ -12,7 +12,7 @@ class OutlineBuilderSpec extends FlatSpec with TestValues with LoadTestEntities 
 
   val outlineBuilder = new OutlineBuilder()
 
-  val entities = loadEntities("gb-test-data.pbf")
+  val entities = loadEntities("richmond.pbf")
 
   val rs = mutable.Set[Relation]()
   val ws = mutable.Set[Way]()
@@ -30,18 +30,20 @@ class OutlineBuilderSpec extends FlatSpec with TestValues with LoadTestEntities 
   val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
   val relationsMap = relations.map(r => r.getId -> r).toMap
 
-  "outline builder" should "assemble the outer ways of a relation into a consecutive list of points" in {
+  "outline builder" should "assemble the outer ways of a relation into a consecutive list of ways" in {
     val richmond = relations.find(r => r.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1).head
 
-    val outline = outlineBuilder.outlineNodesFor(richmond, relationsMap, ways, nodes)
+    val rings = outlineBuilder.outlineRings(richmond, relationsMap, ways, nodes)
 
-    assert(outline.size == 1671)
+    assert(rings.size == 1)
+    val ring = rings.head
+    assert(ring.size == 14)
   }
 
   "outline builder" should "account for subarea relation when building the outline of a relation" in {
     val bournemouth = relations.find(r => r.getId == BOURNEMOUTH._1).head
 
-    val outline = outlineBuilder.outlineNodesFor(bournemouth, relationsMap, ways, nodes)
+    val outline = outlineBuilder.outlineRings(bournemouth, relationsMap, ways, nodes)
 
     assert(outline.size == 0)
   }
