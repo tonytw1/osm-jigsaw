@@ -64,9 +64,14 @@ class OutlineBuilder extends EntityRendering with WayJoining {
       }
     }
 
-    val outerWays: Seq[model.Way] = outerWayResolver.resolveOuterWayIdsFor(r, allRelations).map { wid =>
-      ways.get(wid)
-    }.flatten // TODO handle missing ways
+    val outerWays = outerWayResolver.resolveOuterWayIdsFor(r, allRelations).map { wid =>
+      ways.get(wid).map { w =>
+        Some(w)
+      }.getOrElse {
+        println("Missing way; could not find way " + wid + " required by relation " + r.getId)
+        None
+      }
+    }.flatten
 
     joinWays(outerWays)
   }
