@@ -11,7 +11,15 @@ class OuterWayResolver {
     outers.flatMap { rm =>
       rm.getMemberType match {
         case EntityType.Way => Seq(rm.getMemberId)
-        case EntityType.Relation  => Seq()  // TODO recurse when an example is found
+        case EntityType.Relation  => {
+          allRelations.get(rm.getMemberId).map { sr =>
+            println("Relation " + r + " has subrelation as an outer")
+            resolveOuterWayIdsFor(sr, allRelations)
+          }.getOrElse {
+            println("Could not resolve outer subrelation " + rm.getMemberId + " for relation " + r)
+            Seq()
+          }
+        }
         case _ => Seq()
       }
     }
