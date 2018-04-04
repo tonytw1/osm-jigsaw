@@ -30,18 +30,18 @@ class OuterWayResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
     assert(outerWayIds.contains(199769970L))
   }
 
-  "outer way resolver" should "deal with a relation with more than one ring" in {
+  "outer way resolver" should "include way ids for all rings of relations with more than one ring" in {
     val relation = loadTestEntity(NEW_YORK_CITY, "new-york-city.pbf").get.asInstanceOf[Relation]
     val allRelations = Map(relation.getId -> relation)
 
     val outerWayIds = outerWayResolver.resolveOuterWayIdsFor(relation, allRelations)
 
-    assert(outerWayIds.size == 59)
+    assert(outerWayIds.size == 60)
     assert(outerWayIds.contains(444034102L))
     assert(outerWayIds.contains(61602969L))
 
-    // Should not contain the Liberty Island way
-    assert(!outerWayIds.contains(4820654L))
+    // Should also include the Liberty Island way
+    assert(outerWayIds.contains(4820654L))
   }
 
   def loadTestEntity(target: (Long, EntityType), file: String): Option[Entity] = {
