@@ -46,7 +46,13 @@ class OutlineBuilder extends EntityRendering {
         var foundRings = Seq[Seq[Seq[Long]]]()
         while (available.nonEmpty) {
           val found: Seq[Seq[Long]] = buildRingFromAvailable
-          foundRings = foundRings :+ found
+
+          val isClosed = found.flatten.head == found.flatten.last
+          if (isClosed) {
+            foundRings = foundRings :+ found
+          } else {
+            println("Not closed: " + found)
+          }
         }
 
         foundRings

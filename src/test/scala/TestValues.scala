@@ -27,6 +27,9 @@ trait TestValues {
 
   val NEW_ZEALAND = (556706L, EntityType.Relation)
 
+
+  // 8057667WAY coal island - 2 ways which form a relationless area
+
   // Okmulgee 184191 broken relation -all inners
   // California (165475) first way is part of santa rosa island - hence the state ring is probably ignored
   // Cruz de los Esteros (5349509 Closed loop but ways have no roles
