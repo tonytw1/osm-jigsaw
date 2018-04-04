@@ -14,32 +14,43 @@ class OutlineBuilder extends EntityRendering {
   def outlineNodesFor(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, (String, String, Seq[Long])], nodes: Map[Long, (Double, Double)]): Seq[(String, String, Seq[(Double, Double)])] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
-    def joinWays(ways: Seq[Seq[Long]]): Seq[Seq[Long]] = {
+    def joinWays(ways: Seq[Seq[Long]]): Seq[Seq[Seq[Long]]] = {
       val nonEmptyWayGroups = ways.filter(wg => wg.nonEmpty)
 
       if (nonEmptyWayGroups.nonEmpty) {
         val available = mutable.Set() ++ nonEmptyWayGroups // TODO what of relationship has multiple rings; available will not be fully consumed
 
-        val first = available.head
-        var joined = Seq(first)
-        available.remove(first)
+        def buildRingFromAvailable: Seq[Seq[Long]] = {
+          println(available.size + " available way groups after joining ways")
 
-        def nextAttactment(wg: Seq[Long]): Boolean = wg.head == joined.last.last || wg.last == joined.last.last
+          val first = available.head
+          var joined = Seq(first)   // TODO incorrectly allows non closed areas
+          available.remove(first)
 
-        while (available.nonEmpty && available.exists(nextAttactment)) {
-          val next = available.find(nextAttactment).get
-          if (next.head == joined.last.last) {
-            joined = joined :+ next
-          } else {
-            joined = joined :+ next.reverse
+          def nextAttachment(wg: Seq[Long]): Boolean = wg.head == joined.last.last || wg.last == joined.last.last
+
+          while (available.nonEmpty && available.exists(nextAttachment)) {
+            val next = available.find(nextAttachment).get
+            if (next.head == joined.last.last) {
+              joined = joined :+ next
+            } else {
+              joined = joined :+ next.reverse
+            }
+            available.remove(next)
           }
-          available.remove(next)
+
+          println("Found ring of length:" + joined.size)
+          joined
         }
 
-        if (available.nonEmpty) {
-          println("Relation " + r.getId + " had " + available.size + " available way groups after joining ways")
+        var foundRings = Seq[Seq[Seq[Long]]]()
+        while (available.nonEmpty) {
+          val found: Seq[Seq[Long]] = buildRingFromAvailable
+          foundRings = foundRings :+ found
         }
-        joined
+
+        foundRings
+
 
       } else {
         println("Relation has no non empty outers: " + r.getId)
@@ -52,6 +63,7 @@ class OutlineBuilder extends EntityRendering {
         ways.get(wid)
       }.flatten // TODO handle missing ways
 
+      /*
       val closedWays = outerWays.filter { w =>
         w._3.head == w._3.last
       }
@@ -70,10 +82,13 @@ class OutlineBuilder extends EntityRendering {
         cw._3.map(nid => nodes.get(nid)).flatten
         (cw._1, cw._2, cw._3.map(nid => nodes.get(nid)).flatten)
       }
+      */
 
+      val rings = joinWays(outerWays.map(i => i._3)).map { x =>
+        (render(r), r.getId() + "Relation", x.flatten.map { nid => nodes.get(nid) }.flatten)
+      }
 
-      val mainWay: (String, String, Seq[(Double, Double)]) = (render(r), r.getId() + "Relation", joinWays(waysToUse.map(i => i._3)).flatten.map { nid => nodes.get(nid) }.flatten)
-      z :+ mainWay
+      rings
 
     } catch {
       case e: Exception =>

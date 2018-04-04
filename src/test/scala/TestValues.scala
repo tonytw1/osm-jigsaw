@@ -25,9 +25,14 @@ trait TestValues {
   // Has two non overlapping rings
   //251411
 
+  val NEW_ZEALAND = (556706L, EntityType.Relation)
+
   // Okmulgee 184191 broken relation -all inners
   // California (165475) first way is part of santa rosa island - hence the state ring is probably ignored
   // Cruz de los Esteros (5349509 Closed loop but ways have no roles
+
+  // way 4557216 Salt Island
+  // Part of many parent relations
 
   /* Europe - recursive loop
   Relation 6483281 has 2 relation members which are relations
