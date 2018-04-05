@@ -18,6 +18,16 @@ object Main extends EntityRendering {
   val options  = new Options()
   options.addOption(STEP, true, "Which step to apply to the input file")
 
+  def entitiesToGraph(entity: Entity): Boolean = {
+    val tags = entity.getTags.asScala
+    val isAdminLevel = tags.exists(t => t.getKey == "admin_level")
+    val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
+    val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
+    val isLeisurePark = tags.exists(t => tags.exists(t => t.getKey == "leisure"  && t.getValue == "park"))
+
+    (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) || isLeisurePark
+  }
+
   def main(args: Array[String]): Unit = {
     val cmd = parser.parse(options, args)
     val step = cmd.getOptionValue(STEP)
@@ -40,16 +50,6 @@ object Main extends EntityRendering {
   def extract(inputFilepath: String, outputFilepath: String) {
     println("Extracting entities and their resolved components from " + inputFilepath + " into " + outputFilepath)
 
-    def entitiesToGraph(entity: Entity): Boolean = {
-      val tags = entity.getTags.asScala
-      val isAdminLevel = tags.exists(t => t.getKey == "admin_level")
-      val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
-      val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
-      val isLeisurePark = tags.exists(t => tags.exists(t => t.getKey == "leisure"  && t.getValue == "park"))
-
-      (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) || isLeisurePark
-    }
-
     new RelationExtractor().extract(inputFilepath, entitiesToGraph, outputFilepath)
     println("Done")
   }
@@ -70,13 +70,17 @@ object Main extends EntityRendering {
     def all(entity: Entity): Boolean  = true
 
     var relations = LongMap[Relation]()
-    var ways = LongMap[model.Way]()
+    var ways = LongMap[Way]()
+    var modelWays = LongMap[model.Way]()
     var nodes = LongMap[(Double, Double)]()
 
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations = relations + (r.getId -> r)
-        case w: Way => ways = ways + (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
+        case w: Way => {
+          ways = ways + (w.getId -> w)
+          modelWays = modelWays + (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
+        }
         case n: Node => nodes = nodes + (n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
       }
@@ -89,8 +93,14 @@ object Main extends EntityRendering {
     println("Found " + relations.size + " relations to process")
 
     println("Resolving areas")
+
+    val relationsToResolve: Set[Entity] = (relations.values.toSeq).filter(e => entitiesToGraph(e)).toSet
+    val waysToResolve: Set[Entity] = (ways.values.toSeq).filter(e => entitiesToGraph(e)).toSet
+
+    val entitiesToResolve = relationsToResolve ++ waysToResolve
+
     val relationResolver = new RelationResolver()
-    val areas = relationResolver.resolveAreas(relations.values.toSet, relations, ways, nodes)
+    val areas = relationResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes)
     println("Produced " + areas.size + " relation shapes")
 
     println("Dumping areas to file")
