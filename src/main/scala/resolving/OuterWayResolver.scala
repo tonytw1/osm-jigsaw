@@ -7,7 +7,7 @@ import scala.collection.JavaConverters._
 class OuterWayResolver {
 
   def resolveOuterWayIdsFor(r: Relation, allRelations: Map[Long, Relation]): Seq[Long] = {
-    val outers = r.getMembers.asScala.filter(rm => rm.getMemberRole == "outer")
+    val outers = r.getMembers.asScala.filterNot(rm => rm.getMemberType == EntityType.Relation && rm.getMemberId == r.getId).filter(rm => rm.getMemberRole == "outer")
     outers.flatMap { rm =>
       rm.getMemberType match {
         case EntityType.Way => Seq(rm.getMemberId)
