@@ -1,4 +1,4 @@
-## None persisted OpenSteetMap geocoding spike
+## Non persisted OpenSteetMap geocoding spike
 
 Gecoding is the art turning a location point into a human readable sentence (and vice versa).
 (ie. 51.0, -0.3 <--> London, United Kingdon).
@@ -16,8 +16,7 @@ Postgres module making it more differcult to alter or scale the application sepe
 Cloud deployments are prohibitively expensive.
 
 Is it possible to approach this problem from a more stateless angle?
-Can we transform a raw OSM data extract into a structured graph in application code without
-having to import and persist the entire dataset?
+Can we transform a raw OSM data extract into a structured graph in application code without having to import and persist the entire dataset?
 
 - The input format should be OSM extract files (probably in the compressed pbf format)
 - Happy live without partial updates so long as a full update can be performed in a sensible timeframe.
@@ -26,14 +25,32 @@ having to import and persist the entire dataset?
 
 ### Proposed approach
 
-- Extract top level relations =>
+- Extract high level entities and their components =>
 
-- Resolve these relations into bounding shapes =>
+Select a high level set of entities; say admin boundary relations.
+Extract these from an OSM extract file. Resolve the sub relations, ways and nodes which they are composed of and dump
+these out into a smaller working file.
 
-- Arrange these shapes into some sort of heap like structure; sift up the relations which enclose others to
-try and extract a sensible hierarchy =>
+This step might take the 1Gb Great Britain extract down to something more like 50Mb.
 
-- Pour remaining entites into the top of this structure and let them sift down to the smallest area which encloses them =>
+
+- Resolve these relations into bounding areas =>
+
+Load the high levek entities and attempt to build bounding areas for them.
+Relations may be composed of many shapes. Ways and nodes don't always appear into order.
+
+
+- Try to sort these areas into some sort of hierarchy
+
+Much like a gravel sorting sieve.
+Smaller areas should falled down inside larger areas.
+More important relations like countries should float to the top regardless of their tags.
+Ignore overlapping areas for now; does this mean than insertion order becomes important?
+
+
+- Iterate, pouring remaining entites into the top of this structure in batches
+
+Let them sift down to the smallest area which encloses them =>
 (if this is polygon matching would using a GPU be sensible?)
 
 This graph gives a path from each element back up to the the top level enclosing relation.
