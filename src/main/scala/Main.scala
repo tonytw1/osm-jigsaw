@@ -38,19 +38,19 @@ object Main extends EntityRendering {
   }
 
   def extract(inputFilepath: String, outputFilepath: String) {
-    println("Extracting relations and their resolved components from " + inputFilepath + " into " + outputFilepath)
+    println("Extracting entities and their resolved components from " + inputFilepath + " into " + outputFilepath)
 
-    // Predicate to describe the top level relations we wish to extract
-    def allAdminBoundaries(entity: Entity): Boolean = {
+    def entitiesToGraph(entity: Entity): Boolean = {
       val tags = entity.getTags.asScala
       val isAdminLevel = tags.exists(t => t.getKey == "admin_level")
       val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
       val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
-      entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag // TODO ensure type is tested before more expensive tag operations
+      val isLeisurePark = tags.exists(t => tags.exists(t => t.getKey == "leisure"  && t.getValue == "park"))
+
+      (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) || isLeisurePark
     }
 
-    val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, allAdminBoundaries, outputFilepath)
-
+    new RelationExtractor().extract(inputFilepath, entitiesToGraph, outputFilepath)
     println("Done")
   }
 

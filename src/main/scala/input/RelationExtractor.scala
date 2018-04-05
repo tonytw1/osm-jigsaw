@@ -30,14 +30,14 @@ class RelationExtractor {
     new SinkRunner(inputFilePath, all, addToAllRelations).run
     println("Cached " + allRelations.size + " relations")
 
-    println("Extracting admin boundaries from all relations")
+    println("Extracting interesting relations from all relations")
     val foundRelations = allRelations.values.filter(predicate)
     println("Found " + foundRelations.size + " admin boundaries")
 
     println("Resolving relation ways")
     println("Creating relation lookup map")
 
-    val wayIds = foundRelations.flatMap { r =>
+    val relationWayIds = foundRelations.flatMap { r =>
       val expanded = relationExpander.expandRelation(r, allRelations)
       writer.write(expanded)
       expanded.flatMap { r =>
@@ -45,10 +45,10 @@ class RelationExtractor {
       }
     }.toSet
 
-    println("Need " + wayIds.size + " ways to resolve relations")
+    println("Need " + relationWayIds.size + " ways to resolve relations")
 
     println("Reading required ways to determine required nodes")
-    def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && wayIds.contains(entity.getId)
+    def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && (relationWayIds.contains(entity.getId) || predicate(entity))
 
     val nodeIds = mutable.Set[Long]()
     def persistWayAndExpandNodeIds(entity: Entity) = {
