@@ -5,7 +5,7 @@ import input.{RelationExtractor, SinkRunner}
 import model.{Area, EntityRendering, GraphNode}
 import org.apache.commons.cli._
 import org.openstreetmap.osmosis.core.domain.v0_6._
-import resolving.RelationResolver
+import resolving.AreaResolver
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
@@ -99,8 +99,8 @@ object Main extends EntityRendering {
 
     val entitiesToResolve = relationsToResolve ++ waysToResolve
 
-    val relationResolver = new RelationResolver()
-    val areas = relationResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes)
+    val areaResolver = new AreaResolver()
+    val areas = areaResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes)
     println("Produced " + areas.size + " relation shapes")
 
     println("Dumping areas to file")

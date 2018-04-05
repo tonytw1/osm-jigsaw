@@ -8,11 +8,11 @@ import org.scalatest.FlatSpec
 import scala.collection.mutable
 import scala.collection.JavaConverters._
 
-class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering {
+class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering {
 
-  val relationResolver = new RelationResolver()
+  val areaResolver = new AreaResolver()
 
-  "relation resolver" should "make areas from relations" in {
+  "area resolver"should "make areas from relations" in {
     val entities = loadEntities("gb-test-data.pbf")
 
     val rs = mutable.Set[Relation]()
@@ -33,12 +33,12 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val richmond = relations.find(r => r.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1).head
 
-    val areas = relationResolver.resolveAreas(Set(richmond), relationsMap, ways, nodes)
+    val areas = areaResolver.resolveAreas(Set(richmond), relationsMap, ways, nodes)
 
     assert(areas.size == 1)
   }
 
-  "relation resolver" should "include closed loop outer ways which are part of the relation" in {
+  "area resolver"should "include closed loop outer ways which are part of the relation" in {
     val entities = loadEntities("new-york-city.pbf")
 
     val rs = mutable.Set[Relation]()
@@ -59,12 +59,12 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val newYorkCity = relations.find(r => r.getId == NEW_YORK_CITY._1).head
 
-    val areas = relationResolver.resolveAreas(Set(newYorkCity), relationsMap, ways, nodes)
+    val areas = areaResolver.resolveAreas(Set(newYorkCity), relationsMap, ways, nodes)
 
     assert(areas.size == 3)
   }
 
-  "relation resolver" should "resolve new zealand" in {
+  "area resolver"should "resolve new zealand" in {
     val entities = loadEntities("new-zealand.pbf")
 
     val rs = mutable.Set[Relation]()
@@ -85,7 +85,7 @@ class RelationResolverSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val newZealand = relations.find(r => r.getId == NEW_ZEALAND._1).head
 
-    val areas: Set[Area] = relationResolver.resolveAreas(Set(newZealand), relationsMap, ways, nodes)
+    val areas: Set[Area] = areaResolver.resolveAreas(Set(newZealand), relationsMap, ways, nodes)
 
     areas.map { a =>
       println(a.name + ": " + a.polygon.calculateRingArea2D(0))
