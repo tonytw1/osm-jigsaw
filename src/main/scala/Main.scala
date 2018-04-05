@@ -76,7 +76,7 @@ object Main extends EntityRendering {
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations = relations + (r.getId -> r)
-        case w: Way => ways = ways + (w.getId -> model.Way(w.getId, w.getId + "Way", render(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
+        case w: Way => ways = ways + (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
         case n: Node => nodes = nodes + (n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
       }

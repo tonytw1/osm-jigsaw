@@ -15,11 +15,13 @@ class RelationResolver extends EntityRendering with BoundingBox with PolygonBuil
 
       val areas = outerRings.map { ways =>
 
+        val areaName = render(r)  // TODO can do better
+        val osmId = Some(r.getId.toString)
+
         val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => nodes.get(nid).map(n => (n._1, n._2))).flatten
 
         areaForPoints(outerPoints).map { a =>
-          val areaName = render(r)  // TODO can do better
-          Area(areaName, a, boundingBoxFor(a), Some(r.getId.toString))
+          Area(areaName, a, boundingBoxFor(a), osmId)
         }
       }
       areas.flatten

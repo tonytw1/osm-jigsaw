@@ -27,6 +27,9 @@ trait TestValues {
 
   val NEW_ZEALAND = (556706L, EntityType.Relation)
 
+  val ENGLAND = (58447, EntityType.Relation)
+  val SOUTH_WEST_ENGLAND = (151339, EntityType.Relation)
+
 
   // 8057667WAY coal island - 2 ways which form a relationless area
 
