@@ -40,6 +40,9 @@ trait TestValues {
   // way 4557216 Salt Island
   // Part of many parent relations
 
+
+  // WAY 4412732 Sits just over the edge of two London boroughs.
+
   /* Europe - recursive loop
   Relation 6483281 has 2 relation members which are relations
   Recursing to resolve subrelation: RelationMember(Relation with id 5400348 in the role 'subarea')
