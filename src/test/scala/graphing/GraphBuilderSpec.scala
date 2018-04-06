@@ -18,6 +18,13 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   val smallArea = makePolygon((-1, 1), (1, -1))
   val small = Area(name = "Small", smallArea, boundingBoxFor(smallArea))
 
+
+  val leftArea = makePolygon((-10, 10), (0, -10))
+  val left = Area(name = "Left", leftArea, boundingBoxFor(leftArea))
+
+  val rightArea = makePolygon((0, 10), (10, -10))
+  val right = Area(name = "Right", rightArea, boundingBoxFor(rightArea))
+
   "graph builder" should "provide empty head node" in {
     val empty = graphBuilder.buildGraph(Seq())
 
@@ -29,6 +36,16 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     val graph = graphBuilder.buildGraph(Seq(large))
 
     assert(graph.children.size == 1)
+  }
+
+  "graph builder" should "place non overlapping areas at the same level" in {
+    val graph = graphBuilder.buildGraph(Seq(large, left, right))
+
+    assert(graph.children.size == 1)
+    assert(graph.children.head.area.name == "Large")
+    assert(graph.children.head.children.size == 2)
+    assert(graph.children.head.children.last.area.name == "Left")
+    assert(graph.children.head.children.head.area.name == "Right")
   }
 
   "graph builder" should "sift new nodes down into enclosing siblings" in {

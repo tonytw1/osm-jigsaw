@@ -12,7 +12,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
   val areaResolver = new AreaResolver()
 
-  "area resolver"should "make areas from relations" in {
+  "area resolver" should "make areas from relations" in {
     val entities = loadEntities("gb-test-data.pbf")
 
     val rs = mutable.Set[Relation]()
@@ -87,9 +87,6 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val areas: Set[Area] = areaResolver.resolveAreas(Set(newZealand), relationsMap, ways, nodes)
 
-    areas.map { a =>
-      println(a.name + ": " + a.polygon.calculateRingArea2D(0))
-    }
     assert(areas.size == 4)
   }
 
