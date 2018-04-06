@@ -33,11 +33,17 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           val areaName = render(w) // TODO can do better
           val osmId = Some(w.getId.toString)
 
-          val outerPoints: Seq[(Double, Double)] = w.getWayNodes.asScala.map(nid => nodes.get(nid.getNodeId).map(n => (n._1, n._2))).flatten
-          val x = areaForPoints(outerPoints).map { a =>
-            Area(areaName, a, boundingBoxFor(a), osmId)
+          val wayNodes = w.getWayNodes.asScala
+          val isClosed = wayNodes.head == wayNodes.last
+          val resolvedArea = if (isClosed) {
+            val outerPoints: Seq[(Double, Double)] = w.getWayNodes.asScala.map(nid => nodes.get(nid.getNodeId).map(n => (n._1, n._2))).flatten
+            areaForPoints(outerPoints).map { a =>
+              Area(areaName, a, boundingBoxFor(a), osmId)
+            }
+          } else {
+            None
           }
-          Seq(x).flatten
+          Seq(resolvedArea).flatten
       }
     }
 

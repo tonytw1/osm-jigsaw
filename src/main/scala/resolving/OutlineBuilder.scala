@@ -49,7 +49,7 @@ class OutlineBuilder extends EntityRendering with WayJoining {
         while (available.nonEmpty) {
           val found = buildRingFromAvailable
           val nodes = nodesFor(found)
-          val isClosed = nodes.head == nodes.last
+          val isClosed = nodes.head == nodes.last // TODO duplication
           if (isClosed) {
             foundRings = foundRings :+ found
           } else {

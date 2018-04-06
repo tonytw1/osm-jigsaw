@@ -38,6 +38,8 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
     assert(areas.size == 1)
   }
 
+  // TODO assert ignores unclosed ways
+
   "area resolver"should "include closed loop outer ways which are part of the relation" in {
     val entities = loadEntities("new-york-city.pbf")
 
