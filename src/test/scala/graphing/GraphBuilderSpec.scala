@@ -60,21 +60,8 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(graph.children.head.children.head.children.head.area.name == "Small")
   }
 
-  "graph builder" should "trickle up" in {
+  "graph builder" should "insertion order should not effect trickle down outcome" in {
     val graph = graphBuilder.buildGraph(Seq(small, medium, large))
-
-    new GraphReader().dump(graph)
-
-    assert(graph.children.size == 1)
-    assert(graph.children.head.area.name == "Large")
-    assert(graph.children.head.children.size == 1)
-    assert(graph.children.head.children.head.area.name == "Medium")
-    assert(graph.children.head.children.size == 1)
-    assert(graph.children.head.children.head.children.head.area.name == "Small")
-  }
-
-  "graph builder" should "trickle up2" in {
-    val graph = graphBuilder.buildGraph(Seq(small, large, medium))
 
     new GraphReader().dump(graph)
 
