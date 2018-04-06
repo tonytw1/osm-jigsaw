@@ -9,21 +9,15 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
 
   val graphBuilder = new GraphBuilder()
 
-  val largeArea = makePolygon((-10, 10), (10, -10))
-  val large = Area(name = "Large", largeArea, boundingBoxFor(largeArea))
+  val large = makeArea("Large", (-10, 10), (10, -10))
+  val medium = makeArea("Medium", (-2, 2), (2, -2))
+  val small = makeArea("Small", (-1, 1), (1, -1))
 
-  val mediumArea = makePolygon((-2, 2), (2, -2))
-  val medium = Area(name = "Medium", mediumArea, boundingBoxFor(mediumArea))
+  val left = makeArea("Left", (-10, 10), (0, -10))
+  val right = makeArea("Right", (0, 10), (10, -10))
 
-  val smallArea = makePolygon((-1, 1), (1, -1))
-  val small = Area(name = "Small", smallArea, boundingBoxFor(smallArea))
-
-
-  val leftArea = makePolygon((-10, 10), (0, -10))
-  val left = Area(name = "Left", leftArea, boundingBoxFor(leftArea))
-
-  val rightArea = makePolygon((0, 10), (10, -10))
-  val right = Area(name = "Right", rightArea, boundingBoxFor(rightArea))
+  val overlapping = makeArea("Overlapping", (-5, 10), (5, -10))
+  val fitsInLeftAndOverlapping = makeArea("Fits", (-1, 1), (0, 0))
 
   "graph builder" should "provide empty head node" in {
     val empty = graphBuilder.buildGraph(Seq())
@@ -88,6 +82,21 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(graph.children.head.children.head.area.name == "Medium")
     assert(graph.children.head.children.size == 1)
     assert(graph.children.head.children.head.children.head.area.name == "Small")
+  }
+
+  "graph builder" should "workout what todo about overlapping regions" in {
+    val leftFirst = graphBuilder.buildGraph(Seq(large, left, overlapping, fitsInLeftAndOverlapping))
+    new GraphReader().dump(leftFirst)
+
+    val overlappingFirst = graphBuilder.buildGraph(Seq(large, overlapping, left, fitsInLeftAndOverlapping))
+    new GraphReader().dump(overlappingFirst)
+
+    // TODO
+  }
+
+  def makeArea(name: String, topLeft: (Int, Int), bottomRight: (Int, Int)): Area = {
+    val area = makePolygon(topLeft, bottomRight)
+    Area(name = name, area, boundingBoxFor(area))
   }
 
 }
