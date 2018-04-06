@@ -40,6 +40,10 @@ trait TestValues {
   // way 4557216 Salt Island
   // Part of many parent relations
 
+  /* Boston relation is defined as a single closed way
+  / EarthNone / United KingdomSome(62149Relation) / EnglandSome(58447Relation) / East MidlandsSome(151279Relation) /
+  LincolnshireSome(78312Relation) / BostonSome(58553Relation) / BostonSome(2776224Relation) / 206552267WaySome(206552267WayWay)
+  */
 
   // WAY 4412732 Sits just over the edge of two London boroughs.
 
