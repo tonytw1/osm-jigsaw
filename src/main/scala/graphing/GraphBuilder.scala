@@ -24,7 +24,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
 
     val earthArea = makePolygon((-180, 90),(180, -90))
     val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
-    var head = GraphNode(earth, None)
+    var head = GraphNode(earth)
 
     def showProgress: Unit = {
       i = i + 1
@@ -66,8 +66,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
       a.children = a.children - b
       s.children = s.children + b
       siftDown(s, b)  // TODO test case needed
-
-
     }
 
   }
