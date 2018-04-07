@@ -1,6 +1,6 @@
 package graphing
 
-import com.esri.core.geometry.{OperatorContains, OperatorIntersects, Polygon, SpatialReference}
+import com.esri.core.geometry._
 import model.{Area, GraphNode}
 import resolving.{BoundingBox, PolygonBuilding}
 
@@ -46,7 +46,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
     var siblings = a.children
 
-
     val existingSiblingsWhichNewValueWouldFitIn = a.children.filter(c => c != b).find { s =>
       areaContains(s.area, b.area)
     }
@@ -72,6 +71,14 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
 
+      val siblingsWhichOverlapWithNewNode = siblings.filter(c => c != b).filter{ s =>
+        areasOverlap(b.area, s.area)
+      }
+
+      siblingsWhichOverlapWithNewNode.map { s =>
+        println("New area " + b.area.name + " intersects with sibling: " + s.area.name)
+      }
+
     }
   }
 
@@ -79,14 +86,17 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
     nodes.map(s => s.area.name).mkString(", ")
   }
 
-  private def areaContains(a: Area, b: Area) = {
+  private def areaContains(a: Area, b: Area): Boolean = {
    // if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
     //  false
     //} else {
-      val r = OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+      OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
    // println("!!!! " + a.name + " v " + b.name + ": " + r)
-      r
     //}
+  }
+
+  private def areasOverlap(a: Area, b: Area) = {
+    OperatorOverlaps.local().execute(a.polygon, b.polygon, sr, null)
   }
 
   def areaOf(area: Area): Double = {
