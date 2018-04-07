@@ -1,6 +1,6 @@
 package graphing
 
-import com.esri.core.geometry.{OperatorContains, Polygon, SpatialReference}
+import com.esri.core.geometry.{OperatorContains, OperatorIntersects, Polygon, SpatialReference}
 import model.{Area, GraphNode}
 import resolving.{BoundingBox, PolygonBuilding}
 
@@ -45,29 +45,34 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
     var siblings = a.children
-    val siblingsWhichFitInsideNewNode = siblings.filter(c => c != b).filter { s =>
-      areaContains(b.area, s.area)
-    }
 
-    if (siblingsWhichFitInsideNewNode.nonEmpty) {
-      println("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
-        "(" + render(siblingsWhichFitInsideNewNode) + ")")
 
-      a.children = a.children -- siblingsWhichFitInsideNewNode
-      b.children = b.children ++ siblingsWhichFitInsideNewNode  // TODO parent not set
-    }
-
-    val existingSiblingWhichNewValueWouldFitIn = a.children.filter(c => c != b).find { s =>
+    val existingSiblingsWhichNewValueWouldFitIn = a.children.filter(c => c != b).find { s =>
       areaContains(s.area, b.area)
     }
 
-    existingSiblingWhichNewValueWouldFitIn.map { s =>
-      // println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
+    if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
+      existingSiblingsWhichNewValueWouldFitIn.map { s =>
+        // println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
+        s.children = s.children + b
+        siftDown(s, b) // TODO test case needed
+      }
       a.children = a.children - b
-      s.children = s.children + b
-      siftDown(s, b)  // TODO test case needed
-    }
 
+    } else {
+      val siblingsWhichFitInsideNewNode = siblings.filter(c => c != b).filter { s =>
+        areaContains(b.area, s.area)
+      }
+
+      if (siblingsWhichFitInsideNewNode.nonEmpty) {
+        println("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
+          "(" + render(siblingsWhichFitInsideNewNode) + ")")
+
+        a.children = a.children -- siblingsWhichFitInsideNewNode
+        b.children = b.children ++ siblingsWhichFitInsideNewNode
+      }
+
+    }
   }
 
   private def render(nodes: Set[GraphNode]): String = {
