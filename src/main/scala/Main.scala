@@ -23,9 +23,13 @@ object Main extends EntityRendering {
     val isAdminLevel = tags.exists(t => t.getKey == "admin_level")
     val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
     val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
-    val isLeisurePark = tags.exists(t => tags.exists(t => t.getKey == "leisure"  && t.getValue == "park"))
 
-    (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) || isLeisurePark
+    val isLeisurePark = tags.exists(t => tags.exists(t => t.getKey == "leisure"  && t.getValue == "park"))
+    val isIsland = tags.exists(t => tags.exists(t => t.getKey == "place"  && t.getValue == "island"))
+    val isNationalPark = tags.exists(t => tags.exists(t => t.getKey == "boundary"  && t.getValue == "national_park"))
+
+    (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) ||
+      isLeisurePark || isNationalPark || isIsland
   }
 
   def main(args: Array[String]): Unit = {
