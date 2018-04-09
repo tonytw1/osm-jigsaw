@@ -52,10 +52,10 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
     }
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
+      a.children = a.children - b
       existingSiblingsWhichNewValueWouldFitIn.map { s =>
         println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
         s.children = s.children + b
-        a.children = a.children - b
         siftDown(s, b) // TODO test case needed
       }
 
