@@ -1,7 +1,7 @@
 package graphing
 
 import input.TestValues
-import model.{Area, EntityRendering}
+import model.{Area, EntityRendering, GraphNode}
 import org.scalatest.FlatSpec
 import resolving.{BoundingBox, PolygonBuilding}
 
@@ -84,13 +84,17 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(graph.children.head.children.head.children.head.area.name == "Small")
   }
 
-  "graph builder" should "workout what todo about overlapping regions" in {
-    val leftFirst = graphBuilder.buildGraph(Seq(large, left, overlapping, fitsInLeftAndOverlapping))
+  "graph builder" should "items which fit inside overlapping siblings should become children of all of the overlapping regions" in {
+    val leftFirst: GraphNode = graphBuilder.buildGraph(Seq(large, left, overlapping, fitsInLeftAndOverlapping))
     new GraphReader().dump(leftFirst)
 
-    val overlappingFirst = graphBuilder.buildGraph(Seq(large, overlapping, left, fitsInLeftAndOverlapping))
-    new GraphReader().dump(overlappingFirst)
+    val overlappingNode = leftFirst.children.head.children.head
+    val leftNode = leftFirst.children.head.children.last
+    println(overlapping)
 
+
+    assert(overlappingNode.children.head.area.name == "Fits")
+    assert(leftNode.children.head.area.name == "Fits")
     // TODO
   }
 
