@@ -46,19 +46,23 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
     var siblings = a.children
 
-    val existingSiblingsWhichNewValueWouldFitIn = a.children.filter(c => c != b).find { s =>
+    var filter = a.children.filter(c => c != b)
+    val existingSiblingsWhichNewValueWouldFitIn = filter.filter { s =>
       areaContains(s.area, b.area)
     }
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.map { s =>
-        // println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
+        println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
         s.children = s.children + b
+        a.children = a.children - b
         siftDown(s, b) // TODO test case needed
       }
-      a.children = a.children - b
 
     } else {
+      println("Inserting " + b.area.name + " into " + a.area.name)
+      a.children = a.children ++ Seq(b)
+
       val siblingsWhichFitInsideNewNode = siblings.filter(c => c != b).filter { s =>
         areaContains(b.area, s.area)
       }
@@ -75,9 +79,21 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
         areasOverlap(b.area, s.area)
       }
 
+      /*
       siblingsWhichOverlapWithNewNode.map { s =>
-        println("New area " + b.area.name + " intersects with sibling: " + s.area.name)
+        println("New area " + b.area.name + " intersects with sibling: " + s.area.name + " which has " + s.children.size + " children")
+
+        val inOverlap = s.children.filter{ sc =>
+          areaContains(b.area, sc.area)
+        }
+
+        println("Found " + inOverlap.size + " overlap children to copy to new area")
+        b.children = b.children ++ inOverlap
+        inOverlap.map { u =>
+          siftDown(b, u)
+        }
       }
+      */
 
     }
   }

@@ -47,6 +47,10 @@ trait TestValues {
 
   // WAY 4412732 Sits just over the edge of two London boroughs.
 
+
+
+  // WAY 62091141 Rowledge Cricket Club - overlaps 2 counties.
+
   /* Europe - recursive loop
   Relation 6483281 has 2 relation members which are relations
   Recursing to resolve subrelation: RelationMember(Relation with id 5400348 in the role 'subarea')
