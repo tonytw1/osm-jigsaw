@@ -18,5 +18,8 @@ lazy val root = (project in file(".")).
     libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.1.0",
     libraryDependencies += "joda-time" % "joda-time" % "2.9.9",
     libraryDependencies += "commons-cli" % "commons-cli" % "1.4",
+    libraryDependencies += "org.apache.logging.log4j" % "log4j-api" % "2.11.0",
+    libraryDependencies += "org.apache.logging.log4j" % "log4j-core" % "2.11.0",
+    libraryDependencies += "org.apache.logging.log4j" %% "log4j-api-scala" % "11.0",
     libraryDependencies += scalaTest % Test
   )

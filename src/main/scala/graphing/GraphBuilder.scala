@@ -2,21 +2,23 @@ package graphing
 
 import com.esri.core.geometry._
 import model.{Area, GraphNode}
+import org.apache.logging.log4j.scala.Logging
 import resolving.{BoundingBox, PolygonBuilding}
+import org.apache.logging.log4j.Level
 
-class GraphBuilder extends BoundingBox with PolygonBuilding {
+class GraphBuilder extends BoundingBox with PolygonBuilding with Logging {
 
   val sr = SpatialReference.create(1)
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
-    println("Building graph from " + areas.size + " areas")
-    println("Presorting by area to assist sift down effectiveness")
+    logger.info("Building graph from " + areas.size + " areas")
+    logger.info("Presorting by area to assist sift down effectiveness")
     var c = 0
     val sorted = areas.sortBy { a =>
       areaOf(a)
     }
     val inOrder = sorted.reverse
-    println("Finished sorting")
+    logger.info("Finished sorting")
 
     var i = 0
     var j = 0
@@ -30,7 +32,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
       i = i + 1
       j = j + 1
       if (j == 100) {
-        println(i + "/" + total + ": " + head.children.size)
+        logger.info(i + "/" + total + ": " + head.children.size)
         j = 0
       }
     }
@@ -54,13 +56,13 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       a.children = a.children - b
       existingSiblingsWhichNewValueWouldFitIn.map { s =>
-        println("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
+        logger.info("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
         s.children = s.children + b
         siftDown(s, b) // TODO test case needed
       }
 
     } else {
-      println("Inserting " + b.area.name + " into " + a.area.name)
+      logger.info("Inserting " + b.area.name + " into " + a.area.name)
       a.children = a.children ++ Seq(b)
 
       val siblingsWhichFitInsideNewNode = siblings.filter(c => c != b).filter { s =>
@@ -68,7 +70,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
       }
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
-        println("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
+        logger.info("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
           "(" + render(siblingsWhichFitInsideNewNode) + ")")
 
         a.children = a.children -- siblingsWhichFitInsideNewNode
@@ -81,13 +83,13 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
 
       /*
       siblingsWhichOverlapWithNewNode.map { s =>
-        println("New area " + b.area.name + " intersects with sibling: " + s.area.name + " which has " + s.children.size + " children")
+        logger.info("New area " + b.area.name + " intersects with sibling: " + s.area.name + " which has " + s.children.size + " children")
 
         val inOverlap = s.children.filter{ sc =>
           areaContains(b.area, sc.area)
         }
 
-        println("Found " + inOverlap.size + " overlap children to copy to new area")
+        logger.info("Found " + inOverlap.size + " overlap children to copy to new area")
         b.children = b.children ++ inOverlap
         inOverlap.map { u =>
           siftDown(b, u)
@@ -107,7 +109,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding {
     //  false
     //} else {
       OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
-   // println("!!!! " + a.name + " v " + b.name + ": " + r)
+   // logger.info("!!!! " + a.name + " v " + b.name + ": " + r)
     //}
   }
 
