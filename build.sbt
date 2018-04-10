@@ -3,7 +3,7 @@ import Dependencies._
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
-      organization := "com.example",
+      organization := "uk.co.eelpieconsulting",
       scalaVersion := "2.12.3",
       version      := "0.1.0-SNAPSHOT"
     )),
@@ -11,7 +11,7 @@ lazy val root = (project in file(".")).
     mainClass in assembly := Some("Main"),
     assemblyMergeStrategy in assembly := {
       case PathList("osmosis-plugins.conf", xs @ _*) => MergeStrategy.discard
-      case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+      case "META-INF/MANIFEST.MF" => MergeStrategy.discard
       case x => MergeStrategy.first
     },
     libraryDependencies += "org.openstreetmap.osmosis" % "osmosis-pbf" % "0.46",
