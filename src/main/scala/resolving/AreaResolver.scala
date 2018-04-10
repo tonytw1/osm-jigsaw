@@ -1,12 +1,13 @@
 package resolving
 
 import model.{Area, EntityRendering}
+import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, Relation, Way}
 import progress.ProgressCounter
 
 import scala.collection.JavaConverters._
 
-class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding with WayJoining {
+class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding with WayJoining with Logging {
 
   val outerNodeMapper = new OutlineBuilder()
 
@@ -40,7 +41,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
               Area(areaName, a, boundingBoxFor(a), osmId)
             }
           } else {
-            println("Ignoring non closed way: " + w)
+            logger.info("Ignoring non closed way: " + w)
             None
           }
           Seq(resolvedArea).flatten
