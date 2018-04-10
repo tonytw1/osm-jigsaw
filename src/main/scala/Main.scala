@@ -4,13 +4,14 @@ import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
 import model.{Area, EntityRendering, GraphNode}
 import org.apache.commons.cli._
+import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import resolving.AreaResolver
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 
-object Main extends EntityRendering {
+object Main extends EntityRendering with Logging {
 
   private val STEP = "s"
 
@@ -126,7 +127,7 @@ object Main extends EntityRendering {
     val oos = new ObjectOutputStream(new FileOutputStream(outputFilename))
     oos.writeObject(head)
     oos.close
-    println("Dumped graph to file: " + outputFilename)
+    logger.info("Dumped graph to file: " + outputFilename)
   }
 
   def dumpGraph(inputFilename: String) = {
