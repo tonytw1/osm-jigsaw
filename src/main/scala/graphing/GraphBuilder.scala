@@ -49,9 +49,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     var filter = a.children.filter(c => c != b)
     val existingSiblingsWhichNewValueWouldFitIn = filter.filter { s =>
-      val r = areaContains(s.area, b.area)
-      logger.info("SD: " + b.area.name + " into " + a.area.name + " -> " + s.area.name + " contains " + b.area.name + ": " + r)
-      r
+      areaContains(s.area, b.area)
     }
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
@@ -71,7 +69,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
-        logger.info("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
+        logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
           "(" + render(siblingsWhichFitInsideNewNode) + ")")
 
         a.children = a.children -- siblingsWhichFitInsideNewNode
