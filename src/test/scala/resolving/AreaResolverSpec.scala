@@ -36,6 +36,26 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
     val areas = areaResolver.resolveAreas(Set(richmond), relationsMap, ways, nodes)
 
     assert(areas.size == 1)
+
+
+
+    val bournemouth = relations.find(r => r.getId == BOURNEMOUTH._1).head
+    val holdenhurst = relations.find(r => r.getId == HOLDENHURST_VILLAGE._1).head
+
+    println(bournemouth)
+    println(holdenhurst)
+
+    val bournemouthAreas = areaResolver.resolveAreas(Set(bournemouth), relationsMap, ways, nodes)
+    val holdenhurstAreas = areaResolver.resolveAreas(Set(holdenhurst), relationsMap, ways, nodes)
+
+    println(bournemouthAreas.size)
+    println(holdenhurstAreas.size)
+
+    val bournemouthArea = bournemouthAreas.head
+    val holdenhurstArea = holdenhurstAreas.head
+
+    println(bournemouthArea)
+    println(holdenhurstArea)
   }
 
   // TODO assert ignores unclosed ways

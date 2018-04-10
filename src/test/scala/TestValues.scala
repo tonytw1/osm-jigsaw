@@ -18,6 +18,7 @@ trait TestValues {
 
   // Has a subarea
   val BOURNEMOUTH = (130884L, EntityType.Relation)
+  val HOLDENHURST_VILLAGE = (3565145L, EntityType.Relation)
 
   // Western Isles - collection of islands
   // 1959008

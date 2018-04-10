@@ -1,14 +1,13 @@
 package graphing
 
+import areas.AreaComparison
 import com.esri.core.geometry._
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import resolving.{BoundingBox, PolygonBuilding}
 import org.apache.logging.log4j.Level
 
-class GraphBuilder extends BoundingBox with PolygonBuilding with Logging {
-
-  val sr = SpatialReference.create(1)
+class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
@@ -104,23 +103,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging {
 
   private def render(nodes: Set[GraphNode]): String = {
     nodes.map(s => s.area.name).mkString(", ")
-  }
-
-  private def areaContains(a: Area, b: Area): Boolean = {
-   // if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
-    //  false
-    //} else {
-      OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
-   // logger.info("!!!! " + a.name + " v " + b.name + ": " + r)
-    //}
-  }
-
-  private def areasOverlap(a: Area, b: Area) = {
-    OperatorOverlaps.local().execute(a.polygon, b.polygon, sr, null)
-  }
-
-  def areaOf(area: Area): Double = {
-    Math.abs(area.polygon.calculateArea2D())
   }
 
 }
