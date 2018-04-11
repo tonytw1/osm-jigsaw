@@ -107,8 +107,11 @@ object Main extends EntityRendering with Logging {
       newAreas.foreach(a => oos.writeObject(a))
     }
 
-    areaResolver.resolveAreas(relations.values.filter(e => entitiesToGraph(e)), relations, modelWays, nodes, callback)
-    areaResolver.resolveAreas(ways.values.filter(e => entitiesToGraph(e)), relations, modelWays, nodes, callback)
+    val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
+    areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodes, callback)
+
+    val waysToResolve = ways.values.filter(e => entitiesToGraph(e))
+    areaResolver.resolveAreas(waysToResolve, relations, modelWays, nodes, callback)
 
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)
