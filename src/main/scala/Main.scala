@@ -1,4 +1,4 @@
-import java.io.{FileInputStream, FileOutputStream, ObjectInputStream, ObjectOutputStream}
+import java.io._
 
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
@@ -105,20 +105,26 @@ object Main extends EntityRendering with Logging {
     val entitiesToResolve = relationsToResolve ++ waysToResolve
 
     val areaResolver = new AreaResolver()
-    val areas = areaResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes)
-    logger.info("Produced " + areas.size + " relation shapes")
 
-    logger.info("Dumping areas to file")
-    val oos = new ObjectOutputStream(new FileOutputStream(outputFilepath))
-    oos.writeObject(areas)
+    val oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(outputFilepath)))
+
+    def callback(newArea: Area): Unit = {
+      oos.writeObject(newArea)
+    }
+
+    areaResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes, callback)
+
     oos.close
-
     logger.info("Dumped areas to file: " + outputFilepath)
   }
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
-    val ois = new ObjectInputStream(new FileInputStream(inputFilename))
-    val areas = ois.readObject.asInstanceOf[Set[Area]] // TODO order?
+    var areas = Seq[Area]()
+    val fileInputStream = new FileInputStream(inputFilename)
+    val ois = new ObjectInputStream(fileInputStream)
+    while(fileInputStream.available > 0) {
+      areas = areas :+ ois.readObject().asInstanceOf[Area]
+    }
     ois.close
 
     val head = new GraphBuilder().buildGraph(areas.toSeq)

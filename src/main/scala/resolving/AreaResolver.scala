@@ -11,7 +11,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolveAreas(entities: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
+  def resolveAreas(entities: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)], callback: Area => Unit): Unit = {
 
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[Area] = {
 
@@ -20,7 +20,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           val outerRings = outerNodeMapper.outlineRings(r, allRelations, ways, nodes)
 
           val areaName = render(r) // TODO can do better
-          val osmId = Some(r.getId.toString)
+        val osmId = Some(r.getId.toString)
 
           val areas = outerRings.map { ways =>
             val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => nodes.get(nid).map(n => (n._1, n._2))).flatten
@@ -32,7 +32,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
         case w: Way =>
           val areaName = render(w) // TODO can do better
-          val osmId = Some(w.getId.toString)
+        val osmId = Some(w.getId.toString)
 
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
@@ -49,9 +49,20 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
     }
 
     val counter = new ProgressCounter(1000)
-    entities.flatMap { e =>
-      counter.withProgress(resolveAreasForEntity(e, allRelations, ways, nodes))
+    entities.foreach { e =>
+      counter.withProgress(resolveAreasForEntity(e, allRelations, ways, nodes)).foreach(a => callback(a))
     }
+  }
+
+  def resolveAreas(entitiesToResolve: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
+    var areas = Set[Area]()
+
+    def callback(newArea: Area): Unit = {
+      areas = areas + newArea
+    }
+
+    resolveAreas(entitiesToResolve, allRelations, ways, nodes, callback)
+    areas
   }
 
 }
