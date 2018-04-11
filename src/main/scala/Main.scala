@@ -48,19 +48,19 @@ object Main extends EntityRendering with Logging {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
       }
-      case _ => println("Unknown step") // TODO exit code
+      case _ => logger.info("Unknown step") // TODO exit code
     }
   }
 
   def extract(inputFilepath: String, outputFilepath: String) {
-    println("Extracting entities and their resolved components from " + inputFilepath + " into " + outputFilepath)
+    logger.info("Extracting entities and their resolved components from " + inputFilepath + " into " + outputFilepath)
 
     new RelationExtractor().extract(inputFilepath, entitiesToGraph, outputFilepath)
-    println("Done")
+    logger.info("Done")
   }
 
   def extractRelations(inputFilepath: String, outputFilepath: String, relationIds: Seq[Long]): Unit = {
-    println(relationIds)
+    logger.info(relationIds)
 
     def selectedRelations(entity: Entity): Boolean = {
       entity.getType == EntityType.Relation && relationIds.contains(entity.getId)
@@ -68,7 +68,7 @@ object Main extends EntityRendering with Logging {
 
     val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, selectedRelations, outputFilepath)
 
-    println("Done")
+    logger.info("Done")
   }
 
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
@@ -91,13 +91,13 @@ object Main extends EntityRendering with Logging {
       }
     }
 
-    println("Loading entities")
+    logger.info("Loading entities")
     new SinkRunner(inputFilepath, all, addToFound).run
-    println("Finished loading entities")
+    logger.info("Finished loading entities")
 
-    println("Found " + relations.size + " relations to process")
+    logger.info("Found " + relations.size + " relations to process")
 
-    println("Resolving areas")
+    logger.info("Resolving areas")
 
     val relationsToResolve: Set[Entity] = (relations.values.toSeq).filter(e => entitiesToGraph(e)).toSet
     val waysToResolve: Set[Entity] = (ways.values.toSeq).filter(e => entitiesToGraph(e)).toSet
@@ -106,14 +106,14 @@ object Main extends EntityRendering with Logging {
 
     val areaResolver = new AreaResolver()
     val areas = areaResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes)
-    println("Produced " + areas.size + " relation shapes")
+    logger.info("Produced " + areas.size + " relation shapes")
 
-    println("Dumping areas to file")
+    logger.info("Dumping areas to file")
     val oos = new ObjectOutputStream(new FileOutputStream(outputFilepath))
     oos.writeObject(areas)
     oos.close
 
-    println("Dumped areas to file: " + outputFilepath)
+    logger.info("Dumped areas to file: " + outputFilepath)
   }
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
