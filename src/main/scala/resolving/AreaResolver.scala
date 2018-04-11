@@ -11,7 +11,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolveAreas(entities: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)], callback: Area => Unit): Unit = {
+  def resolveAreas(entities: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)], callback: Seq[Area] => Unit): Unit = {
 
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[Area] = {
 
@@ -50,15 +50,15 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
     val counter = new ProgressCounter(1000)
     entities.foreach { e =>
-      counter.withProgress(resolveAreasForEntity(e, allRelations, ways, nodes)).foreach(a => callback(a))
+      counter.withProgress(callback(resolveAreasForEntity(e, allRelations, ways, nodes)))
     }
   }
 
   def resolveAreas(entitiesToResolve: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
     var areas = Set[Area]()
 
-    def callback(newArea: Area): Unit = {
-      areas = areas + newArea
+    def callback(newAreas: Seq[Area]): Unit = {
+      areas = areas ++ newAreas
     }
 
     resolveAreas(entitiesToResolve, allRelations, ways, nodes, callback)

@@ -108,8 +108,8 @@ object Main extends EntityRendering with Logging {
 
     val oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(outputFilepath)))
 
-    def callback(newArea: Area): Unit = {
-      oos.writeObject(newArea)
+    def callback(newAreas: Seq[Area]): Unit = {
+      newAreas.foreach(a => oos.writeObject(a))
     }
 
     areaResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes, callback)
