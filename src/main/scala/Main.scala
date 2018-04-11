@@ -30,7 +30,7 @@ object Main extends EntityRendering with Logging {
     val isNationalPark = tags.exists(t => tags.exists(t => t.getKey == "boundary"  && t.getValue == "national_park"))
 
     (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) ||
-      isLeisurePark || isNationalPark || isIsland
+      ((entity.getType == EntityType.Relation || entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed) && isLeisurePark || isNationalPark || isIsland)
   }
 
   def main(args: Array[String]): Unit = {
