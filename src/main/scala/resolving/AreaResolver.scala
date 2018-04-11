@@ -11,16 +11,15 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolveAreas(entities: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)], callback: Seq[Area] => Unit): Unit = {
+  def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)], callback: Seq[Area] => Unit): Unit = {
 
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[Area] = {
-
       e match {
         case r: Relation =>
           val outerRings = outerNodeMapper.outlineRings(r, allRelations, ways, nodes)
 
           val areaName = render(r) // TODO can do better
-        val osmId = Some(r.getId.toString)
+          val osmId = Some(r.getId.toString)
 
           val areas = outerRings.map { ways =>
             val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => nodes.get(nid).map(n => (n._1, n._2))).flatten
@@ -32,7 +31,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
         case w: Way =>
           val areaName = render(w) // TODO can do better
-        val osmId = Some(w.getId.toString)
+          val osmId = Some(w.getId.toString)
 
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
@@ -54,7 +53,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
     }
   }
 
-  def resolveAreas(entitiesToResolve: Set[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
+  def resolveAreas(entitiesToResolve: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
     var areas = Set[Area]()
 
     def callback(newAreas: Seq[Area]): Unit = {

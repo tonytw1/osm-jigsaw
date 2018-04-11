@@ -99,11 +99,6 @@ object Main extends EntityRendering with Logging {
 
     logger.info("Resolving areas")
 
-    val relationsToResolve: Set[Entity] = (relations.values.toSeq).filter(e => entitiesToGraph(e)).toSet
-    val waysToResolve: Set[Entity] = (ways.values.toSeq).filter(e => entitiesToGraph(e)).toSet
-
-    val entitiesToResolve = relationsToResolve ++ waysToResolve
-
     val areaResolver = new AreaResolver()
 
     val oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(outputFilepath)))
@@ -112,7 +107,8 @@ object Main extends EntityRendering with Logging {
       newAreas.foreach(a => oos.writeObject(a))
     }
 
-    areaResolver.resolveAreas(entitiesToResolve, relations, modelWays, nodes, callback)
+    areaResolver.resolveAreas(relations.values.filter(e => entitiesToGraph(e)), relations, modelWays, nodes, callback)
+    areaResolver.resolveAreas(ways.values.filter(e => entitiesToGraph(e)), relations, modelWays, nodes, callback)
 
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)
