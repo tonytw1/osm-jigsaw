@@ -105,9 +105,10 @@ object Main extends EntityRendering with Logging {
       newAreas.foreach(a => oos.writeObject(a))
     }
 
-    val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
-    val waysToResolve = ways.values.filter(e => entitiesToGraph(e))
-    var modelWays = LongMap[model.Way]() = ways.values.map(w => (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
+    val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
+    val waysToResolve: Iterable[Way] = ways.values.filter(e => entitiesToGraph(e))
+
+    val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
     areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodes, callback)
