@@ -76,7 +76,6 @@ object Main extends EntityRendering with Logging {
 
     var relations = LongMap[Relation]()
     var ways = LongMap[Way]()
-    var modelWays = LongMap[model.Way]()
     var nodes = LongMap[(Double, Double)]()
 
     def addToFound(entity: Entity) = {
@@ -84,7 +83,6 @@ object Main extends EntityRendering with Logging {
         case r: Relation => relations = relations + (r.getId -> r)
         case w: Way => {
           ways = ways + (w.getId -> w)
-          modelWays = modelWays + (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))
         }
         case n: Node => nodes = nodes + (n.getId -> (n.getLatitude, n.getLongitude))
         case _ =>
@@ -108,9 +106,13 @@ object Main extends EntityRendering with Logging {
     }
 
     val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
+    val waysToResolve = ways.values.filter(e => entitiesToGraph(e))
+    var modelWays = LongMap[model.Way]() = ways.values.map(w => (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
+
+    logger.info("Resolving areas for " + relationsToResolve.size + " relations")
     areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodes, callback)
 
-    val waysToResolve = ways.values.filter(e => entitiesToGraph(e))
+    logger.info("Resolving areas for " + waysToResolve.size + " ways")
     areaResolver.resolveAreas(waysToResolve, relations, modelWays, nodes, callback)
 
     oos.close
