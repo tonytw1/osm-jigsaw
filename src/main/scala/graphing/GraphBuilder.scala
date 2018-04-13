@@ -1,11 +1,9 @@
 package graphing
 
 import areas.AreaComparison
-import com.esri.core.geometry._
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import resolving.{BoundingBox, PolygonBuilding}
-import org.apache.logging.log4j.Level
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
@@ -45,9 +43,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
-    var siblings = a.children
+    var siblings = a.children.filter(c => c != b).par
 
-    val existingSiblingsWhichNewValueWouldFitIn = siblings.filter(c => c != b).filter { s =>
+    val existingSiblingsWhichNewValueWouldFitIn = siblings.filter { s =>
       areaContains(s.area, b.area)
     }
 
@@ -63,7 +61,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       logger.info("Inserting " + b.area.name + " into " + a.area.name)
       a.children = a.children ++ Seq(b)
 
-      val siblingsWhichFitInsideNewNode = siblings.filter(c => c != b).filter { s =>
+      val siblingsWhichFitInsideNewNode = siblings.filter { s =>
         areaContains(b.area, s.area)
       }
 
