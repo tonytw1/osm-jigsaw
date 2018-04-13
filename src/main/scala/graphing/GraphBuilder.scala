@@ -45,7 +45,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
-    var siblings = a.children
+    var siblings = a.children.par
 
     val existingSiblingsWhichNewValueWouldFitIn = siblings.filter(c => c != b).filter { s =>
       areaContains(s.area, b.area)
