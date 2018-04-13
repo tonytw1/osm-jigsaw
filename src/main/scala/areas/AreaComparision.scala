@@ -17,7 +17,11 @@ trait AreaComparison {
   }
 
   def areasOverlap(a: Area, b: Area) = {
-    OperatorOverlaps.local().execute(a.polygon, b.polygon, sr, null)
+    if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
+      false
+    } else {
+      OperatorOverlaps.local().execute(a.polygon, b.polygon, sr, null)
+    }
   }
 
   def areaOf(area: Area): Double = {
