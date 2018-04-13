@@ -45,7 +45,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
-    var siblings = a.children
+    var siblings = a.children.par
 
     var filter = a.children.filter(c => c != b)
     val existingSiblingsWhichNewValueWouldFitIn = filter.filter { s =>
@@ -69,9 +69,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
-        logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name + " " +
-          "(" + render(siblingsWhichFitInsideNewNode) + ")")
-
+        logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name)
         a.children = a.children -- siblingsWhichFitInsideNewNode
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
