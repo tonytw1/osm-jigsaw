@@ -10,6 +10,7 @@ import resolving.AreaResolver
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
+import scala.collection.mutable
 
 object Main extends EntityRendering with Logging {
 
@@ -121,17 +122,20 @@ object Main extends EntityRendering with Logging {
   }
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
-    var areas = Seq[Area]()
-    val fileInputStream = new FileInputStream(inputFilename)
+    logger.info("Reading areas")
+    var areas = mutable.Seq[Area]()
+    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
     val ois = new ObjectInputStream(fileInputStream)
     while(fileInputStream.available > 0) {
       areas = areas :+ ois.readObject().asInstanceOf[Area]
     }
     ois.close
+    logger.info("Read " + areas.size + " areas")
 
-    val head = new GraphBuilder().buildGraph(areas.toSeq)
+    logger.info("Building graph")
+    val head = new GraphBuilder().buildGraph(areas)
 
-    // Dump graph to disk
+    logger.info("Writing graph to disk")
     val oos = new ObjectOutputStream(new FileOutputStream(outputFilename))
     oos.writeObject(head)
     oos.close
