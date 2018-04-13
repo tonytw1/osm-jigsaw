@@ -35,7 +35,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
-    inOrder.map { a =>
+    inOrder.foreach { a =>
       siftDown(head, head.insert(a))
       showProgress
     }
@@ -45,7 +45,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
     var start = DateTime.now()
-    var siblings = a.children.filter(c => c != b).par
+    var siblings = a.children.filter(c => c != b)
 
 
     var startFilter = DateTime.now()
