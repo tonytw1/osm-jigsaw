@@ -74,9 +74,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
 
-      val siblingsWhichOverlapWithNewNode = siblings.filter(c => c != b).filter{ s =>
-        areasOverlap(b.area, s.area)
-      }
+      //val siblingsWhichOverlapWithNewNode = siblings.filter(c => c != b).filter{ s =>
+      //  areasOverlap(b.area, s.area)
+      //}
 
       /*
       siblingsWhichOverlapWithNewNode.map { s =>
