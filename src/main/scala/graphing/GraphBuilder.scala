@@ -3,6 +3,7 @@ package graphing
 import areas.AreaComparison
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
+import org.joda.time.{DateTime, Duration}
 import resolving.{BoundingBox, PolygonBuilding}
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
@@ -43,11 +44,14 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
+    var start = DateTime.now()
     var siblings = a.children.filter(c => c != b).par
+
 
     val existingSiblingsWhichNewValueWouldFitIn = siblings.filter { s =>
       areaContains(s.area, b.area)
     }
+    val filterDuration = new Duration(start, DateTime.now)
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       a.children = a.children - b
@@ -92,6 +96,10 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       */
 
     }
+
+    val duration = new Duration(start, DateTime.now)
+    logger.info("Sift down took " + duration.getMillis + " filter " + filterDuration.getMillis)
+    Unit
   }
 
   private def render(nodes: Set[GraphNode]): String = {
