@@ -30,14 +30,37 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     var head = GraphNode(earth)
 
     val counter = new ProgressCounter(100)
+    head.insert(inOrder)
+    siftDown(head)
+
+    /*
     inOrder.foreach { a =>
       counter.withProgress {
-        OperatorContains.local().accelerateGeometry(a.polygon, sr, GeometryAccelerationDegree.enumMedium)
-        siftDown(head, head.insert(a))
+        // OperatorContains.local().accelerateGeometry(a.polygon, sr, GeometryAccelerationDegree.enumMedium)
+        siftDown(head)
       }
     }
+    */
 
     head
+  }
+
+  def siftDown(a: GraphNode): Unit = {
+    logger.info("Sifting down: " + a.area  + " with " + a.children.size + " children")
+    OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+    val in = a.children
+    a.children = Set()
+
+    val counter = new ProgressCounter(100)
+    in.foreach { b =>
+      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+      siftDown(a, b)
+    }
+
+    // TODO can undo acceleration on items which are no longer in scope
+    a.children.par.map { c =>
+      siftDown(c)
+    }
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
@@ -56,7 +79,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       existingSiblingsWhichNewValueWouldFitIn.map { s =>
         logger.info("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
         s.children = s.children + b
-        siftDown(s, b) // TODO test case needed
+        //siftDown(s, b) // TODO test case needed
       }
 
     } else {
