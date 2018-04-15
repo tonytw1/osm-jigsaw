@@ -4,6 +4,7 @@ import areas.AreaComparison
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.{DateTime, Duration}
+import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
@@ -26,18 +27,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth)
 
-    def showProgress: Unit = {
-      i = i + 1
-      j = j + 1
-      if (j == 100) {
-        logger.info(i + "/" + total + ": " + head.children.size)
-        j = 0
-      }
-    }
-
+    val counter = new ProgressCounter(1000)
     inOrder.foreach { a =>
-      siftDown(head, head.insert(a))
-      showProgress
+      counter.withProgress(siftDown(head, head.insert(a)))
     }
 
     head
