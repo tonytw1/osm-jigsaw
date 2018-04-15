@@ -1,6 +1,8 @@
 package graphing
 
 import areas.AreaComparison
+import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
+import com.esri.core.geometry.OperatorContains
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.{DateTime, Duration}
@@ -27,9 +29,12 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth)
 
-    val counter = new ProgressCounter(1000)
+    val counter = new ProgressCounter(100)
     inOrder.foreach { a =>
-      counter.withProgress(siftDown(head, head.insert(a)))
+      counter.withProgress {
+        OperatorContains.local().accelerateGeometry(a.polygon, sr, GeometryAccelerationDegree.enumMedium)
+        siftDown(head, head.insert(a))
+      }
     }
 
     head
@@ -38,7 +43,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
     var start = DateTime.now()
     var siblings = a.children.filter(c => c != b)
-
 
     var startFilter = DateTime.now()
     val existingSiblingsWhichNewValueWouldFitIn = siblings.filter { s =>
