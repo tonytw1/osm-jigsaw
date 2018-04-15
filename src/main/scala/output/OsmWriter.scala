@@ -1,6 +1,6 @@
 package output
 
-import java.io.FileOutputStream
+import java.io.{BufferedOutputStream, FileOutputStream}
 
 import crosby.binary.osmosis.OsmosisSerializer
 import org.openstreetmap.osmosis.core.container.v0_6.{NodeContainerFactory, RelationContainerFactory, WayContainerFactory}
@@ -14,7 +14,7 @@ class OsmWriter(outputFilePath: String) {
   val wayContainerFactory = new WayContainerFactory()
 
   val out = new FileOutputStream(outputFilePath)
-  var blockOutputStream: BlockOutputStream = new BlockOutputStream(out)
+  var blockOutputStream: BlockOutputStream = new BlockOutputStream(new BufferedOutputStream(out))
 
   val serializer = new OsmosisSerializer(blockOutputStream)
 
