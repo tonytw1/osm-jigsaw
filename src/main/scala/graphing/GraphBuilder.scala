@@ -94,7 +94,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     }
 
     val duration = new Duration(start, DateTime.now)
-    logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
+    logger.info("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
     Unit
   }
 
