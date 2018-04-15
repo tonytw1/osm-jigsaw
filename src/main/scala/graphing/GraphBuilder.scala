@@ -58,7 +58,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     }
 
     // TODO can undo acceleration on items which are no longer in scope
-    a.children.par.map { c =>
+    a.children.foreach { c =>
       siftDown(c)
     }
   }
