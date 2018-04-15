@@ -32,6 +32,8 @@ trait TestValues {
   val SOUTH_WEST_ENGLAND = (151339, EntityType.Relation)
 
 
+  val BUS_ROUTE = (1020786L, EntityType.Relation)
+
   // 8057667WAY coal island - 2 ways which form a relationless area
 
   // Okmulgee 184191 broken relation -all inners
