@@ -45,6 +45,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       areaContains(s.area, b.area)
     }
     val filterDuration = new Duration(startFilter, DateTime.now)
+    var secondFilterDuration: Option[Duration] = None
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       a.children = a.children - b
@@ -58,9 +59,11 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       logger.info("Inserting " + b.area.name + " into " + a.area.name)
       a.children = a.children ++ Seq(b)
 
+      val startSecondFilter = DateTime.now()
       val siblingsWhichFitInsideNewNode = siblings.filter { s =>
         areaContains(b.area, s.area)
       }
+      secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
         logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name)
@@ -91,7 +94,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     }
 
     val duration = new Duration(start, DateTime.now)
-    logger.info("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis)
+    logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
     Unit
   }
 
