@@ -19,7 +19,7 @@ class ProgressCounter(step: Int, total: Option[Long] = None, label: Option[Strin
       val now = DateTime.now
       val delta = now.getMillis - low.getMillis
       val rate = step / (delta * 0.001)
-      logger.info(label.map(l => l + " ") + nf.format(i) + total.map(t => " / " + t) + " in " + delta + "ms @ " + nf.format(rate) + " per second")
+      logger.info(label.map(l => l + " ").getOrElse("") + nf.format(i) + total.map(t => " / " + t).getOrElse("") + " in " + delta + "ms @ " + nf.format(rate) + " per second")
       low = now
       j = 0
     }
