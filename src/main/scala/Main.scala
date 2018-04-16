@@ -21,8 +21,9 @@ object Main extends EntityRendering with Logging {
 
   def entitiesToGraph(entity: Entity): Boolean = {
 
-    //entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)
+    entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)
 
+    /*
     val tags = entity.getTags.asScala
     val isAdminLevel = tags.exists(t => t.getKey == "admin_level")
     val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
@@ -34,6 +35,7 @@ object Main extends EntityRendering with Logging {
 
     (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) ||
       ((entity.getType == EntityType.Relation || entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed) && isLeisurePark || isNationalPark || isIsland)
+      */
   }
 
   def main(args: Array[String]): Unit = {
