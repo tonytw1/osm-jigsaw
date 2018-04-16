@@ -5,7 +5,7 @@ import java.text.DecimalFormat
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.DateTime
 
-class ProgressCounter(step: Int) extends Logging {
+class ProgressCounter(step: Int, total: Option[Long] = None, label: Option[String] = None) extends Logging {
   val nf = new DecimalFormat()
 
   var i = 0L
@@ -19,7 +19,7 @@ class ProgressCounter(step: Int) extends Logging {
       val now = DateTime.now
       val delta = now.getMillis - low.getMillis
       val rate = step / (delta * 0.001)
-      logger.info(nf.format(i) + " in " + delta + "ms @ " + nf.format(rate) + " per second")
+      logger.info(label.map(l => l + " ") + nf.format(i) + total.map(t => " / " + t) + " in " + delta + "ms @ " + nf.format(rate) + " per second")
       low = now
       j = 0
     }
