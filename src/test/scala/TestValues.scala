@@ -51,6 +51,7 @@ trait TestValues {
   // WAY 4412732 Sits just over the edge of two London boroughs.
 
 
+  // WAY 352860187 - way which is part of a relation and should not be indexed indepentanly
 
   // WAY 62091141 Rowledge Cricket Club - overlaps 2 counties.
 

@@ -13,24 +13,17 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
   def buildGraph(areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
-    logger.info("Presorting by area to assist sift down effectiveness")
-    var c = 0
-    val sorted = areas.sortBy { a =>
-      areaOf(a)
-    }
-    val inOrder = sorted.reverse
-    logger.info("Finished sorting")
 
     var i = 0
     var j = 0
-    val total = sorted.size
+    val total = areas.size
 
     val earthArea = makePolygon((-180, 90),(180, -90))
     val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth)
 
     val counter = new ProgressCounter(100)
-    head.insert(inOrder)
+    head.insert(areas)
     siftDown(head)
 
     /*
@@ -46,20 +39,28 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode): Unit = {
-    logger.info("Sifting down: " + a.area  + " with " + a.children.size + " children")
+    logger.info("Sifting down: " + a.area.name  + " with " + a.children.size + " children")
+    logger.info("Presorting by area to assist sift down effectiveness")
+    var c = 0
+    val sorted = a.children.toSeq.sortBy { a =>
+      areaOf(a.area)
+    }
+    val inOrder = sorted.reverse
+
     OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-    val in = a.children
     a.children = Set()
 
     val counter = new ProgressCounter(100)
-    in.foreach { b =>
+    inOrder.foreach { b =>
       OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       siftDown(a, b)
     }
 
     // TODO can undo acceleration on items which are no longer in scope
-    a.children.foreach { c =>
+    a.children.par.foreach { c =>
+      logger.info("Sifting down from " + a.area.name + " to " + c.area.name)
       siftDown(c)
+
     }
   }
 
@@ -121,7 +122,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     }
 
     val duration = new Duration(start, DateTime.now)
-    logger.info("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
+    logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
     Unit
   }
 

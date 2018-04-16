@@ -38,8 +38,8 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(graph.children.size == 1)
     assert(graph.children.head.area.name == "Large")
     assert(graph.children.head.children.size == 2)
-    assert(graph.children.head.children.last.area.name == "Left")
-    assert(graph.children.head.children.head.area.name == "Right")
+    assert(graph.children.head.children.head.area.name == "Left")
+    assert(graph.children.head.children.last.area.name == "Right")
   }
 
   "graph builder" should "sift new nodes down into enclosing siblings" in {
