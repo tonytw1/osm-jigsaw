@@ -14,27 +14,12 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   def buildGraph(areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
 
-    var i = 0
-    var j = 0
-    val total = areas.size
-
     val earthArea = makePolygon((-180, 90),(180, -90))
     val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth)
 
-    val counter = new ProgressCounter(100)
     head.insert(areas)
     siftDown(head)
-
-    /*
-    inOrder.foreach { a =>
-      counter.withProgress {
-        // OperatorContains.local().accelerateGeometry(a.polygon, sr, GeometryAccelerationDegree.enumMedium)
-        siftDown(head)
-      }
-    }
-    */
-
     head
   }
 
