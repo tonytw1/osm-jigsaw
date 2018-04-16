@@ -66,8 +66,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
-    // TODO can undo acceleration on items which are no longer in scope
-    a.children.foreach { c =>
+    a.children.par.foreach { c =>
       logger.info("Sifting down from " + a.area.name + " to " + c.area.name)
       siftDown(c)
     }
