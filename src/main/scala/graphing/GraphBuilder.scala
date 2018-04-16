@@ -47,12 +47,12 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     }
     val inOrder = sorted.reverse
 
-    OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+    //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
     a.children = Set()
 
     val counter = new ProgressCounter(100)
     inOrder.foreach { b =>
-      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+      //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       siftDown(a, b)
     }
 
@@ -85,6 +85,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     } else {
       logger.info("Inserting " + b.area.name + " into " + a.area.name)
+      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       a.children = a.children ++ Seq(b)
 
       val startSecondFilter = DateTime.now()
@@ -96,6 +97,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
         logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name)
         a.children = a.children -- siblingsWhichFitInsideNewNode
+        // TODO decellerate
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
 
