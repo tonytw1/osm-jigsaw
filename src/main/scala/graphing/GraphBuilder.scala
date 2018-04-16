@@ -50,17 +50,11 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
     a.children = Set()
 
-    val counter = new ProgressCounter(100, Some(inOrder.size), Some(a.area.name))
+    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.name))
     inOrder.foreach { b =>
       //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       counter.withProgress {
-        try {
-          siftDown(a, b)
-        } catch {
-          case e: Exception =>
-            logger.error("During siftdown: " + a.area.name + " / " + b.area.name + " " + a.area.osmId + " " + b.area.osmId)
-            throw(e)
-        }
+        siftDown(a, b)
       }
     }
 
@@ -86,9 +80,8 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       a.children = a.children - b
       existingSiblingsWhichNewValueWouldFitIn.map { s =>
-        logger.info("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
+        logger.debug("Found sibling which new value " + b.area.name + " would fit in: " + s.area.name)
         s.children = s.children + b
-        //siftDown(s, b) // TODO test case needed
       }
 
     } else {
