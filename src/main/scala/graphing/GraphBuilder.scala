@@ -2,7 +2,7 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.OperatorContains
+import com.esri.core.geometry.{Operator, OperatorContains}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.{DateTime, Duration}
@@ -58,11 +58,12 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
+    a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
+
     // TODO can undo acceleration on items which are no longer in scope
     a.children.par.foreach { c =>
       logger.info("Sifting down from " + a.area.name + " to " + c.area.name)
       siftDown(c)
-
     }
   }
 
@@ -99,7 +100,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
         logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.name)
         a.children = a.children -- siblingsWhichFitInsideNewNode
-        // TODO decellerate
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
 
