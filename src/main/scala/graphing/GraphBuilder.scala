@@ -53,7 +53,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     val counter = new ProgressCounter(100)
     inOrder.foreach { b =>
       //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-      siftDown(a, b)
+      counter.withProgress {
+        siftDown(a, b)
+      }
     }
 
     // TODO can undo acceleration on items which are no longer in scope
