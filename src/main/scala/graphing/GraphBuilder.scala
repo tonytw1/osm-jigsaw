@@ -54,7 +54,13 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     inOrder.foreach { b =>
       //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       counter.withProgress {
-        siftDown(a, b)
+        try {
+          siftDown(a, b)
+        } catch {
+          case e: Exception =>
+            logger.error("During siftdown: " + a.area.name + " / " + b.area.name + " " + a.area.osmId + " " + b.area.osmId)
+            throw(e)
+        }
       }
     }
 
