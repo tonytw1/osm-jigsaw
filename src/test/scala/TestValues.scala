@@ -64,6 +64,9 @@ trait TestValues {
   Recursing to resolve subrelation: RelationMember(Relation with id 6483278 in the role 'subarea')
   Recursing to resolve subrelation: RelationMember(Relation with id 6483281 in the role 'subarea')
   Relation 6483281 has 2 relation members which are relations
+
+
+  // WAY 464213294 and WAY 461367741 are duplicates which fit inside each other.
   */
   val VILLA_NOVA_DA_BARQUINHA = (6483281L, EntityType.Relation) // Lists it's parent as a subarea
 
