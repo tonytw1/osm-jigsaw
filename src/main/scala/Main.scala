@@ -21,7 +21,7 @@ object Main extends EntityRendering with Logging {
 
   def entitiesToGraph(entity: Entity): Boolean = {
 
-    entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)
+    entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed && nameFor(entity).nonEmpty)
 
     /*
     val tags = entity.getTags.asScala
