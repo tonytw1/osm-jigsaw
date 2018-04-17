@@ -7,7 +7,7 @@ import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.AreaResolver
+import resolving.{AreaResolver, NodeResolver}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
@@ -129,7 +129,6 @@ object Main extends EntityRendering with Logging {
 
     logger.info("Resolving areas")
 
-    val areaResolver = new AreaResolver()
 
     val oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(outputFilepath)))
 
@@ -142,11 +141,14 @@ object Main extends EntityRendering with Logging {
 
     val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
 
+    val areaResolver = new AreaResolver()
+    val nodeResolver = new NodeResolver(nodes)
+
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
-    areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodes, callback)
+    areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodeResolver, callback)
 
     logger.info("Resolving areas for " + waysToResolve.size + " ways")
-    areaResolver.resolveAreas(waysToResolve, relations, modelWays, nodes, callback)
+    areaResolver.resolveAreas(waysToResolve, relations, modelWays, nodeResolver, callback)
 
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)

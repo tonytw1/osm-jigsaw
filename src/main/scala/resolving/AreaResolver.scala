@@ -11,11 +11,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)], callback: Seq[Area] => Unit): Unit = {
-
-    def resolvePointForNode(nodeId: Long): Option[(Double, Double)] = {
-      nodes.get(nodeId).map(n => (n._1, n._2))
-    }
+  def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodeResolver: NodeResolver, callback: Seq[Area] => Unit): Unit = {
 
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way]): Seq[Area] = {
       e match {
@@ -26,7 +22,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           val osmId = Some(r.getId.toString)
 
           val areas = outerRings.map { ways =>
-            val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => resolvePointForNode(nid)).flatten
+            val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => nodeResolver.resolvePointForNode(nid)).flatten
             areaForPoints(outerPoints).map { a =>
               Area(areaName, a, boundingBoxFor(a), osmId)
             }
@@ -39,7 +35,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
-            val outerPoints: Seq[(Double, Double)] = w.getWayNodes.asScala.map(nid => resolvePointForNode(nid.getNodeId)).flatten
+            val outerPoints: Seq[(Double, Double)] = w.getWayNodes.asScala.map(nid => nodeResolver.resolvePointForNode(nid.getNodeId)).flatten
             areaForPoints(outerPoints).map { a =>
               Area(areaName, a, boundingBoxFor(a), osmId)
             }
@@ -58,14 +54,14 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
   }
 
   // TODO test only - move to a test fixture
-  def resolveAreas(entitiesToResolve: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
+  def resolveAreas(entitiesToResolve: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodeResolver: NodeResolver): Set[Area] = {
     var areas = Set[Area]()
 
     def callback(newAreas: Seq[Area]): Unit = {
       areas = areas ++ newAreas
     }
 
-    resolveAreas(entitiesToResolve, allRelations, ways, nodes, callback)
+    resolveAreas(entitiesToResolve, allRelations, ways, nodeResolver, callback)
     areas
   }
 
