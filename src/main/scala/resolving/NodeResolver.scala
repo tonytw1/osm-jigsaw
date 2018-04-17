@@ -1,5 +1,6 @@
 package resolving
 
+import java.io.File
 import java.lang
 
 import org.apache.logging.log4j.scala.Logging
@@ -23,8 +24,8 @@ class MapDBNodeResolver() extends NodeResolver with Logging {
 
   val map: HTreeMap[lang.Long, Array[Double]] = {
     logger.info("Init'ing node resolver")
-    val db = DBMaker.fileDB("nodes.db").fileMmapEnable().make
-    val map: HTreeMap[lang.Long, Array[Double]] = db.hashMap("nodes").keySerializer(Serializer.LONG).valueSerializer(Serializer.DOUBLE_ARRAY).create
+    val db = DBMaker.fileDB(new File("nodes.db")).fileMmapEnable().asyncWriteEnable().make
+    val map = db.hashMap("nodes", Serializer.LONG, Serializer.DOUBLE_ARRAY)
     logger.info("Done")
     map
   }
@@ -34,7 +35,7 @@ class MapDBNodeResolver() extends NodeResolver with Logging {
   }
 
   def resolvePointForNode(nodeId: Long): Option[(Double, Double)] = {
-    val got: Array[Double] = map.get(nodeId)
+    val got = map.get(nodeId)
     if (got != null) {
       Some(got(0), got(1))
     } else {
