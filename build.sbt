@@ -12,6 +12,10 @@ lazy val root = (project in file(".")).
     assemblyMergeStrategy in assembly := {
       case PathList("osmosis-plugins.conf", xs @ _*) => MergeStrategy.discard
       case "META-INF/MANIFEST.MF" => MergeStrategy.discard
+      case "META-INF/ECLIPSE_.RSA" => MergeStrategy.discard
+      case "META-INF/ECLIPSE_.SF" => MergeStrategy.discard
+
+
       case x => MergeStrategy.first
     },
     libraryDependencies += "org.openstreetmap.osmosis" % "osmosis-pbf" % "0.46",
