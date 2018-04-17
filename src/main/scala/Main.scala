@@ -6,6 +6,7 @@ import model.{Area, EntityRendering, GraphNode}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
+import output.OsmWriter
 import resolving.AreaResolver
 
 import scala.collection.JavaConverters._
@@ -45,6 +46,7 @@ object Main extends EntityRendering with Logging {
     val inputFilepath = cmd.getArgList.get(0) // TODO validation required
 
     step match {
+      case "split" => split(inputFilepath)
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
@@ -55,6 +57,31 @@ object Main extends EntityRendering with Logging {
       }
       case _ => logger.info("Unknown step") // TODO exit code
     }
+  }
+
+  def split(inputFilepath: String) {
+    logger.info("Splitting extract file into relation, way and node files: " + inputFilepath)
+
+    val nodesWriter = new OsmWriter(inputFilepath + ".nodes")
+    val waysWriter = new OsmWriter(inputFilepath + ".ways")
+    val relationsWriter = new OsmWriter(inputFilepath + ".relations")
+
+    def writeToSplitFiles(entity: Entity) = {
+      entity match {
+        case n: Relation => nodesWriter.write(n)
+        case w: Relation => waysWriter.write(w)
+        case r: Relation => relationsWriter.write(r)
+        case _ =>
+      }
+    }
+
+    def all(entity: Entity): Boolean = true
+    new SinkRunner(inputFilepath, all, writeToSplitFiles).run
+
+    nodesWriter.close()
+    waysWriter.close()
+    relationsWriter.close()
+    logger.info("Done")
   }
 
   def extract(inputFilepath: String, outputFilepath: String) {
