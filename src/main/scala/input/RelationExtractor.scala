@@ -28,7 +28,7 @@ class RelationExtractor extends Logging {
       }
     }
     def all(entity: Entity): Boolean = true
-    new SinkRunner(inputFilePath, all, addToAllRelations).run
+    new SinkRunner(inputFilePath + ".relations", all, addToAllRelations).run
     logger.info("Cached " + allRelations.size + " relations")
 
     logger.info("Extracting interesting relations from all relations")
@@ -60,7 +60,7 @@ class RelationExtractor extends Logging {
             nodeIds.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
         }
     }
-    new SinkRunner(inputFilePath, requiredWays, persistWayAndExpandNodeIds).run
+    new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
     var extractedNodesCount = nodeIds.size
     logger.info("Found ways containing " + extractedNodesCount + " nodes")
 
@@ -73,7 +73,7 @@ class RelationExtractor extends Logging {
       writer.write(entity)
       foundNodes = foundNodes + 1
     }
-    new SinkRunner(inputFilePath, requiredNodes, addToFoundNodes).run
+    new SinkRunner(inputFilePath + ".nodes", requiredNodes, addToFoundNodes).run
     logger.info("Found " + foundNodes + " nodes")
     writer.close()
 
