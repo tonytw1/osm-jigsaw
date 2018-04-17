@@ -4,7 +4,7 @@ import input.TestValues
 import model.EntityRendering
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
-import resolving.{AreaResolver, LoadTestEntities, NodeResolver}
+import resolving.{AreaResolver, InMemoryNodeResolver, LoadTestEntities, NodeResolver}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -35,7 +35,7 @@ class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities 
     val bournemouth = relations.find(r => r.getId == BOURNEMOUTH._1).head
     val holdenhurst = relations.find(r => r.getId == HOLDENHURST_VILLAGE._1).head
 
-    val nodeResolver = new NodeResolver(nodes)
+    val nodeResolver = new InMemoryNodeResolver(nodes)
     val bournemouthAreas = areaResolver.resolveAreas(Set(bournemouth), relationsMap, ways, nodeResolver)
     val holdenhurstAreas = areaResolver.resolveAreas(Set(holdenhurst), relationsMap, ways, nodeResolver)
     val bournemouthArea = bournemouthAreas.head

@@ -33,7 +33,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val richmond = relations.find(r => r.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1).head
 
-    val nodeResolver = new NodeResolver(nodes)
+    val nodeResolver = new InMemoryNodeResolver(nodes)
     val areas = areaResolver.resolveAreas(Set(richmond), relationsMap, ways, nodeResolver)
 
     assert(areas.size == 1)
@@ -62,7 +62,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val newYorkCity = relations.find(r => r.getId == NEW_YORK_CITY._1).head
 
-    val nodeResolver = new NodeResolver(nodes)
+    val nodeResolver = new InMemoryNodeResolver(nodes)
     val areas = areaResolver.resolveAreas(Set(newYorkCity), relationsMap, ways, nodeResolver)
 
     assert(areas.size == 3)
@@ -89,7 +89,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val newZealand = relations.find(r => r.getId == NEW_ZEALAND._1).head
 
-    val nodeResolver = new NodeResolver(nodes)
+    val nodeResolver = new InMemoryNodeResolver(nodes)
     val areas = areaResolver.resolveAreas(Set(newZealand), relationsMap, ways, nodeResolver)
 
     assert(areas.size == 4)

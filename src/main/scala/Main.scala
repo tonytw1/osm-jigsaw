@@ -7,7 +7,7 @@ import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.{AreaResolver, NodeResolver}
+import resolving.{AreaResolver, InMemoryNodeResolver, NodeResolver}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
@@ -142,7 +142,7 @@ object Main extends EntityRendering with Logging {
     val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
 
     val areaResolver = new AreaResolver()
-    val nodeResolver = new NodeResolver(nodes)
+    val nodeResolver = new InMemoryNodeResolver(nodes)
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
     areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodeResolver, callback)
