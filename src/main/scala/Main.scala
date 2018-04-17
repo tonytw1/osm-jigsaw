@@ -68,8 +68,8 @@ object Main extends EntityRendering with Logging {
 
     def writeToSplitFiles(entity: Entity) = {
       entity match {
-        case n: Relation => nodesWriter.write(n)
-        case w: Relation => waysWriter.write(w)
+        case n: Node => nodesWriter.write(n)
+        case w: Way => waysWriter.write(w)
         case r: Relation => relationsWriter.write(r)
         case _ =>
       }
