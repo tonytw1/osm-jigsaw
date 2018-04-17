@@ -16,7 +16,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[Area] = {
       e match {
         case r: Relation =>
-          val outerRings = outerNodeMapper.outlineRings(r, allRelations, ways, nodes)
+          val outerRings = outerNodeMapper.outlineRings(r, allRelations, ways)
 
           val areaName = render(r) // TODO can do better
           val osmId = Some(r.getId.toString)

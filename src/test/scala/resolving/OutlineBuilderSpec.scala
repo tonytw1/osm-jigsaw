@@ -16,24 +16,21 @@ class OutlineBuilderSpec extends FlatSpec with TestValues with LoadTestEntities 
 
   val rs = mutable.Set[Relation]()
   val ws = mutable.Set[Way]()
-  val ns = mutable.Set[Node]()
 
   entities.map {
     case r: Relation => rs.+=(r)
     case w: Way => ws.+=(w)
-    case n: Node => ns.+=(n)
     case _ =>
   }
 
   val relations = rs.toSet
   val ways = ws.map(w => w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
-  val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
   val relationsMap = relations.map(r => r.getId -> r).toMap
 
   "outline builder" should "assemble the outer ways of a relation into a consecutive list of ways" in {
     val richmond = relations.find(r => r.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1).head
 
-    val rings = outlineBuilder.outlineRings(richmond, relationsMap, ways, nodes)
+    val rings = outlineBuilder.outlineRings(richmond, relationsMap, ways)
 
     assert(rings.size == 1)
     val ring = rings.head
@@ -43,7 +40,7 @@ class OutlineBuilderSpec extends FlatSpec with TestValues with LoadTestEntities 
   "outline builder" should "account for subarea relation when building the outline of a relation" in {
     val bournemouth = relations.find(r => r.getId == BOURNEMOUTH._1).head
 
-    val rings = outlineBuilder.outlineRings(bournemouth, relationsMap, ways, nodes)
+    val rings = outlineBuilder.outlineRings(bournemouth, relationsMap, ways)
 
     assert(rings.size == 1)
     val ring = rings.head

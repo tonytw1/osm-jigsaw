@@ -11,7 +11,7 @@ class OutlineBuilder extends EntityRendering with WayJoining {
   val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
-  def outlineRings(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[Seq[JoinedWay]] = { // TODO handle missing Ways and nodes
+  def outlineRings(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, model.Way]): Seq[Seq[JoinedWay]] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
     def joinWays(ways: Seq[model.Way]) = {
