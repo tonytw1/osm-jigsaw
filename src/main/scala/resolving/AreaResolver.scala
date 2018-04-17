@@ -13,7 +13,11 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
   def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)], callback: Seq[Area] => Unit): Unit = {
 
-    def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Seq[Area] = {
+    def resolvePointForNode(nodeId: Long): Option[(Double, Double)] = {
+      nodes.get(nodeId).map(n => (n._1, n._2))
+    }
+
+    def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way]): Seq[Area] = {
       e match {
         case r: Relation =>
           val outerRings = outerNodeMapper.outlineRings(r, allRelations, ways)
@@ -22,7 +26,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           val osmId = Some(r.getId.toString)
 
           val areas = outerRings.map { ways =>
-            val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => nodes.get(nid).map(n => (n._1, n._2))).flatten
+            val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => resolvePointForNode(nid)).flatten
             areaForPoints(outerPoints).map { a =>
               Area(areaName, a, boundingBoxFor(a), osmId)
             }
@@ -35,7 +39,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
-            val outerPoints: Seq[(Double, Double)] = w.getWayNodes.asScala.map(nid => nodes.get(nid.getNodeId).map(n => (n._1, n._2))).flatten
+            val outerPoints: Seq[(Double, Double)] = w.getWayNodes.asScala.map(nid => resolvePointForNode(nid.getNodeId)).flatten
             areaForPoints(outerPoints).map { a =>
               Area(areaName, a, boundingBoxFor(a), osmId)
             }
@@ -49,10 +53,11 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
     val counter = new ProgressCounter(1000)
     entities.foreach { e =>
-      counter.withProgress(callback(resolveAreasForEntity(e, allRelations, ways, nodes)))
+      counter.withProgress(callback(resolveAreasForEntity(e, allRelations, ways)))
     }
   }
 
+  // TODO test only - move to a test fixture
   def resolveAreas(entitiesToResolve: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Set[Area] = {
     var areas = Set[Area]()
 
