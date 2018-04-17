@@ -3,7 +3,7 @@ package input
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.{OuterWayResolver, RelationExpander}
+import resolving.{MapDBNodeResolver, OuterWayResolver, RelationExpander}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
@@ -61,21 +61,29 @@ class RelationExtractor extends Logging {
         }
     }
     new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
+    writer.close()
+
     var extractedNodesCount = nodeIds.size
     logger.info("Found ways containing " + extractedNodesCount + " nodes")
 
     logger.info("Need " + extractedNodesCount + " nodes to resolve relation ways")
     logger.info("Loading required nodes")
 
+
+    val nodeResolver = new MapDBNodeResolver()
     def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
     var foundNodes = 0L
     def addToFoundNodes(entity: Entity) = {
-      writer.write(entity)
-      foundNodes = foundNodes + 1
+      entity match {
+        case n: Node =>
+          nodeResolver.insert(n.getId, (n.getLatitude, n.getLongitude))
+          foundNodes = foundNodes + 1
+      }
     }
     new SinkRunner(inputFilePath + ".nodes", requiredNodes, addToFoundNodes).run
+    nodeResolver.close()
+
     logger.info("Found " + foundNodes + " nodes")
-    writer.close()
 
     logger.info("relations: " + foundRelations.size + ", ways: " + extractedWaysCount + ", nodes: " + extractedNodesCount)
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")

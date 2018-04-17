@@ -108,15 +108,11 @@ object Main extends EntityRendering with Logging {
 
     var relations = LongMap[Relation]()
     var ways = LongMap[Way]()
-    val nodeResolver = new MapDBNodeResolver()
 
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations = relations + (r.getId -> r)
-        case w: Way => {
-          ways = ways + (w.getId -> w)
-        }
-        case n: Node => nodeResolver.insert(n.getId, (n.getLatitude, n.getLongitude))
+        case w: Way => ways = ways + (w.getId -> w)
         case _ =>
       }
     }
@@ -142,6 +138,7 @@ object Main extends EntityRendering with Logging {
     val areaResolver = new AreaResolver()
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
+    val nodeResolver = new MapDBNodeResolver()
     areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodeResolver, callback)
 
     logger.info("Resolving areas for " + waysToResolve.size + " ways")
