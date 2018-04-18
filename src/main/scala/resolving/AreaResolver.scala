@@ -11,18 +11,18 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
   val outerNodeMapper = new OutlineBuilder()
 
-  def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], ways: Map[Long, model.Way], nodeResolver: NodeResolver, callback: Seq[Area] => Unit): Unit = {
+  def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], wayResolver: WayResolver, nodeResolver: NodeResolver, callback: Seq[Area] => Unit): Unit = {
 
-    def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], ways: Map[Long, model.Way]): Seq[Area] = {
+    def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], wayResolver: WayResolver): Seq[Area] = {
       e match {
         case r: Relation =>
-          val outerRings = outerNodeMapper.outlineRings(r, allRelations, ways)
+          val outerRings = outerNodeMapper.outlineRings(r, allRelations, wayResolver)
 
           val areaName = render(r) // TODO can do better
           val osmId = Some(r.getId.toString)
 
-          val areas = outerRings.map { ways =>
-            val outerPoints: Seq[(Double, Double)] = nodesFor(ways).map(nid => nodeResolver.resolvePointForNode(nid)).flatten
+          val areas = outerRings.map { outerRingWays =>
+            val outerPoints: Seq[(Double, Double)] = nodesFor(outerRingWays).map(nid => nodeResolver.resolvePointForNode(nid)).flatten
             areaForPoints(outerPoints).map { a =>
               Area(areaName, a, boundingBoxFor(a), osmId)
             }
@@ -49,7 +49,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
     val counter = new ProgressCounter(1000)
     entities.foreach { e =>
-      counter.withProgress(callback(resolveAreasForEntity(e, allRelations, ways)))
+      counter.withProgress(callback(resolveAreasForEntity(e, allRelations, wayResolver)))
     }
   }
 
@@ -61,7 +61,8 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
       areas = areas ++ newAreas
     }
 
-    resolveAreas(entitiesToResolve, allRelations, ways, nodeResolver, callback)
+    val wayResolver = new WayResolver(ways)
+    resolveAreas(entitiesToResolve, allRelations, wayResolver, nodeResolver, callback)
     areas
   }
 

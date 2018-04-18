@@ -12,7 +12,7 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
   val outerWayResolver = new OuterWayResolver()
 
   // Give a relation resolve it's outer to a seq of consecutively ordered points
-  def outlineRings(r: Relation, allRelations: Map[Long, Relation], ways: Map[Long, model.Way]): Seq[Seq[JoinedWay]] = { // TODO handle missing Ways and nodes
+  def outlineRings(r: Relation, allRelations: Map[Long, Relation], wayResolver: WayResolver): Seq[Seq[JoinedWay]] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
     def joinWays(ways: Seq[model.Way]) = {
@@ -66,7 +66,7 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
     }
 
     val outerWays = outerWayResolver.resolveOuterWayIdsFor(r, allRelations).map { wid =>
-      ways.get(wid).map { w =>
+      wayResolver.get(wid).map { w =>
         Some(w)
       }.getOrElse {
         logger.warn("Missing way; could not find way " + wid + " required by relation " + r.getId)

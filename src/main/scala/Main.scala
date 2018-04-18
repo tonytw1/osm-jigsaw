@@ -7,7 +7,7 @@ import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.{AreaResolver, MapDBNodeResolver}
+import resolving.{AreaResolver, MapDBNodeResolver, WayResolver}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
@@ -134,16 +134,16 @@ object Main extends EntityRendering with Logging {
     val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
     val waysToResolve: Iterable[Way] = ways.values.filter(e => entitiesToGraph(e))
 
-    val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
-
     val areaResolver = new AreaResolver()
+    val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
+    val wayResolver = new WayResolver(modelWays)
+    val nodeResolver = new MapDBNodeResolver()
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
-    val nodeResolver = new MapDBNodeResolver()
-    areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodeResolver, callback)
+    areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, callback)
 
     logger.info("Resolving areas for " + waysToResolve.size + " ways")
-    areaResolver.resolveAreas(waysToResolve, relations, modelWays, nodeResolver, callback)  // TODO why are two sets of ways in scope?
+    areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, callback)  // TODO why are two sets of ways in scope?
 
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)
