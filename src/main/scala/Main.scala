@@ -7,11 +7,9 @@ import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver, WayResolver}
+import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver}
 
-import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
-import scala.collection.mutable
 
 object Main extends EntityRendering with Logging {
 
@@ -128,7 +126,9 @@ object Main extends EntityRendering with Logging {
     val oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(outputFilepath)))
 
     def callback(newAreas: Seq[Area]): Unit = {
-      newAreas.foreach(a => oos.writeObject(a))
+      newAreas.foreach { a =>
+        oos.writeUnshared(a)
+      }
       oos.reset()
     }
 
@@ -145,6 +145,7 @@ object Main extends EntityRendering with Logging {
     logger.info("Resolving areas for " + waysToResolve.size + " ways")
     areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, callback)  // TODO why are two sets of ways in scope?
 
+    oos.flush()
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)
   }
@@ -154,8 +155,12 @@ object Main extends EntityRendering with Logging {
     var areas = Seq[Area]()
     val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
     val ois = new ObjectInputStream(fileInputStream)
-    while(fileInputStream.available > 0) {
-      areas = areas.+:(ois.readObject().asInstanceOf[Area])
+    try {
+      while (true) {
+        areas = areas.+:(ois.readObject().asInstanceOf[Area])
+      }
+    } catch {
+      case e: EOFException => logger.info("Reached end of file")
     }
     ois.close
     logger.info("Read " + areas.size + " areas")
