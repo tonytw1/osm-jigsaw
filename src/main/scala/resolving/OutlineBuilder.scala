@@ -1,11 +1,12 @@
 package resolving
 
 import model.{EntityRendering, JoinedWay}
+import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 
 import scala.collection.mutable
 
-class OutlineBuilder extends EntityRendering with WayJoining {
+class OutlineBuilder extends EntityRendering with WayJoining with Logging {
 
   val relationExpander = new RelationExpander()
   val outerWayResolver = new OuterWayResolver()
@@ -53,13 +54,13 @@ class OutlineBuilder extends EntityRendering with WayJoining {
           if (isClosed) {
             foundRings = foundRings :+ found
           } else {
-            println("Not closed while outing relation: " + found)
+            logger.info("Not closed while outing relation: " + found)
           }
         }
         foundRings
 
       } else {
-        println("Relation has no non empty outers: " + r.getId)
+        logger.info("Relation has no non empty outers: " + r.getId)
         Seq()
       }
     }
@@ -68,7 +69,7 @@ class OutlineBuilder extends EntityRendering with WayJoining {
       ways.get(wid).map { w =>
         Some(w)
       }.getOrElse {
-        println("Missing way; could not find way " + wid + " required by relation " + r.getId)
+        logger.warn("Missing way; could not find way " + wid + " required by relation " + r.getId)
         None
       }
     }.flatten
