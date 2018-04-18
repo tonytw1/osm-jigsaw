@@ -60,7 +60,7 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
         foundRings
 
       } else {
-        logger.info("Relation has no non empty outers: " + r.getId)
+        logger.debug("Relation has no non empty outers: " + r.getId)
         Seq()
       }
     }
