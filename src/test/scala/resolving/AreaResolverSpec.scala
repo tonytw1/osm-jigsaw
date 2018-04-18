@@ -27,7 +27,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
     }
 
     val relations = rs.toSet
-    val ways = ws.map(w => w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
+    val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
@@ -56,7 +56,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
     }
 
     val relations = rs.toSet
-    val ways = ws.map(w => w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
+    val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
@@ -83,7 +83,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
     }
 
     val relations = rs.toSet
-    val ways = ws.map(w => w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
+    val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
     val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 

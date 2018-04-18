@@ -134,7 +134,7 @@ object Main extends EntityRendering with Logging {
     val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
     val waysToResolve: Iterable[Way] = ways.values.filter(e => entitiesToGraph(e))
 
-    val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, nameFor(w), w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
+    val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
 
     val areaResolver = new AreaResolver()
 
@@ -143,7 +143,7 @@ object Main extends EntityRendering with Logging {
     areaResolver.resolveAreas(relationsToResolve, relations, modelWays, nodeResolver, callback)
 
     logger.info("Resolving areas for " + waysToResolve.size + " ways")
-    areaResolver.resolveAreas(waysToResolve, relations, modelWays, nodeResolver, callback)
+    areaResolver.resolveAreas(waysToResolve, relations, modelWays, nodeResolver, callback)  // TODO why are two sets of ways in scope?
 
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)
