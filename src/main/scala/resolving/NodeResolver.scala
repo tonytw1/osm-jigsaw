@@ -1,9 +1,7 @@
 package resolving
 
-import java.lang
-
 import org.apache.logging.log4j.scala.Logging
-import org.mapdb.{HTreeMap, Serializer, SortedTableMap}
+import org.mapdb.{Serializer, SortedTableMap}
 
 trait NodeResolver {
   def resolvePointForNode(nodeId: Long): Option[(Double, Double)]
@@ -16,8 +14,6 @@ class InMemoryNodeResolver(nodes: Map[Long, (Double, Double)]) extends NodeResol
   }
 
 }
-
-import org.mapdb.DBMaker
 
 class MapDBNodeResolver() extends NodeResolver with Logging {
 
@@ -35,10 +31,6 @@ class MapDBNodeResolver() extends NodeResolver with Logging {
 
     logger.info("Done")
     map
-  }
-
-  def insert(nodeId: Long, position: (Double, Double)) = {
-    //map.put(nodeId, Array(position._1, position._2))
   }
 
   def resolvePointForNode(nodeId: Long): Option[(Double, Double)] = {

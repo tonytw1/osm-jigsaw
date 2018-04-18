@@ -61,7 +61,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
       areas = areas ++ newAreas
     }
 
-    val wayResolver = new WayResolver(ways)
+    val wayResolver = new InMemoryWayResolver(ways)
     resolveAreas(entitiesToResolve, allRelations, wayResolver, nodeResolver, callback)
     areas
   }

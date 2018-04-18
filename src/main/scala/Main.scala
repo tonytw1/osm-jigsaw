@@ -7,10 +7,11 @@ import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.{AreaResolver, MapDBNodeResolver, WayResolver}
+import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver, WayResolver}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
+import scala.collection.mutable
 
 object Main extends EntityRendering with Logging {
 
@@ -107,12 +108,12 @@ object Main extends EntityRendering with Logging {
     def all(entity: Entity): Boolean  = true
 
     var relations = LongMap[Relation]()
-    var ways = LongMap[Way]()
+    var waysToResolve = Set[Way]()
 
     def addToFound(entity: Entity) = {
       entity match {
         case r: Relation => relations = relations + (r.getId -> r)
-        case w: Way => ways = ways + (w.getId -> w)
+        case w: Way => waysToResolve = waysToResolve + w
         case _ =>
       }
     }
@@ -132,11 +133,9 @@ object Main extends EntityRendering with Logging {
 
     logger.info("Filtering relations to resolve")
     val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
-    val waysToResolve: Iterable[Way] = ways.values.filter(e => entitiesToGraph(e))
 
     val areaResolver = new AreaResolver()
-    val modelWays = ways.values.map(w => (w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId)))).toMap
-    val wayResolver = new WayResolver(modelWays)
+    val wayResolver = new MapDBWayResolver()
     val nodeResolver = new MapDBNodeResolver()
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")

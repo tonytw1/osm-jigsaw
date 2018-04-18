@@ -9,6 +9,7 @@ import resolving.{MapDBNodeResolver, OuterWayResolver, RelationExpander}
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 import scala.collection.mutable
+import org.mapdb.volume.MappedFileVol
 
 class RelationExtractor extends Logging {
 
@@ -53,16 +54,28 @@ class RelationExtractor extends Logging {
     logger.info("Reading required ways to determine required nodes")
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && (relationWayIds.contains(entity.getId) || predicate(entity))
 
+    val wayVolume = MappedFileVol.FACTORY.makeVolume("ways.vol", false)
+    val waySink = SortedTableMap.create(
+      wayVolume,
+      Serializer.LONG,
+      Serializer.LONG_ARRAY
+    ).createFromSink()
+
     val nodeIds = mutable.Set[Long]()
     def persistWayAndExpandNodeIds(entity: Entity) = {
         entity match {
           case w: Way =>
-            writer.write(w)
+            if (predicate(w)) {
+              writer.write(w)
+            }
+            waySink.put(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId).toArray)
             nodeIds.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
         }
     }
     new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
     writer.close()
+    waySink.create()
+    wayVolume.close()
 
     var extractedNodesCount = nodeIds.size
     logger.info("Found ways containing " + extractedNodesCount + " nodes")
@@ -71,11 +84,9 @@ class RelationExtractor extends Logging {
     logger.info("Loading required nodes")
 
 
-    import org.mapdb.volume.MappedFileVol
-    val volume = MappedFileVol.FACTORY.makeVolume("nodes.vol", false)
-
-    val sink = SortedTableMap.create(
-      volume,
+    val nodeVolume = MappedFileVol.FACTORY.makeVolume("nodes.vol", false)
+    val nodeSink = SortedTableMap.create(
+      nodeVolume,
       Serializer.LONG,
       Serializer.DOUBLE_ARRAY
     ).createFromSink()
@@ -85,13 +96,13 @@ class RelationExtractor extends Logging {
     def addToFoundNodes(entity: Entity) = {
       entity match {
         case n: Node =>
-          sink.put(n.getId, Array(n.getLatitude, n.getLongitude))
+          nodeSink.put(n.getId, Array(n.getLatitude, n.getLongitude))
           foundNodes = foundNodes + 1
       }
     }
     new SinkRunner(inputFilePath + ".nodes", requiredNodes, addToFoundNodes).run
-    sink.create()
-    volume.close()
+    nodeSink.create()
+    nodeVolume.close()
 
     logger.info("Found " + foundNodes + " nodes")
 
