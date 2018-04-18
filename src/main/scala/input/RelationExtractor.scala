@@ -1,6 +1,7 @@
 package input
 
 import org.apache.logging.log4j.scala.Logging
+import org.mapdb.{Serializer, SortedTableMap}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import resolving.{MapDBNodeResolver, OuterWayResolver, RelationExpander}
@@ -70,18 +71,27 @@ class RelationExtractor extends Logging {
     logger.info("Loading required nodes")
 
 
-    val nodeResolver = new MapDBNodeResolver()
+    import org.mapdb.volume.MappedFileVol
+    val volume = MappedFileVol.FACTORY.makeVolume("nodes.vol", false)
+
+    val sink = SortedTableMap.create(
+      volume,
+      Serializer.LONG,
+      Serializer.DOUBLE_ARRAY
+    ).createFromSink()
+
     def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
     var foundNodes = 0L
     def addToFoundNodes(entity: Entity) = {
       entity match {
         case n: Node =>
-          nodeResolver.insert(n.getId, (n.getLatitude, n.getLongitude))
+          sink.put(n.getId, Array(n.getLatitude, n.getLongitude))
           foundNodes = foundNodes + 1
       }
     }
     new SinkRunner(inputFilePath + ".nodes", requiredNodes, addToFoundNodes).run
-    nodeResolver.close()
+    sink.create()
+    volume.close()
 
     logger.info("Found " + foundNodes + " nodes")
 

@@ -130,6 +130,7 @@ object Main extends EntityRendering with Logging {
       newAreas.foreach(a => oos.writeObject(a))
     }
 
+    logger.info("Filtering relations to resolve")
     val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
     val waysToResolve: Iterable[Way] = ways.values.filter(e => entitiesToGraph(e))
 

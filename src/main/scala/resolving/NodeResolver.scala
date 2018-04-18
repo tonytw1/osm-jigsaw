@@ -3,7 +3,7 @@ package resolving
 import java.lang
 
 import org.apache.logging.log4j.scala.Logging
-import org.mapdb.{HTreeMap, Serializer}
+import org.mapdb.{HTreeMap, Serializer, SortedTableMap}
 
 trait NodeResolver {
   def resolvePointForNode(nodeId: Long): Option[(Double, Double)]
@@ -21,16 +21,24 @@ import org.mapdb.DBMaker
 
 class MapDBNodeResolver() extends NodeResolver with Logging {
 
-  val map: HTreeMap[lang.Long, Array[Double]] = {
+  val map = {
     logger.info("Init'ing node resolver")
-    val db = DBMaker.fileDB("nodes.db").fileMmapEnable().make
-    val map = db.hashMap("nodes").keySerializer(Serializer.LONG).valueSerializer(Serializer.DOUBLE_ARRAY).createOrOpen
+
+    import org.mapdb.volume.MappedFileVol
+    val volume = MappedFileVol.FACTORY.makeVolume("nodes.vol", true)
+
+    val map = SortedTableMap.open(
+        volume,
+        Serializer.LONG,
+        Serializer.DOUBLE_ARRAY
+      )
+
     logger.info("Done")
     map
   }
 
   def insert(nodeId: Long, position: (Double, Double)) = {
-    map.put(nodeId, Array(position._1, position._2))
+    //map.put(nodeId, Array(position._1, position._2))
   }
 
   def resolvePointForNode(nodeId: Long): Option[(Double, Double)] = {
@@ -38,6 +46,7 @@ class MapDBNodeResolver() extends NodeResolver with Logging {
     if (got != null) {
       Some(got(0), got(1))
     } else {
+      logger.warn("Could not resolve node: " + nodeId)
       None
     }
   }
