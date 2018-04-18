@@ -129,6 +129,7 @@ object Main extends EntityRendering with Logging {
 
     def callback(newAreas: Seq[Area]): Unit = {
       newAreas.foreach(a => oos.writeObject(a))
+      oos.reset()
     }
 
     logger.info("Filtering relations to resolve")
