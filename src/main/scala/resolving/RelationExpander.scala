@@ -13,7 +13,7 @@ class RelationExpander extends Logging {
       Seq(r)
 
     } else {
-      logger.info("Relation " + r.getId + " has " + relationMembers.size + " relation members which are relations.")
+      logger.debug("Relation " + r.getId + " has " + relationMembers.size + " relation members which are relations.")
       if (relationMembers.exists(rm => {
         val maybeLong: Option[Long] = parent.map(p => p.getId)
         Some(rm.getMemberId) == maybeLong
