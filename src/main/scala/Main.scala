@@ -22,8 +22,8 @@ object Main extends EntityRendering with Logging {
 
   def entitiesToGraph(entity: Entity): Boolean = {
 
-    (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed && nameFor(entity).nonEmpty)) &&
-      !entity.getTags.asScala.exists(t => t.getKey == "indoor:area")
+    (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)) &&
+      nameFor(entity).nonEmpty && !entity.getTags.asScala.exists(t => t.getKey == "indoor:area")
 
     /*
     val tags = entity.getTags.asScala
