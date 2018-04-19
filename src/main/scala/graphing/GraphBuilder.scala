@@ -43,9 +43,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
-    a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
+    a.children.par.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
-    a.children.filter(i => i.children.nonEmpty && i.children.size > 1).foreach { c =>
+    a.children.par.filter(i => i.children.nonEmpty && i.children.size > 1).foreach { c =>
       logger.info("Sifting down from " + a.area.name + " to " + c.area.name)
       siftDown(c)
     }
