@@ -14,13 +14,13 @@ class InMemoryWayResolver(ways: Map[Long, Way]) extends WayResolver {
   }
 }
 
-class MapDBWayResolver() extends WayResolver with Logging {
+class MapDBWayResolver(filepath: String) extends WayResolver with Logging {
 
   val map = {
     logger.info("Init'ing node resolver")
 
     import org.mapdb.volume.MappedFileVol
-    val volume = MappedFileVol.FACTORY.makeVolume("ways.vol", true)
+    val volume = MappedFileVol.FACTORY.makeVolume(filepath, true)
 
     val map = SortedTableMap.open(
       volume,

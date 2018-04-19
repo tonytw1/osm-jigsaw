@@ -15,13 +15,13 @@ class InMemoryNodeResolver(nodes: Map[Long, (Double, Double)]) extends NodeResol
 
 }
 
-class MapDBNodeResolver() extends NodeResolver with Logging {
+class MapDBNodeResolver(filepath: String) extends NodeResolver with Logging {
 
   val map = {
     logger.info("Init'ing node resolver")
 
     import org.mapdb.volume.MappedFileVol
-    val volume = MappedFileVol.FACTORY.makeVolume("nodes.vol", true)
+    val volume = MappedFileVol.FACTORY.makeVolume(filepath, true)
 
     val map = SortedTableMap.open(
         volume,

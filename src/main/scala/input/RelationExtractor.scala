@@ -54,7 +54,7 @@ class RelationExtractor extends Logging {
     logger.info("Reading required ways to determine required nodes")
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && (relationWayIds.contains(entity.getId) || predicate(entity))
 
-    val wayVolume = MappedFileVol.FACTORY.makeVolume("ways.vol", false)
+    val wayVolume = MappedFileVol.FACTORY.makeVolume(inputFilePath + ".ways.vol", false)
     val waySink = SortedTableMap.create(
       wayVolume,
       Serializer.LONG,
@@ -84,7 +84,7 @@ class RelationExtractor extends Logging {
     logger.info("Loading required nodes")
 
 
-    val nodeVolume = MappedFileVol.FACTORY.makeVolume("nodes.vol", false)
+    val nodeVolume = MappedFileVol.FACTORY.makeVolume(inputFilePath + ".nodes.vol", false)
     val nodeSink = SortedTableMap.create(
       nodeVolume,
       Serializer.LONG,

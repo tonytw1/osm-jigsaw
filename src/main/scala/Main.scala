@@ -136,8 +136,8 @@ object Main extends EntityRendering with Logging {
     val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
 
     val areaResolver = new AreaResolver()
-    val wayResolver = new MapDBWayResolver()
-    val nodeResolver = new MapDBNodeResolver()
+    val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
+    val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
     areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, callback)
