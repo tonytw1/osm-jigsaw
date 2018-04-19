@@ -71,7 +71,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     } else {
       logger.info("Inserting " + b.area.name + " into " + a.area.name)
-      // OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       a.children = a.children ++ Seq(b)
 
       val startSecondFilter = DateTime.now()
