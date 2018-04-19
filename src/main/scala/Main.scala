@@ -10,6 +10,7 @@ import output.OsmWriter
 import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver}
 
 import scala.collection.immutable.LongMap
+import scala.collection.JavaConverters._
 
 object Main extends EntityRendering with Logging {
 
@@ -21,7 +22,8 @@ object Main extends EntityRendering with Logging {
 
   def entitiesToGraph(entity: Entity): Boolean = {
 
-    entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed && nameFor(entity).nonEmpty)
+    (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed && nameFor(entity).nonEmpty)) &&
+      !entity.getTags.asScala.exists(t => t.getKey == "indoor:area")
 
     /*
     val tags = entity.getTags.asScala
