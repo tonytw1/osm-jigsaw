@@ -73,3 +73,12 @@ London -> Greater London -> England -> United Kingdon.
 
 Even if the former is the desired output, the graph should represent all of the possible paths (the later)
 so as to not comprise the renderer's right to change it's mind at runtime.
+
+
+
+
+### Progress
+
+20 April - Europe extract runs to completion producing 6.5 million areas (all named relations, and named closed ways).
+Resulting graph requires 30Gb of heap to load. 
+ 
