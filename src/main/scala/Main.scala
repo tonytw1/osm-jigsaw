@@ -178,11 +178,16 @@ object Main extends EntityRendering with Logging {
   }
 
   def dumpGraph(inputFilename: String) = {
+    logger.info("Opening graph file: " + inputFilename)
     val ois = new ObjectInputStream(new FileInputStream(inputFilename))
+    logger.info("Reading object")
     val graph = ois.readObject.asInstanceOf[GraphNode]
+    logger.info("Closing")
     ois.close
 
+    logger.info("Beginning dump")
     new GraphReader().dump(graph)
+    logger.info("Done")
   }
 
 }
