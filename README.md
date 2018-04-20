@@ -82,3 +82,9 @@ so as to not comprise the renderer's right to change it's mind at runtime.
 20 April - Europe extract runs to completion producing 6.5 million areas (all named relations, and named closed ways).
 Resulting graph requires 30Gb of heap to load. 
  
+```
+java -Xmx24G -jar osm-parsing-assembly-0.1.0-SNAPSHOT.jar -s split great-britain-latest.osm.pbf
+java -Xmx24G -jar osm-parsing-assembly-0.1.0-SNAPSHOT.jar -s extract great-britain-latest.osm.pbf great-britain-latest.rels.pbf
+java -Xmx24G -jar osm-parsing-assembly-0.1.0-SNAPSHOT.jar -s areas great-britain-latest.rels.pbf great-britain-latest.areas.ser
+java -Xmx24G -jar osm-parsing-assembly-0.1.0-SNAPSHOT.jar -s graph great-britain-latest.areas.ser great-britain-latest.graph.ser
+```
