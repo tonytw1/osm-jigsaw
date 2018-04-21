@@ -7,7 +7,7 @@ lazy val root = (project in file(".")).
       scalaVersion := "2.12.3",
       version      := "0.1.0-SNAPSHOT"
     )),
-    name := "osm-parsing",
+    name := "osm-jigsaw",
     mainClass in assembly := Some("Main"),
     assemblyMergeStrategy in assembly := {
       case PathList("osmosis-plugins.conf", xs @ _*) => MergeStrategy.discard
