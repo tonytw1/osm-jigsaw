@@ -1,7 +1,8 @@
 package graphing
 
 import com.esri.core.geometry.{OperatorContains, Point, SpatialReference}
-import model.{GraphNode, Shape}
+import model.GraphNode
+import outputarea.OutputArea
 
 import scala.collection.mutable
 
@@ -54,7 +55,7 @@ class GraphReader {
   }
 
   def export(node: GraphNode, parent: Option[String]): Unit = {
-    val shape = Shape(node.area.osmId.getOrElse(""), node.area.name, parent)
+    val shape = OutputArea(node.area.osmId, Some(node.area.name), parent)
     println(shape)
     node.children.map( c => export(c, node.area.osmId))
   }

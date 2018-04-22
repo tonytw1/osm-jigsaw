@@ -1,5 +1,9 @@
 import Dependencies._
 
+PB.targets in Compile := Seq(
+  scalapb.gen() -> (sourceManaged in Compile).value
+)
+
 lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
@@ -14,8 +18,6 @@ lazy val root = (project in file(".")).
       case "META-INF/MANIFEST.MF" => MergeStrategy.discard
       case "META-INF/ECLIPSE_.RSA" => MergeStrategy.discard
       case "META-INF/ECLIPSE_.SF" => MergeStrategy.discard
-
-
       case x => MergeStrategy.first
     },
     libraryDependencies += "org.openstreetmap.osmosis" % "osmosis-pbf" % "0.46",
