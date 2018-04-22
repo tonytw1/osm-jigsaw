@@ -20,7 +20,6 @@ lazy val root = (project in file(".")).
       case "META-INF/ECLIPSE_.SF" => MergeStrategy.discard
       case x => MergeStrategy.first
     },
-    libraryDependencies += "org.openstreetmap.osmosis" % "osmosis-pbf" % "0.46",
     libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.1.0",
     libraryDependencies += "joda-time" % "joda-time" % "2.9.9",
     libraryDependencies += "commons-cli" % "commons-cli" % "1.4",
