@@ -52,6 +52,7 @@ object Main extends EntityRendering with Logging {
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "dump" => dumpGraph(inputFilepath)
+      case "export" => exportGraph(inputFilepath)
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
@@ -189,5 +190,19 @@ object Main extends EntityRendering with Logging {
     new GraphReader().dump(graph)
     logger.info("Done")
   }
+
+  def exportGraph(inputFilename: String) = {
+    logger.info("Opening graph file: " + inputFilename)
+    val ois = new ObjectInputStream(new FileInputStream(inputFilename))
+    logger.info("Reading object")
+    val graph = ois.readObject.asInstanceOf[GraphNode]
+    logger.info("Closing")
+    ois.close
+
+    logger.info("Export dump")
+    new GraphReader().export(graph, None)
+    logger.info("Done")
+  }
+
 
 }
