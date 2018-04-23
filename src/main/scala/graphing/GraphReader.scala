@@ -59,7 +59,7 @@ class GraphReader {
   def export(node: GraphNode, output: OutputStream, parent: Option[String]): Unit = {
     val shape = OutputArea(node.area.osmId, Some(node.area.name), parent)
     println(shape)
-    shape.writeTo(output)
+    shape.writeDelimitedTo(output)
     node.children.map( c => export(c, output, node.area.osmId))
   }
 

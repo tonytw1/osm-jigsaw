@@ -7,6 +7,7 @@ import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
+import outputarea.OutputArea
 import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver}
 
 import scala.collection.JavaConverters._
@@ -53,6 +54,7 @@ object Main extends EntityRendering with Logging {
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "dump" => dumpGraph(inputFilepath)
       case "export" => exportGraph(inputFilepath, cmd.getArgList.get(1))
+      case "verify" => verifyGraph(inputFilepath)
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
@@ -208,5 +210,21 @@ object Main extends EntityRendering with Logging {
     output.close()
     logger.info("Done")
   }
+
+  def verifyGraph(inputFilename: String) = {
+    logger.info("Opening graph pbf file: " + inputFilename)
+    val is = new BufferedInputStream(new FileInputStream(inputFilename))
+
+    var ok = true
+    while(ok) {
+      val area = OutputArea.parseDelimitedFrom(is)
+      println(area)
+      ok = area.nonEmpty
+    }
+
+    logger.info("Closing")
+    is.close
+  }
+
 
 }
