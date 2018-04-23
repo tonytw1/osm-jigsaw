@@ -8,6 +8,7 @@ import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import outputarea.OutputArea
+import progress.ProgressCounter
 import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver}
 
 import scala.collection.JavaConverters._
@@ -202,9 +203,10 @@ object Main extends EntityRendering with Logging {
     ois.close
 
     val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
+    val counter = new ProgressCounter(100000)
 
     logger.info("Export dump")
-    new GraphReader().export(graph, output, None)
+    new GraphReader().export(graph, output, None, counter)
 
     output.flush()
     output.close()
