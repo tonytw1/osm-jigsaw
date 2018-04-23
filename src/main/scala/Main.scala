@@ -9,8 +9,8 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver}
 
-import scala.collection.immutable.LongMap
 import scala.collection.JavaConverters._
+import scala.collection.immutable.LongMap
 
 object Main extends EntityRendering with Logging {
 
@@ -52,7 +52,7 @@ object Main extends EntityRendering with Logging {
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "dump" => dumpGraph(inputFilepath)
-      case "export" => exportGraph(inputFilepath)
+      case "export" => exportGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
@@ -191,7 +191,7 @@ object Main extends EntityRendering with Logging {
     logger.info("Done")
   }
 
-  def exportGraph(inputFilename: String) = {
+  def exportGraph(inputFilename: String, outputFilename: String) = {
     logger.info("Opening graph file: " + inputFilename)
     val ois = new ObjectInputStream(new FileInputStream(inputFilename))
     logger.info("Reading object")
@@ -199,10 +199,14 @@ object Main extends EntityRendering with Logging {
     logger.info("Closing")
     ois.close
 
+    val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
+
     logger.info("Export dump")
-    new GraphReader().export(graph, None)
+    new GraphReader().export(graph, output, None)
+
+    output.flush()
+    output.close()
     logger.info("Done")
   }
-
 
 }

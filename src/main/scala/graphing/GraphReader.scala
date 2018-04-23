@@ -1,5 +1,7 @@
 package graphing
 
+import java.io.OutputStream
+
 import com.esri.core.geometry.{OperatorContains, Point, SpatialReference}
 import model.GraphNode
 import outputarea.OutputArea
@@ -54,10 +56,11 @@ class GraphReader {
     }
   }
 
-  def export(node: GraphNode, parent: Option[String]): Unit = {
+  def export(node: GraphNode, output: OutputStream, parent: Option[String]): Unit = {
     val shape = OutputArea(node.area.osmId, Some(node.area.name), parent)
     println(shape)
-    node.children.map( c => export(c, node.area.osmId))
+    shape.writeTo(output)
+    node.children.map( c => export(c, output, node.area.osmId))
   }
 
 }
