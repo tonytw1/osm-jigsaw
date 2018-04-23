@@ -4,7 +4,7 @@ import java.io.OutputStream
 
 import com.esri.core.geometry.{OperatorContains, Point, SpatialReference}
 import model.GraphNode
-import outputarea.OutputArea
+import outputarea.{OutputArea, OutputPoint}
 
 import scala.collection.mutable
 
@@ -57,9 +57,14 @@ class GraphReader {
   }
 
   def export(node: GraphNode, output: OutputStream, parent: Option[String]): Unit = {
-    val shape = OutputArea(node.area.osmId, Some(node.area.name), parent)
+    val points = Range(0, node.area.polygon.getPointCount - 1).map { i =>
+      val p = node.area.polygon.getPoint(i)
+      OutputPoint(p.getX, p.getY)
+    }
+    val shape = OutputArea(osmId = node.area.osmId, name = Some(node.area.name), parent = parent, points = points)
     println(shape)
     shape.writeDelimitedTo(output)
+
     node.children.map( c => export(c, output, node.area.osmId))
   }
 
