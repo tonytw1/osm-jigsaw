@@ -4,9 +4,10 @@ import java.io.OutputStream
 
 import com.esri.core.geometry.{OperatorContains, Point, SpatialReference}
 import model.GraphNode
-import outputarea.{OutputArea, OutputPoint}
+import progress.ProgressCounter
 
 import scala.collection.mutable
+import outputarea.{OutputArea, OutputPoint}
 
 class GraphReader {
 
@@ -36,17 +37,6 @@ class GraphReader {
     }
   }
 
-  def search(node: GraphNode, q: String, output: mutable.Buffer[Seq[GraphNode]], parents: Seq[GraphNode] = Seq()): Unit = {
-    val path = parents :+ node
-    if (node.area.name == q) {
-      output.+=(path)
-    } else {
-      node.children.map { c =>
-        search(c, q, output, parents)
-      }
-    }
-  }
-
   def dump(node: GraphNode, soFar: String = ""): Unit = {
     val path = soFar + " / " + node.area.name + node.area.osmId.map(o => " (" + o + ")").getOrElse("")
     if (node.children.nonEmpty) {
@@ -56,13 +46,12 @@ class GraphReader {
     }
   }
 
-  def export(node: GraphNode, output: OutputStream, parent: Option[String]): Unit = {
+  def export(node: GraphNode, output: OutputStream, parent: Option[String], count: ProgressCounter): Unit = {
     val points = Range(0, node.area.polygon.getPointCount - 1).map { i =>
       val p = node.area.polygon.getPoint(i)
       OutputPoint(p.getX, p.getY)
     }
     val shape = OutputArea(osmId = node.area.osmId, name = Some(node.area.name), parent = parent, points = points)
-    println(shape)
     shape.writeDelimitedTo(output)
 
     node.children.map( c => export(c, output, node.area.osmId))
