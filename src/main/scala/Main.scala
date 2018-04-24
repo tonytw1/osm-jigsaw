@@ -196,7 +196,7 @@ object Main extends EntityRendering with Logging {
 
   def exportGraph(inputFilename: String, outputFilename: String) = {
     logger.info("Opening graph file: " + inputFilename)
-    val ois = new ObjectInputStream(new FileInputStream(inputFilename))
+    val ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(inputFilename)))
     logger.info("Reading object")
     val graph = ois.readObject.asInstanceOf[GraphNode]
     logger.info("Closing")
