@@ -1,0 +1,13 @@
+syntax = "proto2";
+
+message OutputPoint {
+   required double lat = 1;
+   required double lon = 2;
+}
+
+message OutputArea {
+   optional string name = 1;
+   optional string osm_id = 2;
+   optional string parent = 3;
+   repeated OutputPoint points = 4;
+}
