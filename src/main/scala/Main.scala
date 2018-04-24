@@ -217,18 +217,20 @@ object Main extends EntityRendering with Logging {
     logger.info("Opening graph pbf file: " + inputFilename)
     val is = new BufferedInputStream(new FileInputStream(inputFilename))
 
+    val counter = new ProgressCounter(100000)
     var ok = true
     var total = 0
     while(ok) {
-      val area = OutputArea.parseDelimitedFrom(is)
-      total = total + 1
-      ok = area.nonEmpty
+      counter.withProgress {
+        total = total + 1
+        val area = OutputArea.parseDelimitedFrom(is)
+        ok = area.nonEmpty
+      }
     }
 
     logger.info("Closing")
     logger.info("Found " + total + " areas in pbf file")
     is.close
   }
-
 
 }
