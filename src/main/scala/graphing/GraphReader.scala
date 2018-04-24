@@ -54,7 +54,7 @@ class GraphReader {
     val shape = OutputArea(osmId = node.area.osmId, name = Some(node.area.name), parent = parent, points = points)
     shape.writeDelimitedTo(output)
 
-    node.children.map( c => export(c, output, node.area.osmId))
+    node.children.map( c => export(c, output, node.area.osmId, count))
   }
 
 }
