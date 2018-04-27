@@ -55,7 +55,7 @@ class GraphReader {
     count.withProgress {
       shape.writeDelimitedTo(output)
     }
-    node.children.map( c => export(c, output, node.area.osmId, count))
+    node.children.map( c => export(c, output, Some(node.id.toString), count))
   }
 
 }
