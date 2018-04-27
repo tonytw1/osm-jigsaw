@@ -1,3 +1,4 @@
+
 name := "osm-jigsaw-viewer"
 version := "1.0"
 
@@ -8,5 +9,4 @@ lazy val `osm-jigsaw-viewer` = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.7"
 
-//libraryDependencies ++= Seq(ws)
-//libraryDependencies += specs2 % Test
+libraryDependencies += specs2 % Test
