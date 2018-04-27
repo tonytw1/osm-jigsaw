@@ -51,7 +51,7 @@ class GraphReader {
       val p = node.area.polygon.getPoint(i)
       OutputPoint(p.getX, p.getY)
     }
-    val shape = OutputArea(osmId = node.area.osmId, name = Some(node.area.name), parent = parent, points = points)
+    val shape = OutputArea(id = Some(node.id.toString), osmId = node.area.osmId, name = Some(node.area.name), parent = parent, points = points)
     count.withProgress {
       shape.writeDelimitedTo(output)
     }
