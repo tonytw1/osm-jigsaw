@@ -6,6 +6,7 @@ import java.net.URL
 import graph.{Area, GraphReader}
 import play.api.mvc.{Action, Controller}
 
+import scala.collection.mutable
 import scala.concurrent.Future
 
 class Application extends Controller {
@@ -17,8 +18,15 @@ class Application extends Controller {
     head = new GraphReader().loadGraph(new BufferedInputStream(file.openStream()))
   }
 
-  def ping = Action.async { request =>
-    Future.successful(Ok(head.children.map(a => a.name).flatten.mkString(", ")))
+  def ping(q: String) = Action.async { request =>
+    val components = new mutable.Queue() ++ q.split("/")
+    var show = head
+    while(components.nonEmpty) {
+      val next = components.dequeue()
+      show = show.children.find(a => a.name.contains(next)).get
+    }
+
+    Future.successful(Ok(show.children.map(a => a.name).flatten.mkString(", ")))
   }
 
 }
