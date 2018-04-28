@@ -18,13 +18,18 @@ class Application extends Controller {
     head = new GraphReader().loadGraph(new BufferedInputStream(file.openStream()))
   }
 
-  def ping(q: String) = Action.async { request =>
-    val components = q.split("/").toSeq
+  def ping(qo: Option[String]) = Action.async { request =>
+
+    def areaIdentifier(area: Area): String = {
+      area.id.get
+    }
+
+    val components = qo.getOrElse("").split("/").toSeq
     val queue = new mutable.Queue() ++ components
     var show = head
     while(queue.nonEmpty) {
       val next = queue.dequeue()
-      show = show.children.find(a => a.name.contains(next)).get
+      show = show.children.find(a => areaIdentifier(a).contains(next)).get
     }
 
     Future.successful(Ok(views.html.index(components, show)))

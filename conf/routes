@@ -1,1 +1,1 @@
-GET     /   controllers.Application.ping(q: String)
+GET     /   controllers.Application.ping(q: Option[String])
