@@ -1,0 +1,12 @@
+@import graph.Area
+@(areas: Seq[Area], area: Area)
+
+<h2>@areas.map(a => a.name.getOrElse("")).mkString(" / ")</h2>
+
+<ul>
+@area.children.toSeq.sortBy(c => -c.children.size).map { c =>
+    <li><a href="@routes.Application.ping(Some((areas.map(a => a.id.get) :+ c.id.get).mkString("/")))">@c.name</a>
+        @if(c.children.nonEmpty) {(@c.children.size)}
+    </li>
+}
+</ul>

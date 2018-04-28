@@ -1,6 +1,6 @@
 package controllers
 
-import java.io.{BufferedInputStream, File}
+import java.io.BufferedInputStream
 import java.net.URL
 
 import graph.{Area, GraphReader}
@@ -25,14 +25,18 @@ class Application extends Controller {
     }
 
     val components = qo.getOrElse("").split("/").toSeq
+    val areas = mutable.ListBuffer[Area]()
     val queue = new mutable.Queue() ++ components
+
     var show = head
+
     while(queue.nonEmpty) {
       val next = queue.dequeue()
       show = show.children.find(a => areaIdentifier(a).contains(next)).get
+      areas.+=(show)
     }
 
-    Future.successful(Ok(views.html.index(components, show)))
+    Future.successful(Ok(views.html.index(areas, show)))
   }
 
 }
