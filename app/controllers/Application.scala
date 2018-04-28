@@ -19,14 +19,15 @@ class Application extends Controller {
   }
 
   def ping(q: String) = Action.async { request =>
-    val components = new mutable.Queue() ++ q.split("/")
+    val components = q.split("/").toSeq
+    val queue = new mutable.Queue() ++ components
     var show = head
-    while(components.nonEmpty) {
-      val next = components.dequeue()
+    while(queue.nonEmpty) {
+      val next = queue.dequeue()
       show = show.children.find(a => a.name.contains(next)).get
     }
 
-    Future.successful(Ok(show.children.map(a => a.name).flatten.mkString(", ")))
+    Future.successful(Ok(views.html.index(components, show)))
   }
 
 }
