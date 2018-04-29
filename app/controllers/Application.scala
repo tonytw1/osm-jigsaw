@@ -2,19 +2,21 @@ package controllers
 
 import java.io.BufferedInputStream
 import java.net.URL
+import javax.inject.Inject
 
 import graph.{Area, GraphReader}
+import play.api.Configuration
 import play.api.mvc.{Action, Controller}
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application extends Controller {
+class Application @Inject()(configuration: Configuration) extends Controller {
 
   var head: Area = Area()
 
   {
-    val file = new URL(" http://10.0.45.22:32680/osm/great-britain-latest.graph.pbf")
+    val file = new URL(configuration.getString("graph.url").get)
     head = new GraphReader().loadGraph(new BufferedInputStream(file.openStream()))
   }
 
