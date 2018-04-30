@@ -4,10 +4,10 @@ import java.io.OutputStream
 
 import com.esri.core.geometry.{OperatorContains, Point, SpatialReference}
 import model.GraphNode
+import outputarea.OutputArea
 import progress.ProgressCounter
 
 import scala.collection.mutable
-import outputarea.{OutputArea, OutputPoint}
 
 class GraphReader {
 
@@ -47,10 +47,13 @@ class GraphReader {
   }
 
   def export(node: GraphNode, output: OutputStream, parent: Option[String], count: ProgressCounter): Unit = {
-    val points = Range(0, node.area.polygon.getPointCount - 1).map { i =>
+    val pointCount = node.area.polygon.getPointCount - 1
+    println(node.id + ": " + pointCount)
+    val points = (0 to pointCount).map { i =>
       val p = node.area.polygon.getPoint(i)
-      OutputPoint(p.getX, p.getY)
-    }
+      Seq(p.getX, p.getY)
+    }.flatten
+
     val shape = OutputArea(id = Some(node.id.toString), osmId = node.area.osmId, name = Some(node.area.name), parent = parent, points = points)
     count.withProgress {
       shape.writeDelimitedTo(output)
