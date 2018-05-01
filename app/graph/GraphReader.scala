@@ -21,9 +21,9 @@ class GraphReader {
       val outputArea = OutputArea.parseDelimitedFrom(input)
       outputArea.map { a =>
         counter.withProgress {
-          val points: Seq[Point] = (a.latitudes zip a.longitudes).map(ll => Point(ll._1, ll._2))
+          // val points: Seq[Point] = (a.latitudes zip a.longitudes).map(ll => Point(ll._1, ll._2))
 
-          val area = Area(id = a.id, name = a.name, points = points)
+          val area = Area(id = a.id, name = a.name, points = Seq())
 
           var insertInto = stack.pop
           while (insertInto.id != a.parent) {
