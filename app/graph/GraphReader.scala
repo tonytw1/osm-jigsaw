@@ -1,8 +1,9 @@
 package graph
 
-import java.io.{BufferedInputStream, File, FileInputStream, InputStream}
+import java.io.InputStream
 
 import outputarea.OutputArea
+import progress.ProgressCounter
 
 import scala.collection.mutable
 
@@ -13,26 +14,30 @@ class GraphReader {
     val stack = mutable.Stack[Area]()
     stack.push(head)
 
+    val counter = new ProgressCounter(step = 10000, label = Some("Reading graph"))
     var ok = true
     while (ok) {
       val outputArea = OutputArea.parseDelimitedFrom(input)
       outputArea.map { a =>
-        val points: Seq[Point] = (a.latitudes zip a.longitudes).map(ll => Point(ll._1, ll._2))
+        counter.withProgress {
+          val points: Seq[Point] = (a.latitudes zip a.longitudes).map(ll => Point(ll._1, ll._2))
 
-        val area = Area(id = a.id, name = a.name, points = points)
+          val area = Area(id = a.id, name = a.name, points = points)
 
-        var insertInto = stack.pop
-        while (insertInto.id != a.parent) {
-          insertInto = stack.pop
+          var insertInto = stack.pop
+          while (insertInto.id != a.parent) {
+            insertInto = stack.pop
+          }
+
+          insertInto.children += area
+          stack.push(insertInto)
+          stack.push(area)
+
+          //println(stack.map(a => a.name).flatten.reverse.mkString(" / "))
         }
 
-        insertInto.children += area
-        stack.push(insertInto)
-        stack.push(area)
-
-        //println(stack.map(a => a.name).flatten.reverse.mkString(" / "))
+        ok = outputArea.nonEmpty
       }
-      ok = outputArea.nonEmpty
     }
 
     input.close()
