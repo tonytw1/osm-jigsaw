@@ -13,3 +13,8 @@ libraryDependencies += specs2 % Test
 enablePlugins(DockerPlugin)
 dockerBaseImage := "openjdk:8-jre"
 dockerExposedPorts in Docker := Seq(9000)
+
+javaOptions in Universal ++= Seq(
+  // -J params will be added as jvm parameters
+  "-J-XX:+UnlockExperimentalVMOptions", "-J -XX:+UseCGroupMemoryLimitForHeap" ,"-J-XshowSettings:vm"
+)
