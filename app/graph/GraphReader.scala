@@ -3,6 +3,7 @@ package graph
 import java.io.InputStream
 
 import outputarea.OutputArea
+import play.api.Logger
 import progress.ProgressCounter
 
 import scala.collection.mutable
@@ -32,13 +33,12 @@ class GraphReader {
           insertInto.children += area
           stack.push(insertInto)
           stack.push(area)
-
-          //println(stack.map(a => a.name).flatten.reverse.mkString(" / "))
         }
-
-        ok = outputArea.nonEmpty
       }
+      ok = outputArea.nonEmpty
+
     }
+    Logger.info("Finished reading")
 
     input.close()
     head

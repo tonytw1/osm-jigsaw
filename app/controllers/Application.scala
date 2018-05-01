@@ -5,7 +5,7 @@ import java.net.URL
 import javax.inject.Inject
 
 import graph.{Area, GraphReader}
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.mvc.{Action, Controller}
 
 import scala.collection.mutable
@@ -17,6 +17,7 @@ class Application @Inject()(configuration: Configuration) extends Controller {
 
   {
     val file = new URL(configuration.getString("graph.url").get)
+    Logger.info("Loading graph from: " + file)
     head = new GraphReader().loadGraph(new BufferedInputStream(file.openStream()))
   }
 
