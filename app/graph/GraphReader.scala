@@ -2,6 +2,7 @@ package graph
 
 import java.io.InputStream
 
+import com.esri.core.geometry.{Point, Polygon}
 import outputarea.OutputArea
 import play.api.Logger
 import progress.ProgressCounter
@@ -21,9 +22,10 @@ class GraphReader {
       val outputArea = OutputArea.parseDelimitedFrom(input)
       outputArea.map { a =>
         counter.withProgress {
-          // val points: Seq[Point] = (a.latitudes zip a.longitudes).map(ll => Point(ll._1, ll._2))
+          val points = (a.latitudes zip a.longitudes).map(ll => (ll._1, ll._2))
+          val polygon = polygonForPoints(points)
 
-          val area = Area(id = a.id, name = a.name, points = Seq())
+          val area = Area(id = a.id, name = a.name, polygon = polygon)
 
           var insertInto = stack.pop
           while (insertInto.id != a.parent) {
@@ -44,7 +46,17 @@ class GraphReader {
     head
   }
 
+  def polygonForPoints(points: Seq[(Double, Double)]): Option[Polygon] = {
+    points.headOption.map { n =>
+      val polygon = new Polygon()
+      polygon.startPath(n._1, n._2)
+      points.drop(1).map { on =>
+        polygon.lineTo(on._1, on._2)
+      }
+      polygon
+    }
+  }
+
 }
 
-case class Area(id: Option[String] = None, name: Option[String] = None, children: mutable.Set[Area] = mutable.Set(), points: Seq[Point]= Seq())
-case class Point(latitude: Double, longitude: Double)
+case class Area(id: Option[String] = None, name: Option[String] = None, children: mutable.Set[Area] = mutable.Set(), polygon: Option[Polygon] = None)

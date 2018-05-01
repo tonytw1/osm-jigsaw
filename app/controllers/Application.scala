@@ -5,8 +5,8 @@ import java.net.URL
 import javax.inject.Inject
 
 import graph.{Area, GraphReader}
-import play.api.{Configuration, Logger}
 import play.api.mvc.{Action, Controller}
+import play.api.{Configuration, Logger}
 
 import scala.collection.mutable
 import scala.concurrent.Future

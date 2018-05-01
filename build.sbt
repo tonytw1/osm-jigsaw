@@ -8,6 +8,7 @@ lazy val `osm-jigsaw-viewer` = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.7"
 
+libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.1.0"
 libraryDependencies += specs2 % Test
 
 enablePlugins(DockerPlugin)
