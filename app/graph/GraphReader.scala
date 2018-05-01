@@ -17,7 +17,9 @@ class GraphReader {
     while (ok) {
       val outputArea = OutputArea.parseDelimitedFrom(input)
       outputArea.map { a =>
-        val area = Area(id = a.id, name = a.name)
+        val points: Seq[Point] = (a.latitudes zip a.longitudes).map(ll => Point(ll._1, ll._2))
+
+        val area = Area(id = a.id, name = a.name, points = points)
 
         var insertInto = stack.pop
         while (insertInto.id != a.parent) {
@@ -39,4 +41,5 @@ class GraphReader {
 
 }
 
-case class Area(id: Option[String] = None, name: Option[String] = None, children: mutable.Set[Area] = mutable.Set())
+case class Area(id: Option[String] = None, name: Option[String] = None, children: mutable.Set[Area] = mutable.Set(), points: Seq[Point]= Seq())
+case class Point(latitude: Double, longitude: Double)

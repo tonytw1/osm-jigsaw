@@ -1,14 +1,10 @@
 syntax = "proto2";
 
-message OutputPoint {
-   required double lat = 1;
-   required double lon = 2;
-}
-
 message OutputArea {
    optional string id = 1;
    optional string name = 2;
    optional string osm_id = 3;
    optional string parent = 4;
-   repeated OutputPoint points = 5;
+   repeated double latitudes = 5 [packed=true];
+   repeated double longitudes = 6 [packed=true];
 }
