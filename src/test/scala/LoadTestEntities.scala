@@ -9,10 +9,10 @@ trait LoadTestEntities {
 
   private def all(entity: Entity): Boolean = true
 
-  def loadEntities(filepath: String, predicate: Entity => Boolean = all): Seq[Entity] = {
+  def loadEntities(filename: String, predicate: Entity => Boolean = all): Seq[Entity] = {
     var found = mutable.Buffer[Entity]()
     def addToBuffer(entity: Entity) = found = found.+=(entity)
-    new SinkRunner(filepath, predicate, addToBuffer).run
+    new SinkRunner(getClass.getClassLoader.getResource(filename).getPath, predicate, addToBuffer).run
     found
   }
 
