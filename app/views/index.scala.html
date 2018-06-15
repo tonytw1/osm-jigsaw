@@ -5,7 +5,7 @@
 
 <ul>
 @area.children.toSeq.sortBy(c => -c.children.size).map { c =>
-    <li><a href="@routes.Application.ping(Some((areas.map(a => a.id.get) :+ c.id.get).mkString("/")))">@c.name</a>
+    <li><a href="@routes.Application.index(Some((areas.map(a => a.id.get) :+ c.id.get).mkString("/")))">@c.name</a>
         @if(c.children.nonEmpty) {(@c.children.size)}
     </li>
 }

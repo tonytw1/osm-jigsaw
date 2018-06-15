@@ -1,27 +1,17 @@
 package controllers
 
-import java.io.BufferedInputStream
-import java.net.URL
 import javax.inject.Inject
 
-import graph.{Area, GraphReader}
+import graph.{Area, GraphService}
+import play.api.Configuration
 import play.api.mvc.{Action, Controller}
-import play.api.{Configuration, Logger}
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration) extends Controller {
+class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller {
 
-  var head: Area = Area()
-
-  {
-    val file = new URL(configuration.getString("graph.url").get)
-    Logger.info("Loading graph from: " + file)
-    head = new GraphReader().loadGraph(new BufferedInputStream(file.openStream()))
-  }
-
-  def ping(qo: Option[String]) = Action.async { request =>
+  def index(qo: Option[String]) = Action.async { request =>
 
     def areaIdentifier(area: Area): String = {
       area.id.get
@@ -31,7 +21,7 @@ class Application @Inject()(configuration: Configuration) extends Controller {
     val areas = mutable.ListBuffer[Area]()
     val queue = new mutable.Queue() ++ components
 
-    var show = head
+    var show = graphService.head
 
     while(queue.nonEmpty) {
       val next = queue.dequeue()
