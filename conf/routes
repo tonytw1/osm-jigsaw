@@ -1,1 +1,2 @@
-GET     /   controllers.Application.index(q: Option[String])
+GET     /           controllers.Application.index(q: Option[String])
+GET     /reverse    controllers.Application.reverse(lat: Double, lon: Double)
