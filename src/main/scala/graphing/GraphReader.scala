@@ -46,7 +46,7 @@ class GraphReader {
     }
   }
 
-  def export(node: GraphNode, output: OutputStream, parent: Option[String], count: ProgressCounter): Unit = {
+  def export(node: GraphNode, output: OutputStream, parent: Option[Long], count: ProgressCounter): Unit = {
     val latitudes = mutable.ListBuffer[Double]()
     val longitudes = mutable.ListBuffer[Double]()
     val pointCount = node.area.polygon.getPointCount - 1
@@ -56,11 +56,11 @@ class GraphReader {
       longitudes.+=(p.getY)
     }
 
-    val shape = OutputArea(id = Some(node.id.toString), osmId = node.area.osmId, name = Some(node.area.name), parent = parent, latitudes = latitudes, longitudes = longitudes)
+    val shape = OutputArea(id = Some(node.id), osmId = node.area.osmId, name = Some(node.area.name), parent = parent, latitudes = latitudes, longitudes = longitudes)
     count.withProgress {
       shape.writeDelimitedTo(output)
     }
-    node.children.map( c => export(c, output, Some(node.id.toString), count))
+    node.children.map( c => export(c, output, Some(node.id), count))
   }
 
 }
