@@ -1,8 +1,8 @@
 package model
 
-import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 
-case class GraphNode(area: Area, var children: Set[GraphNode] = Set(), id: UUID = UUID.randomUUID()) {
+case class GraphNode(area: Area, id: Long = GraphNodeIdSequence.nextId, var children: Set[GraphNode] = Set()) {
 
   def insert(newArea: Area): GraphNode = {
     val newNode = GraphNode(newArea)
@@ -18,5 +18,15 @@ case class GraphNode(area: Area, var children: Set[GraphNode] = Set(), id: UUID 
   }
 
   override def hashCode(): Int = id.hashCode()
+
+}
+
+object GraphNodeIdSequence {
+
+  val seq: AtomicLong = new AtomicLong(1L)
+
+  def nextId: Long = {
+    seq.getAndIncrement()
+  }
 
 }

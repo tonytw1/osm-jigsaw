@@ -1,12 +1,12 @@
 package resolving
 
 import input.TestValues
-import model.{Area, EntityRendering}
+import model.EntityRendering
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
 
-import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering {
 
