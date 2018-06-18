@@ -47,7 +47,9 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val lastArea = areas.last
     Logger.info("Last area: " + lastArea.name)
 
-    Future.successful(Ok(views.html.index(areas, show)))
+    val childrenHash = lastArea.children.map(c => c.points).flatten.hashCode()
+    Logger.info("Child hash: " + childrenHash)
+    Future.successful(Ok(views.html.index(areas, show, childrenHash)))
   }
 
   def reverse(lat: Double, lon: Double) = Action.async { request =>
