@@ -74,7 +74,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     }
 
     val pt = new Point(lat, lon)
-    val output = areasContaining(pt, graphService.head.children.head, Seq()).map { a =>
+    val output = areasContaining(pt, graphService.head, Seq()).map { a =>
       renderAreaStack(a)
     }
 
