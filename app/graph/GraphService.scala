@@ -8,7 +8,7 @@ import play.api.{Configuration, Logger}
 
 class GraphService @Inject()(configuration: Configuration) {
 
-  var head: Area = Area()
+  var head: Area = null
 
   {
     val file = new URL(configuration.getString("graph.url").get)

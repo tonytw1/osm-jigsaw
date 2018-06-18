@@ -17,20 +17,30 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   def index(qo: Option[String]) = Action.async { request =>
 
-    def areaIdentifier(area: Area): String = {
-      area.id.get
+    def areaIdentifier(area: Area): Long = {
+      area.id
     }
 
-    val components = qo.getOrElse("").split("/").toSeq
-    val areas = mutable.ListBuffer[Area]()
-    val queue = new mutable.Queue() ++ components
+    val components = qo.getOrElse("").split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
 
     var show = graphService.head
+    val areas = mutable.ListBuffer[Area]()
+    areas.+= (show)
+
+    val queue = new mutable.Queue() ++ components
 
     while(queue.nonEmpty) {
       val next = queue.dequeue()
-      show = show.children.find(a => areaIdentifier(a).contains(next)).get
-      areas.+=(show)
+      val children = show.children
+
+      val found = children.find{ a =>
+        areaIdentifier(a) == next
+      }
+
+      found.map { f =>
+        areas.+=(f)
+        show = f
+      }
     }
 
     Logger.info("Areas: " + areas.map(a => a.name).mkString(" / "))
