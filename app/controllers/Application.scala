@@ -47,7 +47,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val lastArea = areas.last
     Logger.info("Last area: " + lastArea.name)
 
-    val childrenHash = lastArea.children.map(c => c.points).flatten.hashCode()
+    val childrenHash = lastArea.children.map(c => c.id).hashCode()
     Logger.info("Child hash: " + childrenHash)
     Future.successful(Ok(views.html.index(areas, show, childrenHash)))
   }
