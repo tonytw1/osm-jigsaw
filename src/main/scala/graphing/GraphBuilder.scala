@@ -3,7 +3,7 @@ package graphing
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
 import com.esri.core.geometry.{Operator, OperatorContains}
-import model.{Area, GraphNode}
+import model.{Area, GraphNode, GraphNodeIdSequence}
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.{DateTime, Duration}
 import progress.ProgressCounter
@@ -15,7 +15,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     logger.info("Building graph from " + areas.size + " areas")
 
     val earthArea = makePolygon((-180, 90),(180, -90))
-    val earth = Area(name = "Earth", earthArea, boundingBoxFor(earthArea))
+    val earth = Area(GraphNodeIdSequence.nextId, "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth)
 
     head.insert(areas)

@@ -56,11 +56,11 @@ class GraphReader {
       longitudes.+=(p.getY)
     }
 
-    val shape = OutputArea(id = Some(node.id), osmId = node.area.osmId, name = Some(node.area.name), parent = parent, latitudes = latitudes, longitudes = longitudes)
+    val shape = OutputArea(id = Some(node.area.id), osmId = node.area.osmId, name = Some(node.area.name), parent = parent, latitudes = latitudes, longitudes = longitudes)
     count.withProgress {
       shape.writeDelimitedTo(output)
     }
-    node.children.map( c => export(c, output, Some(node.id), count))
+    node.children.map( c => export(c, output, Some(node.area.id), count))
   }
 
 }
