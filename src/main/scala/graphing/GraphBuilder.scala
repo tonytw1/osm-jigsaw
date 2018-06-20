@@ -15,7 +15,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     logger.info("Building graph from " + areas.size + " areas")
 
     val earthArea = makePolygon((-180, 90),(180, -90))
-    val earth = Area(GraphNodeIdSequence.nextId, "Earth", earthArea, boundingBoxFor(earthArea))
+    val earth = Area(0, "Earth", earthArea, boundingBoxFor(earthArea))
     var head = GraphNode(earth)
 
     head.insert(areas)
