@@ -32,6 +32,7 @@ class GraphReader {
     def getCachedArea(id: Long): Area = {
       areasMap.get(id).get
     }
+    input.close()
 
     val inputSecond = new BufferedInputStream(file.openStream())
     val area1 = outputAreaToArea(OutputArea.parseDelimitedFrom(inputSecond).get)
@@ -60,6 +61,8 @@ class GraphReader {
       ok = outputArea.nonEmpty
 
     }
+    inputSecond.close()
+
     Logger.info("Finished reading")
 
     input.close()
