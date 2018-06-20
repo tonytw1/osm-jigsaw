@@ -12,21 +12,41 @@ import scala.collection.mutable
 class GraphReader {
 
   def loadGraph(file: URL): Area = {
-    val input: InputStream = new BufferedInputStream(file.openStream())
+    val input = new BufferedInputStream(file.openStream())
 
-    val head = outputAreaToArea(OutputArea.parseDelimitedFrom(input).get)
+    val areasMap = mutable.Map[Long, Area]()
+    val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
+    var ok = true
+    while (ok) {
+      counter.withProgress {
+        val outputArea = OutputArea.parseDelimitedFrom(input)
+        outputArea.map { oa =>
+          val area = outputAreaToArea(oa)
+          areasMap += area.id -> area
+        }
+        ok = outputArea.nonEmpty
+      }
+    }
+    Logger.info("Mapped areas: " + areasMap.size)
+
+    def getCachedArea(id: Long): Area = {
+      areasMap.get(id).get
+    }
+
+    val inputSecond = new BufferedInputStream(file.openStream())
+    val area1 = outputAreaToArea(OutputArea.parseDelimitedFrom(inputSecond).get)
+    val head = getCachedArea(area1.id)
     Logger.info("Head element: " + head)
     val stack = mutable.Stack[Area]()
     stack.push(head)
 
-    val counter = new ProgressCounter(step = 10000, label = Some("Reading graph"))
-    var ok = true
+    val counterSecond = new ProgressCounter(step = 100000, label = Some("Building graph"))
+    ok = true
     while (ok) {
-      val outputArea: Option[OutputArea] = OutputArea.parseDelimitedFrom(input)
+      val outputArea = OutputArea.parseDelimitedFrom(inputSecond)
       outputArea.map { oa =>
-        counter.withProgress {
-          val area = outputAreaToArea(oa)
-          // Logger.info("Processing area: " + area.name + " / " + area.id + " / " + area.parent)
+        counterSecond.withProgress {
+          val area = getCachedArea(outputAreaToArea(oa).id)
           var insertInto = stack.pop
           while (Some(insertInto.id) != oa.parent) {
             insertInto = stack.pop
@@ -48,7 +68,7 @@ class GraphReader {
 
   private def outputAreaToArea(oa: OutputArea): Area = {
     val points = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
-    Area(id = oa.id.get, name = oa.name, points = points, parent = oa.parent)   // TODO Naked get of id
+    Area(id = oa.id.get, name = oa.name, points = points, parent = oa.parent) // TODO Naked get of id
   }
 
 }
