@@ -41,7 +41,7 @@ class GraphReader {
     val stack = mutable.Stack[Area]()
     stack.push(head)
 
-    val counterSecond = new ProgressCounter(step = 100000, label = Some("Building graph"))
+    val counterSecond = new ProgressCounter(step = 1000, label = Some("Building graph"))
     ok = true
     while (ok) {
       val outputArea = OutputArea.parseDelimitedFrom(inputSecond)
