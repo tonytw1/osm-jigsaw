@@ -1,6 +1,7 @@
 package graph
 
-import java.io.InputStream
+import java.io.{BufferedInputStream, InputStream}
+import java.net.URL
 
 import outputarea.OutputArea
 import play.api.Logger
@@ -10,7 +11,9 @@ import scala.collection.mutable
 
 class GraphReader {
 
-  def loadGraph(input: InputStream): Area = {
+  def loadGraph(file: URL): Area = {
+    val input: InputStream = new BufferedInputStream(file.openStream())
+
     val head = outputAreaToArea(OutputArea.parseDelimitedFrom(input).get)
     Logger.info("Head element: " + head)
     val stack = mutable.Stack[Area]()

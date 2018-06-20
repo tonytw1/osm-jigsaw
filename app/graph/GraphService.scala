@@ -13,7 +13,7 @@ class GraphService @Inject()(configuration: Configuration) {
   {
     val file = new URL(configuration.getString("graph.url").get)
     Logger.info("Loading graph from: " + file)
-    head = new GraphReader().loadGraph(new BufferedInputStream(file.openStream()))
+    head = new GraphReader().loadGraph(file)
   }
 
 }
