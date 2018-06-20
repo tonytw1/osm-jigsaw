@@ -3,7 +3,7 @@ package graphing
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
 import com.esri.core.geometry.{Operator, OperatorContains}
-import model.{Area, GraphNode, GraphNodeIdSequence}
+import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.{DateTime, Duration}
 import progress.ProgressCounter
