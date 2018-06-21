@@ -93,11 +93,12 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     assert(leftNode.children.head.area.name == "Fits")
     // TODO
   }
+    */
 
   def makeArea(name: String, topLeft: (Int, Int), bottomRight: (Int, Int)): Area = {
     val area = makePolygon(topLeft, bottomRight)
     Area(AreaIdSequence.nextId, name, area, boundingBoxFor(area))
   }
-  */
+
 
 }
