@@ -1,7 +1,7 @@
 package graphing
 
 import input.TestValues
-import model.{Area, EntityRendering, GraphNode, GraphNodeIdSequence}
+import model.{Area, EntityRendering, GraphNode, AreaIdSequence}
 import org.scalatest.FlatSpec
 import resolving.{BoundingBox, PolygonBuilding}
 
@@ -100,7 +100,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
 
   def makeArea(name: String, topLeft: (Int, Int), bottomRight: (Int, Int)): Area = {
     val area = makePolygon(topLeft, bottomRight)
-    Area(GraphNodeIdSequence.nextId, name, area, boundingBoxFor(area))
+    Area(AreaIdSequence.nextId, name, area, boundingBoxFor(area))
   }
 
 }
