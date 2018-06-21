@@ -26,7 +26,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   def siftDown(a: GraphNode): Unit = {
     logger.info("Sifting down: " + a.area.name  + " with " + a.children.size + " children")
     logger.debug("Presorting by area to assist sift down effectiveness")
-    var c = 0
     val sorted = a.children.toSeq.sortBy { a =>
       areaOf(a.area)
     }
