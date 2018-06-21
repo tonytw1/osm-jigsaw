@@ -9,12 +9,12 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import outputarea.OutputArea
 import progress.ProgressCounter
-import resolving.{AreaResolver, MapDBNodeResolver, MapDBWayResolver}
+import resolving._
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 
-object Main extends EntityRendering with Logging {
+object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox {
 
   private val STEP = "s"
 
@@ -173,7 +173,7 @@ object Main extends EntityRendering with Logging {
 
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
-    var areas = readAreasFromSerFile(inputFilename)
+    var areas = readAreasFromPbfFile(inputFilename)
 
     logger.info("Building graph")
     val head = new GraphBuilder().buildGraph(areas)
@@ -252,6 +252,34 @@ object Main extends EntityRendering with Logging {
     ois.close
     logger.info("Read " + areas.size + " areas")
     areas
+  }
+  private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {
+    logger.info("Reading areas")
+    var areas = Seq[Area]()
+    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
+
+    val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
+    var ok = true
+    while (ok) {
+      counter.withProgress {
+        val outputArea = OutputArea.parseDelimitedFrom(fileInputStream)
+        outputArea.map { oa =>
+          val area = outputAreaToArea(oa)
+          areas = areas.+:(area)
+        }
+        ok = outputArea.nonEmpty
+      }
+    }
+
+    fileInputStream.close
+    logger.info("Read " + areas.size + " areas")
+    areas
+  }
+
+  private def outputAreaToArea(oa: OutputArea): Area = {
+    val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
+    val p = areaForPoints(points).get
+    Area(id = oa.id.get, name = oa.name.get, polygon = p, boundingBox = boundingBoxFor(p)) // TODO Naked gets
   }
 
 }
