@@ -279,7 +279,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def outputAreaToArea(oa: OutputArea): Area = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
     val p = areaForPoints(points).get
-    Area(id = oa.id.get, name = oa.name.get, polygon = p, boundingBox = boundingBoxFor(p)) // TODO Naked gets
+    Area(id = oa.id.get, name = oa.name.get, polygon = p, boundingBox = boundingBoxFor(p), osmId = oa.osmId) // TODO Naked gets
   }
 
 }
