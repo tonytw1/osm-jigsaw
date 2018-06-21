@@ -55,6 +55,7 @@ object Main extends EntityRendering with Logging {
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "dump" => dumpGraph(inputFilepath)
       case "export" => exportGraph(inputFilepath, cmd.getArgList.get(1))
+      case "exportareas" => exportAreas(inputFilepath, cmd.getArgList.get(1))
       case "verify" => verifyGraph(inputFilepath)
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -156,20 +157,23 @@ object Main extends EntityRendering with Logging {
     logger.info("Dumped areas to file: " + outputFilepath)
   }
 
+  def exportAreas(inputFilename: String, outputFilename: String) = {
+    val areas = readAreasFromSerFile(inputFilename)
+
+    val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
+    val counter = new ProgressCounter(100000)
+
+    logger.info("Export dump")
+    new GraphReader().exportAreas(areas, output, counter)
+
+    output.flush()
+    output.close()
+    logger.info("Done")
+  }
+
+
   def buildGraph(inputFilename: String, outputFilename: String) = {
-    logger.info("Reading areas")
-    var areas = Seq[Area]()
-    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
-    val ois = new ObjectInputStream(fileInputStream)
-    try {
-      while (true) {
-        areas = areas.+:(ois.readObject().asInstanceOf[Area])
-      }
-    } catch {
-      case e: EOFException => logger.info("Reached end of file")
-    }
-    ois.close
-    logger.info("Read " + areas.size + " areas")
+    var areas = readAreasFromSerFile(inputFilename)
 
     logger.info("Building graph")
     val head = new GraphBuilder().buildGraph(areas)
@@ -231,6 +235,23 @@ object Main extends EntityRendering with Logging {
     logger.info("Closing")
     logger.info("Found " + total + " areas in pbf file")
     is.close
+  }
+
+  private def readAreasFromSerFile(inputFilename: String): Seq[Area] = {
+    logger.info("Reading areas")
+    var areas = Seq[Area]()
+    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
+    val ois = new ObjectInputStream(fileInputStream)
+    try {
+      while (true) {
+        areas = areas.+:(ois.readObject().asInstanceOf[Area])
+      }
+    } catch {
+      case e: EOFException => logger.info("Reached end of file")
+    }
+    ois.close
+    logger.info("Read " + areas.size + " areas")
+    areas
   }
 
 }
