@@ -4,6 +4,7 @@ import java.io.BufferedInputStream
 import java.net.URL
 
 import outputarea.OutputArea
+import outputgraphnode.OutputGraphNode
 import play.api.Logger
 import progress.ProgressCounter
 
@@ -11,9 +12,9 @@ import scala.collection.mutable
 
 class GraphReader {
 
-  def loadGraph(file: URL): Area = {
+  def loadGraph(areasFile: URL, graphFile: URL): Area = {
     try {
-      val input = new BufferedInputStream(file.openStream())
+      val input = new BufferedInputStream(areasFile.openStream())
 
       val areasMap = mutable.Map[Long, Area]()
       val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
@@ -36,9 +37,10 @@ class GraphReader {
 
       input.close()
 
-      val inputSecond = new BufferedInputStream(file.openStream())
-      val area1 = outputAreaToArea(OutputArea.parseDelimitedFrom(inputSecond).get)
-      val head = getCachedArea(area1.id)
+      val inputSecond = new BufferedInputStream(graphFile.openStream())
+      val graphNode = OutputGraphNode.parseDelimitedFrom(inputSecond).get
+      Logger.info("Graph node: " + graphNode)
+      val head = getCachedArea(graphNode.area.get)
       Logger.info("Head element: " + head)
       val stack = mutable.Stack[Area]()
       stack.push(head)
@@ -46,10 +48,10 @@ class GraphReader {
       val counterSecond = new ProgressCounter(step = 10000, label = Some("Building graph"))
       ok = true
       while (ok) {
-        val outputArea = OutputArea.parseDelimitedFrom(inputSecond)
-        outputArea.map { oa =>
+        val outputGraphNode = OutputGraphNode.parseDelimitedFrom(inputSecond)
+        outputGraphNode.map { oa =>
           counterSecond.withProgress {
-            val area = getCachedArea(outputAreaToArea(oa).id)
+            val area = getCachedArea(oa.area.get)
             var insertInto = stack.pop
             while (Some(insertInto.id) != oa.parent) {
               insertInto = stack.pop
@@ -60,7 +62,7 @@ class GraphReader {
             stack.push(area)
           }
         }
-        ok = outputArea.nonEmpty
+        ok = outputGraphNode.nonEmpty
 
       }
       inputSecond.close()
