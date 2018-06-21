@@ -105,7 +105,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         }
       }
       */
-
     }
 
     val duration = new Duration(start, DateTime.now)

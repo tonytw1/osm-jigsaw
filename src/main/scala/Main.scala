@@ -54,9 +54,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
-      case "dump" => dumpGraph(inputFilepath)
-      case "export" => exportGraph(inputFilepath, cmd.getArgList.get(1))
-      case "verify" => verifyGraph(inputFilepath)
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
@@ -177,62 +174,15 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val head = new GraphBuilder().buildGraph(areas)
 
     logger.info("Writing graph to disk")
-    val oos = new ObjectOutputStream(new FileOutputStream(outputFilename))
-    oos.writeObject(head)
-    oos.close
-    logger.info("Dumped graph to file: " + outputFilename)
-  }
-
-  def dumpGraph(inputFilename: String) = {
-    logger.info("Opening graph file: " + inputFilename)
-    val ois = new ObjectInputStream(new FileInputStream(inputFilename))
-    logger.info("Reading object")
-    val graph = ois.readObject.asInstanceOf[GraphNode]
-    logger.info("Closing")
-    ois.close
-
-    logger.info("Beginning dump")
-    new GraphReader().dump(graph)
-    logger.info("Done")
-  }
-
-  def exportGraph(inputFilename: String, outputFilename: String) = {
-    logger.info("Opening graph file: " + inputFilename)
-    val ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(inputFilename)))
-    logger.info("Reading object")
-    val graph = ois.readObject.asInstanceOf[GraphNode]
-    logger.info("Closing")
-    ois.close
-
     val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
     val counter = new ProgressCounter(100000)
 
     logger.info("Export dump")
-    new GraphReader().export(graph, output, None, counter)
+    new GraphReader().export(head, output, None, counter)
 
     output.flush()
     output.close()
     logger.info("Done")
-  }
-
-  def verifyGraph(inputFilename: String) = {
-    logger.info("Opening graph pbf file: " + inputFilename)
-    val is = new BufferedInputStream(new FileInputStream(inputFilename))
-
-    val counter = new ProgressCounter(100000)
-    var ok = true
-    var total = 0
-    while(ok) {
-      counter.withProgress {
-        total = total + 1
-        val area = OutputArea.parseDelimitedFrom(is)
-        ok = area.nonEmpty
-      }
-    }
-
-    logger.info("Closing")
-    logger.info("Found " + total + " areas in pbf file")
-    is.close
   }
 
   private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {

@@ -74,8 +74,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   "graph builder" should "insertion order should not effect trickle down outcome" in {
     val graph = graphBuilder.buildGraph(Seq(small, medium, large))
 
-    new GraphReader().dump(graph)
-
     assert(graph.children.size == 1)
     assert(graph.children.head.area.name == "Large")
     assert(graph.children.head.children.size == 1)
@@ -85,13 +83,10 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   }
 
   "graph builder" should "items which fit inside overlapping siblings should become children of all of the overlapping regions" in {
-    val leftFirst: GraphNode = graphBuilder.buildGraph(Seq(large, left, overlapping, fitsInLeftAndOverlapping))
-    new GraphReader().dump(leftFirst)
+    val leftFirst = graphBuilder.buildGraph(Seq(large, left, overlapping, fitsInLeftAndOverlapping))
 
     val overlappingNode = leftFirst.children.head.children.head
     val leftNode = leftFirst.children.head.children.last
-    println(overlapping)
-
 
     assert(overlappingNode.children.head.area.name == "Fits")
     assert(leftNode.children.head.area.name == "Fits")
