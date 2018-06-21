@@ -3,7 +3,7 @@ package graphing
 import java.io.OutputStream
 
 import com.esri.core.geometry.{OperatorContains, Point, SpatialReference}
-import model.{Area, GraphNode}
+import model.GraphNode
 import outputarea.OutputArea
 import progress.ProgressCounter
 
@@ -61,24 +61,6 @@ class GraphReader {
       outputArea.writeDelimitedTo(output)
     }
     node.children.map( c => export(c, output, Some(node.area.id), count))
-  }
-
-  def exportAreas(areas: Seq[Area], output: OutputStream, count: ProgressCounter): Unit = {
-    areas.map { area =>
-      val latitudes = mutable.ListBuffer[Double]()
-      val longitudes = mutable.ListBuffer[Double]()
-      val pointCount = area.polygon.getPointCount - 1
-      (0 to pointCount).map { i =>
-        val p = area.polygon.getPoint(i)
-        latitudes.+=(p.getX)
-        longitudes.+=(p.getY)
-      }
-
-      val outputArea = OutputArea(id = Some(area.id), osmId = area.osmId, name = Some(area.name), parent = None, latitudes = latitudes, longitudes = longitudes)
-      count.withProgress {
-        outputArea.writeDelimitedTo(output)
-      }
-    }
   }
 
 }

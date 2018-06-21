@@ -13,6 +13,7 @@ import resolving._
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
+import scala.collection.mutable
 
 object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox {
 
@@ -55,7 +56,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "dump" => dumpGraph(inputFilepath)
       case "export" => exportGraph(inputFilepath, cmd.getArgList.get(1))
-      case "exportareas" => exportAreas(inputFilepath, cmd.getArgList.get(1))
       case "verify" => verifyGraph(inputFilepath)
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -130,13 +130,26 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Found " + relations.size + " relations to process")
 
     logger.info("Resolving areas")
-    val oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(outputFilepath)))
+    val oos = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+
+    def exportArea(area: Area, output: OutputStream): Unit = {
+      val latitudes = mutable.ListBuffer[Double]()
+      val longitudes = mutable.ListBuffer[Double]()
+      val pointCount = area.polygon.getPointCount - 1
+      (0 to pointCount).map { i =>
+        val p = area.polygon.getPoint(i)
+        latitudes.+=(p.getX)
+        longitudes.+=(p.getY)
+      }
+
+      val outputArea = OutputArea(id = Some(area.id), osmId = area.osmId, name = Some(area.name), parent = None, latitudes = latitudes, longitudes = longitudes)
+      outputArea.writeDelimitedTo(output)
+    }
 
     def callback(newAreas: Seq[Area]): Unit = {
       newAreas.foreach { a =>
-        oos.writeUnshared(a)
+        exportArea(a, oos)
       }
-      oos.reset()
     }
 
     logger.info("Filtering relations to resolve")
