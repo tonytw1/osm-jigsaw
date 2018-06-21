@@ -157,21 +157,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Dumped areas to file: " + outputFilepath)
   }
 
-  def exportAreas(inputFilename: String, outputFilename: String) = {
-    val areas = readAreasFromSerFile(inputFilename)
-
-    val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
-    val counter = new ProgressCounter(100000)
-
-    logger.info("Export dump")
-    new GraphReader().exportAreas(areas, output, counter)
-
-    output.flush()
-    output.close()
-    logger.info("Done")
-  }
-
-
   def buildGraph(inputFilename: String, outputFilename: String) = {
     var areas = readAreasFromPbfFile(inputFilename)
 
@@ -237,22 +222,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     is.close
   }
 
-  private def readAreasFromSerFile(inputFilename: String): Seq[Area] = {
-    logger.info("Reading areas")
-    var areas = Seq[Area]()
-    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
-    val ois = new ObjectInputStream(fileInputStream)
-    try {
-      while (true) {
-        areas = areas.+:(ois.readObject().asInstanceOf[Area])
-      }
-    } catch {
-      case e: EOFException => logger.info("Reached end of file")
-    }
-    ois.close
-    logger.info("Read " + areas.size + " areas")
-    areas
-  }
   private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {
     logger.info("Reading areas")
     var areas = Seq[Area]()
