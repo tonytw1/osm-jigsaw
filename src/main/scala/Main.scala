@@ -149,6 +149,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
     }
 
+    val earthArea = makePolygon((-180, 90),(180, -90))
+    val earth = Area(0, "Earth", earthArea, boundingBoxFor(earthArea))
+    exportArea(earth, oos)
+
     logger.info("Filtering relations to resolve")
     val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
 
