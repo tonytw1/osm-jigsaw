@@ -19,7 +19,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   val overlapping = makeArea("Overlapping", (-5, 10), (5, -10))
   val fitsInLeftAndOverlapping = makeArea("Fits", (-1, 1), (0, 0))
 
-  /*
   "graph builder" should "provide empty head node" in {
     val empty = graphBuilder.buildGraph(Seq())
 
@@ -98,6 +97,5 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     val area = makePolygon(topLeft, bottomRight)
     Area(AreaIdSequence.nextId, name, area, boundingBoxFor(area))
   }
-  */
 
 }
