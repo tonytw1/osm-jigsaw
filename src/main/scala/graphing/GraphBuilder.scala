@@ -22,7 +22,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode): Unit = {
-    logger.info("Sifting down: " + a.area.name  + " with " + a.children.size + " children")
+    logger.debug("Sifting down: " + a.area.name  + " with " + a.children.size + " children")
     logger.debug("Presorting by area to assist sift down effectiveness")
     val sorted = a.children.toSeq.sortBy { a =>
       areaOf(a.area)
@@ -43,7 +43,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     a.children.par.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
     a.children.par.filter(i => i.children.nonEmpty && i.children.size > 1).foreach { c =>
-      logger.info("Sifting down from " + a.area.name + " to " + c.area.name)
+      logger.debug("Sifting down from " + a.area.name + " to " + c.area.name)
       siftDown(c)
     }
   }
