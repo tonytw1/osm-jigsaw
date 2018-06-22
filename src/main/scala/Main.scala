@@ -14,6 +14,7 @@ import resolving._
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox {
 
@@ -202,7 +203,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
   private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {
     logger.info("Reading areas")
-    var areas = Seq[Area]()
+    var areas = ListBuffer[Area]()
     val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
 
     val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
@@ -212,7 +213,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         val outputArea = OutputArea.parseDelimitedFrom(fileInputStream)
         outputArea.map { oa =>
           val area = outputAreaToArea(oa)
-          areas = areas.+:(area)
+          areas = areas += area
         }
         ok = outputArea.nonEmpty
       }
@@ -220,7 +221,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     fileInputStream.close
     logger.info("Read " + areas.size + " areas")
-    areas
+    areas.toList
   }
 
   private def outputAreaToArea(oa: OutputArea): Area = {
