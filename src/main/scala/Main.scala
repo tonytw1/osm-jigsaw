@@ -53,6 +53,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "split" => split(inputFilepath)
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
+      case "dumpareas" => dumpAreas(inputFilepath)
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -169,6 +170,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     oos.flush()
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)
+  }
+
+  def dumpAreas(inputFilename: String) = {
+    readAreasFromPbfFile(inputFilename).map { a =>
+      println(a)
+    }
   }
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
