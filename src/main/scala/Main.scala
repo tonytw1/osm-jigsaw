@@ -149,8 +149,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
     }
 
-    val earthArea = makePolygon((-180, 90),(180, -90))
-    val earth = Area(0, "Earth", earthArea, boundingBoxFor(earthArea))
+    val earthPolygon = makePolygon((-180, 90),(180, -90))
+    val earth = Area(0, "Earth", earthPolygon, boundingBoxFor(earthPolygon))
     exportArea(earth, oos)
 
     logger.info("Filtering relations to resolve")
@@ -175,7 +175,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var areas = readAreasFromPbfFile(inputFilename)
 
     logger.info("Building graph")
-    val head = new GraphBuilder().buildGraph(areas)
+    val head = new GraphBuilder().buildGraph(areas.head, areas.drop(1))
 
     logger.info("Writing graph to disk")
     val output = new BufferedOutputStream(new FileOutputStream(outputFilename))

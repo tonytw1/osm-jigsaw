@@ -1,13 +1,15 @@
 package graphing
 
 import input.TestValues
-import model.{Area, EntityRendering, GraphNode, AreaIdSequence}
+import model.{Area, AreaIdSequence, EntityRendering, GraphNode}
 import org.scalatest.FlatSpec
 import resolving.{BoundingBox, PolygonBuilding}
 
 class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering with BoundingBox with PolygonBuilding {
 
   val graphBuilder = new GraphBuilder()
+
+  val earth = makeArea("Earth", (-180, 90),(180, -90))
 
   val large = makeArea("Large", (-10, 10), (10, -10))
   val medium = makeArea("Medium", (-2, 2), (2, -2))
@@ -20,30 +22,31 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   val fitsInLeftAndOverlapping = makeArea("Fits", (-1, 1), (0, 0))
 
   "graph builder" should "provide empty head node" in {
-    val empty = graphBuilder.buildGraph(Seq())
+    val empty = graphBuilder.buildGraph(earth, Seq())
 
     assert(empty.area.name == "Earth")
     assert(empty.children.size == 0)
   }
 
   "graph builder" should "insert nodes as children of head" in {
-    val graph = graphBuilder.buildGraph(Seq(large))
+    val graph = graphBuilder.buildGraph(earth, Seq(large))
 
     assert(graph.children.size == 1)
   }
 
   "graph builder" should "place non overlapping areas at the same level" in {
-    val graph = graphBuilder.buildGraph(Seq(large, left, right))
+    val graph = graphBuilder.buildGraph(earth, Seq(large, left, right))
 
     assert(graph.children.size == 1)
-    assert(graph.children.head.area.name == "Large")
-    assert(graph.children.head.children.size == 2)
-    assert(graph.children.head.children.head.area.name == "Left")
-    assert(graph.children.head.children.last.area.name == "Right")
+    var largeNode = graph.children.head
+    assert(largeNode.area.name == "Large")
+    assert(largeNode.children.size == 2)
+    assert(largeNode.children.head.area.name == "Left")
+    assert(largeNode.children.last.area.name == "Right")
   }
 
   "graph builder" should "sift new nodes down into enclosing siblings" in {
-    val graph = graphBuilder.buildGraph(Seq(large, small))
+    val graph = graphBuilder.buildGraph(earth, Seq(large, small))
 
     assert(graph.children.size == 1)
     assert(graph.children.head.area.name == "Large")
@@ -52,7 +55,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   }
 
   "graph builder" should "sift existing nodes down into enclosing siblings which are inserted after them" in {
-    val graph = graphBuilder.buildGraph(Seq(small, large))
+    val graph = graphBuilder.buildGraph(earth, Seq(small, large))
 
     assert(graph.children.size == 1)
     assert(graph.children.head.area.name == "Large")
@@ -61,7 +64,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   }
 
   "graph builder" should "trickle down" in {
-    val graph = graphBuilder.buildGraph(Seq(large, medium, small))
+    val graph = graphBuilder.buildGraph(earth, Seq(large, medium, small))
 
     assert(graph.children.size == 1)
     assert(graph.children.head.area.name == "Large")
@@ -72,7 +75,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   }
 
   "graph builder" should "insertion order should not effect trickle down outcome" in {
-    val graph = graphBuilder.buildGraph(Seq(small, medium, large))
+    val graph = graphBuilder.buildGraph(earth, Seq(small, medium, large))
 
     assert(graph.children.size == 1)
     assert(graph.children.head.area.name == "Large")
@@ -83,7 +86,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   }
 
   "graph builder" should "items which fit inside overlapping siblings should become children of all of the overlapping regions" in {
-    val leftFirst = graphBuilder.buildGraph(Seq(large, left, overlapping, fitsInLeftAndOverlapping))
+    val leftFirst = graphBuilder.buildGraph(earth, Seq(large, left, overlapping, fitsInLeftAndOverlapping))
 
     val overlappingNode = leftFirst.children.head.children.head
     val leftNode = leftFirst.children.head.children.last

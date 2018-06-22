@@ -11,13 +11,12 @@ import resolving.{BoundingBox, PolygonBuilding}
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
-  def buildGraph(areas: Seq[Area]): GraphNode = {
+  def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
 
-    val earthArea = areas.head
-    var head = GraphNode(earthArea)
+    var head = GraphNode(headArea)
 
-    head.insert(areas.take(1))
+    head.insert(areas)
     siftDown(head)
     head
   }
