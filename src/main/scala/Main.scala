@@ -149,16 +149,16 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
     }
 
-    val earthPolygon = makePolygon((-180, 90),(180, -90))
-    val earth = Area(0, "Earth", earthPolygon, boundingBoxFor(earthPolygon))
-    exportArea(earth, oos)
-
     logger.info("Filtering relations to resolve")
-    val relationsToResolve: Iterable[Relation] = relations.values.filter(e => entitiesToGraph(e))
+    val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
 
     val areaResolver = new AreaResolver()
     val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
     val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
+
+    val earthPolygon = makePolygon((-180, 90),(180, -90))
+    val earth = Area(0, "Earth", earthPolygon, boundingBoxFor(earthPolygon))
+    exportArea(earth, oos)
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
     areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, callback)
