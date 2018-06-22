@@ -2,7 +2,7 @@ import java.io._
 
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
-import model.{Area, EntityRendering, GraphNode}
+import model.{Area, EntityRendering}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
@@ -213,7 +213,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         val outputArea = OutputArea.parseDelimitedFrom(fileInputStream)
         outputArea.map { oa =>
           val area = outputAreaToArea(oa)
-          areas = areas += area
+          area.fold {
+            logger.warn("Could not build areas from: " + oa)
+          } { a =>
+            areas = areas += a
+          }
         }
         ok = outputArea.nonEmpty
       }
@@ -224,10 +228,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     areas.toList
   }
 
-  private def outputAreaToArea(oa: OutputArea): Area = {
+  private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
-    val p = areaForPoints(points).get
-    Area(id = oa.id.get, name = oa.name.get, polygon = p, boundingBox = boundingBoxFor(p), osmId = oa.osmId) // TODO Naked gets
+    areaForPoints(points).map { p =>
+      Area(id = oa.id.get, name = oa.name.get, polygon = p, boundingBox = boundingBoxFor(p), osmId = oa.osmId) // TODO Naked gets
+    }
   }
 
 }
