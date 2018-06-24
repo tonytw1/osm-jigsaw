@@ -9,8 +9,9 @@
 
 <h2>@areas.map(a => a.name.getOrElse("")).mkString(" / ")</h2>
 
-<p>@area.id / @childrenHash</p>
+<p>@area.id / @area.osmId</p>
 <p>@areaBoundingBox</p>
+
 
 <div id="mapid"></div>
 <style>
