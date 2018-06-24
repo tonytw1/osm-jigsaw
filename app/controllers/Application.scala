@@ -2,6 +2,7 @@ package controllers
 
 import javax.inject.Inject
 
+import areas.BoundingBox
 import com.esri.core.geometry.{OperatorContains, Point, Polygon, SpatialReference}
 import graph.{Area, GraphService}
 import play.api.libs.json.Json
@@ -11,7 +12,7 @@ import play.api.{Configuration, Logger}
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller {
+class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller with BoundingBox {
 
   private val sr = SpatialReference.create(1)
   private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
@@ -48,9 +49,11 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val lastArea = areas.last
     Logger.info("Last area: " + lastArea.name)
 
+    val areaBoundingBox: (Double, Double, Double, Double) = boundingBoxFor(lastArea.points)
+
     val childrenHash = lastArea.children.map(c => c.id).hashCode()
     Logger.info("Child hash: " + childrenHash)
-    Future.successful(Ok(views.html.index(areas, show, childrenHash, maxBoxApiKey)))
+    Future.successful(Ok(views.html.index(areas, show, childrenHash, maxBoxApiKey, areaBoundingBox)))
   }
 
   def reverse(lat: Double, lon: Double) = Action.async { request =>
