@@ -81,11 +81,11 @@ class GraphReader {
 
   private def outputAreaToArea(oa: OutputArea): Area = {
     val points = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
-    Area(id = oa.id.get, name = oa.name, points = points, parent = oa.parent) // TODO Naked get of id
+    Area(id = oa.id.get, name = oa.name, points = points) // TODO Naked get of id
   }
 
 }
 
-case class Area(id: Long, name: Option[String] = None, children: mutable.Set[Area] = mutable.Set(), points: Seq[(Double, Double)], parent: Option[Long]) {
+case class Area(id: Long, name: Option[String] = None, children: mutable.Set[Area] = mutable.Set(), points: Seq[(Double, Double)]) {
   override def hashCode() = id.hashCode()
 }
