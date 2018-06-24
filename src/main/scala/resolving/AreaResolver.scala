@@ -13,6 +13,10 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
   def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], wayResolver: WayResolver, nodeResolver: NodeResolver, callback: Seq[Area] => Unit): Unit = {
 
+    def osmIdFor(e: Entity): String = {
+      e.getId.toString + e.getType.toString
+    }
+
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], wayResolver: WayResolver): Seq[Area] = {
       e match {
         case r: Relation =>
@@ -21,13 +25,13 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           outerRings.map { outerRingWays =>
             val outerPoints: Seq[(Double, Double)] = nodesFor(outerRingWays).map(nid => nodeResolver.resolvePointForNode(nid)).flatten
             areaForPoints(outerPoints).map { a =>
-              Area(AreaIdSequence.nextId, render(r), a, boundingBoxFor(a), Some(r.getId.toString))
+              Area(AreaIdSequence.nextId, render(r), a, boundingBoxFor(a), Some(osmIdFor(r)))
             }
           }.flatten
 
         case w: Way =>
           val areaName = render(w) // TODO can do better
-          val osmId = Some(w.getId.toString)
+          val osmId = Some(osmIdFor(w))
 
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
