@@ -141,8 +141,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         longitudes.+=(p.getY)
       }
 
-      val outputArea = OutputArea(id = Some(area.id), osmId = area.osmId, name = Some(area.name), parent = None, latitudes = latitudes, longitudes = longitudes)
-      outputArea.writeDelimitedTo(output)
+      OutputArea(id = Some(area.id), osmId = area.osmId, name = Some(area.name), latitudes = latitudes, longitudes = longitudes).writeDelimitedTo(output)
     }
 
     def callback(newAreas: Seq[Area]): Unit = {
