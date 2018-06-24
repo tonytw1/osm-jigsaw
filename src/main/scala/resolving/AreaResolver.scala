@@ -14,7 +14,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
   def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], wayResolver: WayResolver, nodeResolver: NodeResolver, callback: Seq[Area] => Unit): Unit = {
 
     def osmIdFor(e: Entity): String = {
-      e.getId.toString + e.getType.toString
+      e.getId.toString + e.getType.toString.take(1)
     }
 
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], wayResolver: WayResolver): Seq[Area] = {
