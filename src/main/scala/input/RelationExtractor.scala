@@ -1,15 +1,15 @@
 package input
 
 import org.apache.logging.log4j.scala.Logging
+import org.mapdb.volume.MappedFileVol
 import org.mapdb.{Serializer, SortedTableMap}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
-import resolving.{MapDBNodeResolver, OuterWayResolver, RelationExpander}
+import resolving.{OuterWayResolver, RelationExpander}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 import scala.collection.mutable
-import org.mapdb.volume.MappedFileVol
 
 class RelationExtractor extends Logging {
 
