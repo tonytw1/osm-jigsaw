@@ -1,10 +1,12 @@
 package areas
 
+import graph.Point
+
 trait BoundingBox {
 
-  def boundingBoxFor(points: Seq[(Double, Double)]): (Double, Double, Double, Double) = {
-    var latitudes = points.map(_._1)
-    var longitudes = points.map(_._2)
+  def boundingBoxFor(points: Seq[Point]): (Double, Double, Double, Double) = {
+    var latitudes = points.map(_.lat)
+    var longitudes = points.map(_.lon)
 
     val minX = latitudes.min
     val maxX = latitudes.max

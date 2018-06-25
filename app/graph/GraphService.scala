@@ -10,6 +10,6 @@ class GraphService @Inject()(configuration: Configuration) {
   val areasFile = new URL(configuration.getString("areas.url").get)
   val graphFile = new URL(configuration.getString("graph.url").get)
 
-  val head: Area = new GraphReader().loadGraph(areasFile, graphFile)
+  val head: GraphNode = new GraphReader().loadGraph(areasFile, graphFile)
 
 }

@@ -1,5 +1,5 @@
 @import graph.Area
-@(areas: Seq[Area], area: Area, mapBoxApiKey: String, areaBoundingBox: (Double, Double, Double, Double))
+@(areas: Seq[Area], area: Area, children: Seq[Area], mapBoxApiKey: String, areaBoundingBox: (Double, Double, Double, Double))
 <link rel="stylesheet" href="https://unpkg.com/leaflet@@1.3.1/dist/leaflet.css"
       integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
       crossorigin=""/>
@@ -36,10 +36,8 @@
 </script>
 
 <ul>
-@area.children.toSeq.sortBy(c => -c.children.size).map { c =>
-    <li><a href="@routes.Application.index(Some((areas.map(a => a.id) :+ c.id).mkString("/")))" title="@c.id">@c.name</a>
-        @if(c.children.nonEmpty) {(@c.children.size)}
-    </li>
+@children.map { c =>
+    <li><a href="@routes.Application.index(Some((areas.map(a => a.id) :+ c.id).mkString("/")))" title="@c.id">@c.name</a></li>
 }
 </ul>
 

@@ -12,7 +12,7 @@ import scala.collection.mutable
 
 class GraphReader {
 
-  def loadGraph(areasFile: URL, graphFile: URL): Area = {
+  def loadGraph(areasFile: URL, graphFile: URL): GraphNode = {
     try {
       val input = new BufferedInputStream(areasFile.openStream())
 
@@ -40,9 +40,10 @@ class GraphReader {
       val inputSecond = new BufferedInputStream(graphFile.openStream())
       val graphNode = OutputGraphNode.parseDelimitedFrom(inputSecond).get
       Logger.info("Graph node: " + graphNode)
-      val head = getCachedArea(graphNode.area.get)
+      val head = GraphNode(area = getCachedArea(graphNode.area.get))
       Logger.info("Head element: " + head)
-      val stack = mutable.Stack[Area]()
+
+      val stack = mutable.Stack[GraphNode]()
       stack.push(head)
 
       val counterSecond = new ProgressCounter(step = 10000, label = Some("Building graph"))
@@ -51,15 +52,15 @@ class GraphReader {
         val outputGraphNode = OutputGraphNode.parseDelimitedFrom(inputSecond)
         outputGraphNode.map { oa =>
           counterSecond.withProgress {
-            val area = getCachedArea(oa.area.get)
+            val node = GraphNode(area = getCachedArea(oa.area.get))
             var insertInto = stack.pop
-            while (Some(insertInto.id) != oa.parent) {
+            while (Some(insertInto.area.id) != oa.parent) {
               insertInto = stack.pop
             }
 
-            insertInto.children += area
+            insertInto.children += node
             stack.push(insertInto)
-            stack.push(area)
+            stack.push(node)
           }
         }
         ok = outputGraphNode.nonEmpty
@@ -80,12 +81,16 @@ class GraphReader {
   }
 
   private def outputAreaToArea(oa: OutputArea): Area = {
-    val points = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
+    val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2))
     Area(id = oa.id.get, name = oa.name, points = points, osmId = oa.osmId) // TODO Naked get of id
   }
 
 }
 
-case class Area(id: Long, name: Option[String] = None, children: mutable.Set[Area] = mutable.Set(), points: Seq[(Double, Double)], osmId: Option[String]) {
+case class Point(lat: Double, lon: Double)
+
+case class Area(id: Long, name: Option[String] = None, points: Seq[Point], osmId: Option[String]) {
   override def hashCode() = id.hashCode()
 }
+
+case class GraphNode(area: Area, children: mutable.Set[GraphNode] = mutable.Set())
