@@ -93,4 +93,4 @@ case class Area(id: Long, name: Option[String] = None, points: Seq[Point], osmId
   override def hashCode() = id.hashCode()
 }
 
-case class GraphNode(area: Area, children: mutable.Set[GraphNode] = mutable.Set())
+case class GraphNode(area: Area, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer())

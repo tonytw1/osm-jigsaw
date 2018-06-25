@@ -5,7 +5,7 @@ import javax.inject.Inject
 import areas.BoundingBox
 import com.esri.core.geometry.{OperatorContains, Point, Polygon, SpatialReference}
 import graph.{Area, GraphNode, GraphService}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
 import play.api.{Configuration, Logger}
 
@@ -32,16 +32,15 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     implicit val pw = Json.writes[graph.Point]
     implicit val aw = Json.writes[Area]
-
     Future.successful(Ok(Json.toJson(nodes.map(_.area))))
   }
 
   def reverse(lat: Double, lon: Double) = Action.async { request =>
 
-    def areasContaining(pt: Point, area: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
-      Logger.info("Checking area: " + renderAreaStack(stack) + " / " + area.area.name.getOrElse(""))
+    def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
+      Logger.debug("Checking area: " + renderAreaStack(stack) + " / " + node.area.name.getOrElse(""))
 
-      val matchingChildren = area.children.toSeq.filter { c =>
+      val matchingChildren = node.children.filter { c =>
         val childPolygon = polygonForPoints(c.area.points)
         childPolygon.map { p =>
           OperatorContains.local().execute(p, pt, sr, null)
@@ -53,19 +52,28 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
       if (matchingChildren.nonEmpty) {
         matchingChildren.flatMap { m =>
-          areasContaining(pt, m, stack :+ area)
+          nodesContaining(pt, m, stack :+ node)
         }
       } else {
-        Seq(stack :+ area)
+        Seq(stack :+ node)
       }
     }
 
     val pt = new Point(lat, lon)
-    val output = areasContaining(pt, graphService.head, Seq()).map { a =>
-      renderAreaStack(a)
+    val containing = nodesContaining(pt, graphService.head, Seq())
+
+    def toJson(gn: GraphNode): JsValue = {
+      val fields = Seq(
+        Some("id" -> Json.toJson(gn.area.id)),
+        gn.area.name.map(n => "name" -> Json.toJson(n)),
+        gn.area.osmId.map(o => "osmId" -> Json.toJson(o))
+      ).flatten.toMap
+      Json.toJson(fields)
     }
 
-    Future.successful(Ok(Json.toJson(output)))
+    val json = containing.map(g => g.map(i => toJson(i)))
+
+    Future.successful(Ok(Json.toJson(json)))
   }
 
   private def renderAreaStack(stack: Seq[GraphNode]) = {
