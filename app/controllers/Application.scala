@@ -23,35 +23,44 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       area.id
     }
 
-    val components = qo.getOrElse("").split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
-
-    var show = graphService.head
-    val areas = mutable.ListBuffer[Area]()
-    areas.+= (show)
-
-    val queue = new mutable.Queue() ++ components
-
-    while(queue.nonEmpty) {
-      val next = queue.dequeue()
-      val children = show.children
-
-      val found = children.find{ a =>
-        areaIdentifier(a) == next
-      }
-
-      found.map { f =>
-        areas.+=(f)
-        show = f
-      }
+    def parseComponents(q: String): Seq[Long] = {
+      q.split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
     }
 
-    Logger.info("Areas: " + areas.map(a => a.name).mkString(" / "))
+    val components = qo.map(parseComponents).getOrElse(Seq())
+
+    def areasFor(components: Seq[Long]): mutable.Seq[Area] = {
+
+      val areas = mutable.ListBuffer[Area]()
+      var show = graphService.head
+      areas.+=(show)
+
+      val queue = new mutable.Queue() ++ components
+
+      while (queue.nonEmpty) {
+        val next = queue.dequeue()
+        val children = show.children
+
+        val found = children.find { a =>
+          areaIdentifier(a) == next
+        }
+
+        found.map { f =>
+          areas.+=(f)
+          show = f
+        }
+      }
+
+      areas
+    }
+
+    val areas = areasFor(components)
+
     val lastArea = areas.last
     Logger.info("Last area: " + lastArea.name)
-
     val areaBoundingBox = boundingBoxFor(lastArea.points)
 
-    Future.successful(Ok(views.html.index(areas, show, maxBoxApiKey, areaBoundingBox)))
+    Future.successful(Ok(views.html.index(areas, lastArea, maxBoxApiKey, areaBoundingBox)))
   }
 
   def reverse(lat: Double, lon: Double) = Action.async { request =>
