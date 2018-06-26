@@ -38,8 +38,6 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   def reverse(lat: Double, lon: Double) = Action.async { request =>
 
     def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
-      Logger.debug("Checking area: " + renderAreaStack(stack) + " / " + node.area.name.getOrElse(""))
-
       val matchingChildren = node.children.filter { c =>
         val childPolygon = polygonForPoints(c.area.points)
         childPolygon.map { p =>
