@@ -10,7 +10,7 @@ trait AreaComparison {
 
   def areaContainsPoint(area: Area, pt: Point): Boolean = {
 
-    def polygonForPoints(points: Seq[graph.Point]): Option[Polygon] = {
+    def buildPolygonForPoints(points: Seq[graph.Point]): Option[Polygon] = {
       points.headOption.map { n =>
         val polygon = new Polygon()
         polygon.startPath(n.lat, n.lon)
@@ -21,8 +21,11 @@ trait AreaComparison {
       }
     }
 
-    val childPolygon = polygonForPoints(area.points)
-    childPolygon.map { p =>
+    def polygonForArea(area: Area): Option[Polygon] = {
+      buildPolygonForPoints(area.points)
+    }
+
+    polygonForArea(area).map { p =>
       OperatorContains.local().execute(p, pt, sr, null)
     }.getOrElse {
       Logger.warn("Area has no polygon: " + area.name)
