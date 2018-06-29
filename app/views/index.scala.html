@@ -61,9 +61,12 @@
 
 <div id="reverse"></div>
 
-<ul>
-@children.map { c =>
-    <li><a href="@routes.Application.index(Some((crumbs.last._2 :+ c.id).mkString("/")))" title="@c.id">@c.name</a></li>
-}
-</ul>
 
+@if(children.nonEmpty) {
+    <h4>Children (@children.size)</h4>
+    <ul>
+    @children.map { c =>
+        <li><a href="@routes.Application.index(Some((crumbs.last._2 :+ c.id).mkString("/")))" title="@c.id">@c.name</a></li>
+    }
+    </ul>
+}
