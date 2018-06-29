@@ -2,26 +2,25 @@ package controllers
 
 import javax.inject.Inject
 
-import areas.BoundingBox
-import com.esri.core.geometry.{OperatorContains, Point, Polygon, SpatialReference}
+import areas.{AreaComparison, BoundingBox}
+import com.esri.core.geometry.Point
 import graph.{Area, GraphNode, GraphService}
+import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
-import play.api.{Configuration, Logger}
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller with BoundingBox {
+class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller with BoundingBox with AreaComparison {
 
-  private val sr = SpatialReference.create(1)
   private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
 
   def index(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
 
     val lastNode: GraphNode = nodes.last
-    val children = lastNode.children.map(_.area).toSeq
+    val children = lastNode.children.map(_.area)
     val areaBoundingBox = boundingBoxFor(lastNode.area.points)
 
     Future.successful(Ok(views.html.index(nodes.map(_.area), lastNode.area, children, maxBoxApiKey, areaBoundingBox)))
@@ -39,13 +38,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
       val matchingChildren = node.children.filter { c =>
-        val childPolygon = polygonForPoints(c.area.points)
-        childPolygon.map { p =>
-          OperatorContains.local().execute(p, pt, sr, null)
-        }.getOrElse {
-          Logger.warn("Area has no polygon: " + c.area.name)
-          false
-        }
+        areaContainsPoint(c.area, pt)
       }
 
       if (matchingChildren.nonEmpty) {
@@ -76,17 +69,6 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   private def renderAreaStack(stack: Seq[GraphNode]) = {
     stack.map(a => a.area.name.getOrElse("?")).mkString(" / ")
-  }
-
-  private def polygonForPoints(points: Seq[graph.Point]): Option[Polygon] = {
-    points.headOption.map { n =>
-      val polygon = new Polygon()
-      polygon.startPath(n.lat, n.lon)
-      points.drop(1).map { on =>
-        polygon.lineTo(on.lat, on.lon)
-      }
-      polygon
-    }
   }
 
   private def parseComponents(q: String): Seq[Long] = {
