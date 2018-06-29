@@ -40,8 +40,10 @@
 }).addTo(mymap);
 
     mymap.on('click', function(e) {
+        var latlng = e.latlng.wrap();
+
         $.ajax({
-            url: "/reverse?lat=" + e.latlng.lat + "&lon=" + e.latlng.lng
+            url: "/reverse?lat=" + latlng.lat + "&lon=" + latlng.lng
         }).done(function(data) {
             var output = $('#reverse');
             output.html("");
