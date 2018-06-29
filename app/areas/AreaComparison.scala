@@ -11,7 +11,7 @@ trait AreaComparison {
   private val sr = SpatialReference.create(1)
 
   val polygonCache = CacheBuilder.newBuilder()
-    .maximumSize(10000)
+    .maximumSize(100000)
     .build[java.lang.Long, Polygon]
 
   def areaContainsPoint(area: Area, pt: Point): Boolean = {
