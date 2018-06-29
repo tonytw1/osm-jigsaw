@@ -1,8 +1,7 @@
 package areas
 
-import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
 import com.esri.core.geometry.{OperatorContains, Point, Polygon, SpatialReference}
-import com.google.common.cache.{Cache, CacheBuilder}
+import com.google.common.cache.CacheBuilder
 import graph.Area
 import play.api.Logger
 
@@ -23,7 +22,6 @@ trait AreaComparison {
         points.drop(1).map { on =>
           polygon.lineTo(on.lat, on.lon)
         }
-        OperatorContains.local().accelerateGeometry(polygon, sr, GeometryAccelerationDegree.enumMedium)
         polygon
       }
     }
