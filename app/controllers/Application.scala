@@ -23,7 +23,13 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val children = lastNode.children.map(_.area)
     val areaBoundingBox = boundingBoxFor(lastNode.area.points)
 
-    Future.successful(Ok(views.html.index(nodes.map(_.area), lastNode.area, children, maxBoxApiKey, areaBoundingBox)))
+    val ids = nodes.foldLeft(Seq[Seq[Long]]()) { (i, n) =>
+      val next = i.lastOption.getOrElse(Seq.empty) :+ n.area.id
+      i :+ next
+    }
+    val crumbs = nodes.map(n => n.area.name.getOrElse(n.area.id.toString)).zip(ids)
+
+    Future.successful(Ok(views.html.index(lastNode.area, crumbs, children, maxBoxApiKey, areaBoundingBox)))
   }
 
   def show(qo: Option[String]) = Action.async { request =>
