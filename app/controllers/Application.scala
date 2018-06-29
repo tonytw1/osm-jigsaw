@@ -30,14 +30,10 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val crumbs = nodes.map(n => n.area.name.getOrElse(n.area.id.toString)).zip(ids)
 
     val osmUrl = lastNode.area.osmId.map { osmId =>
-
       val osmTypes = Set("node", "way", "relation")
-
       val osmType = osmId.takeRight(1).toLowerCase()
-
       "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
     }
-    Logger.info("OSM: " + osmUrl)
 
     Future.successful(Ok(views.html.index(lastNode.area, crumbs, children, osmUrl, maxBoxApiKey, areaBoundingBox)))
   }
