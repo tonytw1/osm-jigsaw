@@ -1,4 +1,4 @@
-name := "osm-jigsaw-viewer"
+name := "osm-jigsaw-api"
 version := "1.0"
 
 PB.targets in Compile := Seq(scalapb.gen() -> (sourceManaged in Compile).value)

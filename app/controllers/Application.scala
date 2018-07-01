@@ -5,7 +5,7 @@ import javax.inject.Inject
 import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
 import graph.{Area, GraphNode, GraphService}
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
 
@@ -13,30 +13,6 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller with BoundingBox with AreaComparison {
-
-  private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
-
-  def index(qo: Option[String]) = Action.async { request =>
-    val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
-
-    val lastNode: GraphNode = nodes.last
-    val children = lastNode.children.map(_.area)
-    val areaBoundingBox = boundingBoxFor(lastNode.area.points)
-
-    val ids = nodes.foldLeft(Seq[Seq[Long]]()) { (i, n) =>
-      val next = i.lastOption.getOrElse(Seq.empty) :+ n.area.id
-      i :+ next
-    }
-    val crumbs = nodes.map(n => n.area.name.getOrElse(n.area.id.toString)).zip(ids)
-
-    val osmUrl = lastNode.area.osmId.map { osmId =>
-      val osmTypes = Set("node", "way", "relation")
-      val osmType = osmId.takeRight(1).toLowerCase()
-      "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
-    }
-
-    Future.successful(Ok(views.html.index(lastNode.area, crumbs, children, osmUrl, maxBoxApiKey, areaBoundingBox)))
-  }
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
