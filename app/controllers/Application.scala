@@ -27,13 +27,9 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
 
       val lastArea = areas.last
       val children = Seq() // TODO
-    val areaBoundingBox = boundingBoxFor(lastArea.points)
+      val areaBoundingBox = boundingBoxFor(lastArea.points)
 
-      val ids = areas.foldLeft(Seq[Seq[Long]]()) { (i, a) =>
-        val next = i.lastOption.getOrElse(Seq.empty) :+ a.id
-        i :+ next
-      }
-      val crumbs = areas.map(a => a.name.getOrElse(a.id.toString)).zip(ids)
+      val crumbs = areasToCrumbs(areas)
 
       val osmUrl = lastArea.osmId.map { osmId =>
         val osmTypes = Set("node", "way", "relation")
@@ -53,8 +49,25 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       implicit val ar = Json.reads[SparseArea]
       val results = Json.parse(r.body).as[Seq[Seq[SparseArea]]]
 
-      Ok(views.html.click(results))
+      val asAreas: Seq[Seq[Area]] = results.map { r =>
+        r.map(a => Area(a.id, a.name, Seq(), a.osmId))    // TODO figure out what todo with area points
+      }
+
+      val asCrumbs: Seq[Seq[(String, Seq[Long])]] = asAreas.map { as =>
+        areasToCrumbs(as)
+      }
+
+      Ok(views.html.click(asCrumbs))
     }
+  }
+
+  private def areasToCrumbs(areas: Seq[Area]) = {
+    val ids = areas.foldLeft(Seq[Seq[Long]]()) { (i, a) =>
+      val next = i.lastOption.getOrElse(Seq.empty) :+ a.id
+      i :+ next
+    }
+    val crumbs = areas.map(a => a.name.getOrElse(a.id.toString)).zip(ids)
+    crumbs
   }
 
 }

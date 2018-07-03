@@ -1,0 +1,4 @@
+@(crumbs: Seq[(String, Seq[Long])])
+@crumbs.map{ c =>
+    <a href="@routes.Application.index(Some((c._2).mkString("/")))">@c._1</a>
+}

@@ -1,8 +1,7 @@
 @import graph.SparseArea
-@(results: Seq[Seq[SparseArea]])
-
+@(results:  Seq[Seq[(String, Seq[Long])]])
 <ul>
-@results.map{ r =>
-    <li>@r.map(a => a.name)</li>
+@results.map { r =>
+    <li>@crumbs(r)</li>
 }
 </ul>
