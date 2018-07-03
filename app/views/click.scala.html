@@ -1,0 +1,8 @@
+@import graph.SparseArea
+@(results: Seq[Seq[SparseArea]])
+
+<ul>
+@results.map{ r =>
+    <li>@r.map(a => a.name)</li>
+}
+</ul>

@@ -3,7 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import areas.BoundingBox
-import graph.{Area, Point}
+import graph.{Area, Point, SparseArea}
 import play.api.{Configuration, Logger}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
@@ -19,7 +19,6 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
 
   def index(qo: Option[String]) = Action.async { request =>
     val url = (apiUrl + "/show").addParam("q", qo.getOrElse(""))
-    Logger.info("Calling: " + url)
     ws.url(url).get.map { r =>
 
       implicit val pr = Json.reads[Point]
@@ -42,7 +41,19 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
       }
 
-      Ok(views.html.index(lastArea, crumbs, children, osmUrl, apiUrl, maxBoxApiKey, areaBoundingBox))
+      Ok(views.html.index(lastArea, crumbs, children, osmUrl, maxBoxApiKey, areaBoundingBox))
+    }
+  }
+
+  def click(lat: Double, lon: Double) = Action.async { request =>
+    val url = (apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)
+    ws.url(url).get.map { r =>
+
+      implicit val pr = Json.reads[Point]
+      implicit val ar = Json.reads[SparseArea]
+      val results = Json.parse(r.body).as[Seq[Seq[SparseArea]]]
+
+      Ok(views.html.click(results))
     }
   }
 

@@ -1,5 +1,5 @@
 @import graph.Area
-@(area: Area, crumbs: Seq[(String, Seq[Long])], children: Seq[Area], osmUrl: Option[String], apiUrl: String, mapBoxApiKey: String, areaBoundingBox: (Double, Double, Double, Double))
+@(area: Area, crumbs: Seq[(String, Seq[Long])], children: Seq[Area], osmUrl: Option[String], mapBoxApiKey: String, areaBoundingBox: (Double, Double, Double, Double))
 <link rel="stylesheet" href="https://unpkg.com/leaflet@@1.3.1/dist/leaflet.css"
       integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
       crossorigin=""/>
@@ -43,18 +43,9 @@
         var latlng = e.latlng.wrap();
 
         $.ajax({
-            url: "@apiUrl/reverse?lat=" + latlng.lat + "&lon=" + latlng.lng
+            url: "/click?lat=" + latlng.lat + "&lon=" + latlng.lng
         }).done(function(data) {
-            var output = $('#reverse');
-            output.html("");
-            $.map(data, function(i) {
-                var stem = "";
-                $.map(i, function(j) {
-                    stem = stem + " / " + j.name;
-                }
-                );
-                output.append("<li>" + stem + "</li>");
-            });
+            $('#reverse').html(data);
         });
     });
 
