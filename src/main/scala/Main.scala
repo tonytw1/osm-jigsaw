@@ -8,6 +8,7 @@ import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import outputarea.OutputArea
+import outputtagging.OutputTagging
 import progress.ProgressCounter
 import resolving._
 
@@ -54,7 +55,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "split" => split(inputFilepath)
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
-      case "tags" => tags(inputFilepath)
+      case "tags" => tags(inputFilepath, cmd.getArgList.get(1))
       case "dumpareas" => dumpAreas(inputFilepath)
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
@@ -109,17 +110,23 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def tags(inputFilepath: String): Unit = {
-    def all(entity: Entity): Boolean  = true
+  def tags(inputFilepath: String, outputFilepath: String): Unit = {
+    val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
 
     def saveTags(entity: Entity) = {
-      val i = entity.getTags.asScala.map(t => t.getKey + ":" + t.getValue).mkString(", ")
-      println(entity.getId.toString + entity.getType + ": " + i)
+      val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
+      val values = entity.getTags.asScala.map(t => t.getValue).toSeq
+      OutputTagging(osmId = Some(entity.getId.toString + entity.getType.toString), keys = keys, values = values).writeDelimitedTo(output)
     }
 
     logger.info("Loading entities")
+    def all(entity: Entity): Boolean  = true
     new SinkRunner(inputFilepath, all, saveTags).run
     logger.info("Finished extracting tags")
+
+    output.flush()
+    output.close
+    logger.info("Dumped tags to file: " + outputFilepath)
   }
 
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
