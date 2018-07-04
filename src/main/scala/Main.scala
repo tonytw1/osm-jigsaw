@@ -115,13 +115,15 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var count = 0
 
     def saveTags(entity: Entity) = {
-      val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
-      val values = entity.getTags.asScala.map(t => t.getValue).toSeq
-      OutputTagging(osmId = Some(entity.getId.toString + entity.getType.toString.take(1).toUpperCase), keys = keys, values = values).writeDelimitedTo(output)
-      count = count + 1
+      if (entitiesToGraph(entity)) {
+        val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
+        val values = entity.getTags.asScala.map(t => t.getValue).toSeq
+        OutputTagging(osmId = Some(entity.getId.toString + entity.getType.toString.take(1).toUpperCase), keys = keys, values = values).writeDelimitedTo(output)
+        count = count + 1
+      }
     }
 
-    logger.info("Loading entities")
+    logger.info("Extracting tags")
     def all(entity: Entity): Boolean  = true
     new SinkRunner(inputFilepath, all, saveTags).run
     logger.info("Finished extracting tags")
@@ -227,7 +229,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Reading areas")
     var areas = ListBuffer[Area]()
     val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
-
+    var withOsm = 0
     val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
     var ok = true
     while (ok) {
@@ -238,6 +240,9 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
           area.fold {
             logger.warn("Could not build areas from: " + oa)
           } { a =>
+            if (a.osmId.nonEmpty) {
+              withOsm = withOsm + 1
+            }
             areas = areas += a
           }
         }
@@ -247,6 +252,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     fileInputStream.close
     logger.info("Read " + areas.size + " areas")
+    logger.info("Of which " + withOsm + " had OSM ids")
     areas.toList
   }
 
