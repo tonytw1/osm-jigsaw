@@ -25,19 +25,18 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           outerRings.map { outerRingWays =>
             val outerPoints: Seq[(Double, Double)] = nodesFor(outerRingWays).map(nid => nodeResolver.resolvePointForNode(nid)).flatten
             areaForPoints(outerPoints).map { a =>
-              Area(AreaIdSequence.nextId, render(r), a, boundingBoxFor(a), Some(osmIdFor(r)))
+              Area(AreaIdSequence.nextId, a, boundingBoxFor(a), Some(osmIdFor(r)))
             }
           }.flatten
 
         case w: Way =>
-          val areaName = render(w) // TODO can do better
           val osmId = Some(osmIdFor(w))
 
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
             val outerPoints = w.getWayNodes.asScala.map(nid => nodeResolver.resolvePointForNode(nid.getNodeId)).flatten
             areaForPoints(outerPoints).map { a =>
-              Area(AreaIdSequence.nextId, areaName, a, boundingBoxFor(a), osmId)
+              Area(AreaIdSequence.nextId, a, boundingBoxFor(a), osmId)
             }
           } else {
             logger.info("Ignoring non closed way: " + w)

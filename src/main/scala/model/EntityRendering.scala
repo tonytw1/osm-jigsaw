@@ -7,7 +7,7 @@ import scala.collection.JavaConverters._
 trait EntityRendering {
 
   def render(entity: Entity): String = {
-    nameFor(entity).getOrElse(entity.getId + entity.getType.toString)
+    entity.getId + entity.getType.toString
   }
 
   def nameFor(entity: Entity): Option[String] = {
