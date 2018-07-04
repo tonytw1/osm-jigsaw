@@ -54,6 +54,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "split" => split(inputFilepath)
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
+      case "tags" => tags(inputFilepath)
       case "dumpareas" => dumpAreas(inputFilepath)
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
@@ -106,6 +107,19 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, selectedRelations, outputFilepath)
 
     logger.info("Done")
+  }
+
+  def tags(inputFilepath: String): Unit = {
+    def all(entity: Entity): Boolean  = true
+
+    def saveTags(entity: Entity) = {
+      val i = entity.getTags.asScala.map(t => t.getKey + ":" + t.getValue).mkString(", ")
+      println(entity.getId.toString + entity.getType + ": " + i)
+    }
+
+    logger.info("Loading entities")
+    new SinkRunner(inputFilepath, all, saveTags).run
+    logger.info("Finished extracting tags")
   }
 
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
