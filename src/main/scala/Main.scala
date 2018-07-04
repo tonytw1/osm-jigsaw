@@ -112,11 +112,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
   def tags(inputFilepath: String, outputFilepath: String): Unit = {
     val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+    var count = 0
 
     def saveTags(entity: Entity) = {
       val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
       val values = entity.getTags.asScala.map(t => t.getValue).toSeq
       OutputTagging(osmId = Some(entity.getId.toString + entity.getType.toString.take(1).toUpperCase), keys = keys, values = values).writeDelimitedTo(output)
+      count = count + 1
     }
 
     logger.info("Loading entities")
@@ -126,7 +128,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     output.flush()
     output.close
-    logger.info("Dumped tags to file: " + outputFilepath)
+    logger.info("Dumped " + count + " tags to file: " + outputFilepath)
   }
 
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
