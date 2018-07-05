@@ -3,14 +3,15 @@ package controllers
 import javax.inject.Inject
 
 import areas.BoundingBox
+import com.netaporter.uri.dsl._
 import graph.{Area, Point, SparseArea}
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
-import com.netaporter.uri.dsl._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class Application @Inject()(configuration: Configuration, ws: WSClient) extends Controller with BoundingBox {
 
@@ -18,8 +19,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
 
   def index(qo: Option[String]) = Action.async { request =>
-    val url = (apiUrl + "/show").addParam("q", qo.getOrElse(""))
-    ws.url(url).get.map { r =>
+    ws.url((apiUrl + "/show").addParam("q", qo.getOrElse(""))).get.flatMap { r =>
 
       implicit val pr = Json.reads[Point]
       implicit val ar = Json.reads[Area]
@@ -37,7 +37,15 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
       }
 
-      Ok(views.html.index(lastArea, crumbs, children, osmUrl, maxBoxApiKey, areaBoundingBox))
+      val tags = lastArea.osmId.map { osmId =>
+        ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
+          r.body
+        }
+      }.getOrElse(Future.successful(""))
+
+      tags.map { ts =>
+        Ok(views.html.index(lastArea, crumbs, children, osmUrl, maxBoxApiKey, areaBoundingBox, ts))
+      }
     }
   }
 

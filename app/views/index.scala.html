@@ -1,5 +1,5 @@
 @import graph.Area
-@(area: Area, cs: Seq[(String, Seq[Long])], children: Seq[Area], osmUrl: Option[String], mapBoxApiKey: String, areaBoundingBox: (Double, Double, Double, Double))
+@(area: Area, cs: Seq[(String, Seq[Long])], children: Seq[Area], osmUrl: Option[String], mapBoxApiKey: String, areaBoundingBox: (Double, Double, Double, Double), tags: String)
 <link rel="stylesheet" href="https://unpkg.com/leaflet@@1.3.1/dist/leaflet.css"
       integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
       crossorigin=""/>
@@ -12,7 +12,7 @@
 
 <p>@area.id / @osmUrl.map{ u => @area.osmId.map{ i => <a href="@u">@i</a>}}</p>
 <p>@areaBoundingBox</p>
-
+<p>@tags</p>
 
 <div id="mapid"></div>
 <style>
