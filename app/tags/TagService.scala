@@ -24,6 +24,11 @@ class TagService @Inject()(configuration: Configuration) {
   private def loadTags(tagsFile: URL): Map[String, Seq[(String, String)]] = {
     try {
       val output = mutable.Map[String, Seq[(String, String)]]()
+      val uniqueKeys = mutable.Set[String]()
+      val uniqueValues = mutable.Set[String]()
+
+      var totalKeys = 0
+      var totalValues = 0
 
       val input = new BufferedInputStream(tagsFile.openStream())
 
@@ -37,6 +42,12 @@ class TagService @Inject()(configuration: Configuration) {
             val osmId = ot.osmId.get
             val keys = ot.keys
             val values = ot.values
+
+            keys.map( k => uniqueKeys.add(k))
+            values.map( k => uniqueValues.add(k))
+            totalKeys = totalKeys + keys.size
+            totalValues = totalValues + values.size
+
             output.put(osmId, keys.zip(values))
 
           }
@@ -45,6 +56,8 @@ class TagService @Inject()(configuration: Configuration) {
       }
 
       Logger.info("Read tags: " + output.size)
+      Logger.info("Found " + totalKeys + " keys of which " + uniqueKeys.size + " were unique")
+      Logger.info("Found " + totalValues + " values of which " + uniqueValues.size + " were unique")
       output.toMap
 
     } catch {
