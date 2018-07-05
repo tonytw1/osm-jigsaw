@@ -75,8 +75,8 @@ class TagService @Inject()(configuration: Configuration) {
           val outputTagging = OutputTagging.parseDelimitedFrom(input2)
           outputTagging.map { ot =>
             val osmId = ot.osmId.get
-            val keys: Seq[Int] = ot.keys.map(k => keysIndex.get(k).get)
-            val values: Seq[Int] = ot.values.map(v => valuesIndex.get(v).get)
+            val keys = ot.keys.map(k => keysIndex.get(k).get)
+            val values = ot.values.map(v => valuesIndex.get(v).get)
             tagsMap.put(smallKeyFor(osmId), keys.zip(values))
           }
           ok = outputTagging.nonEmpty
