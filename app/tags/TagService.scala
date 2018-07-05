@@ -14,18 +14,18 @@ class TagService @Inject()(configuration: Configuration) {
 
   val tagsFile = new URL(configuration.getString("tags.url").get)
 
-  val tagsMap = loadTags(tagsFile)
+  val tagsMap: (Map[Long, Seq[(Int, Int)]], immutable.IndexedSeq[String], immutable.IndexedSeq[String]) = loadTags(tagsFile)
 
   def tagsFor(osmId: String): Option[Seq[(String, String)]] = {
     val keysIndex = tagsMap._2    // TODO push up
     val valuesIndex = tagsMap._3    // TODO push up
 
-    tagsMap._1.get(osmId).map { i: Seq[(Int, Int)] =>
+    tagsMap._1.get(smallKeyFor(osmId)).map { i: Seq[(Int, Int)] =>
       i.map( j => (keysIndex(j._1), valuesIndex(j._2)))
     }
   }
 
-  private def loadTags(tagsFile: URL): (Map[String, Seq[(Int, Int)]], immutable.IndexedSeq[String], immutable.IndexedSeq[String]) = {
+  private def loadTags(tagsFile: URL): (Map[Long, Seq[(Int, Int)]], immutable.IndexedSeq[String], immutable.IndexedSeq[String]) = {
     try {
       val uniqueKeys = mutable.Set[String]()
       val uniqueValues = mutable.Set[String]()
@@ -65,7 +65,7 @@ class TagService @Inject()(configuration: Configuration) {
       val valuesIndex: Map[String, Int] = valuesSeq.zipWithIndex.toMap
 
       Logger.info("Rereading tags after indexing")
-      val tagsMap = mutable.Map[String, Seq[(Int, Int)]]()
+      val tagsMap = mutable.Map[Long, Seq[(Int, Int)]]()
 
       val input2 = new BufferedInputStream(tagsFile.openStream())
       val counter2 = new ProgressCounter(step = 10000, label = Some("Reading area tags"))
@@ -77,7 +77,7 @@ class TagService @Inject()(configuration: Configuration) {
             val osmId = ot.osmId.get
             val keys: Seq[Int] = ot.keys.map(k => keysIndex.get(k).get)
             val values: Seq[Int] = ot.values.map(v => valuesIndex.get(v).get)
-            tagsMap.put(osmId, keys.zip(values))
+            tagsMap.put(smallKeyFor(osmId), keys.zip(values))
           }
           ok = outputTagging.nonEmpty
         }
@@ -92,6 +92,15 @@ class TagService @Inject()(configuration: Configuration) {
         Logger.error("Error: " + e)
         throw e
     }
+  }
+
+  def smallKeyFor(osmId: String): Long = {
+    val `type` = osmId.takeRight(1)
+    val typeHash = `type`.charAt(0).hashCode()
+    val hash = (typeHash + osmId.dropRight(1)).toLong
+
+    Logger.info(osmId + ": " + `type` + ", " + typeHash + ", " + hash)
+    hash
   }
 
 }
