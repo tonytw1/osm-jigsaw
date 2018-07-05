@@ -6,13 +6,14 @@ import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
 import graph.{Area, GraphNode, GraphService}
 import play.api.Configuration
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import play.api.mvc.{Action, Controller}
+import tags.TagService
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller with BoundingBox with AreaComparison {
+class Application @Inject()(configuration: Configuration, graphService: GraphService, tagService: TagService) extends Controller with BoundingBox with AreaComparison {
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
@@ -23,7 +24,20 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     }
     implicit val pw = Json.writes[graph.Point]
     implicit val aw = Json.writes[Area]
-    Future.successful(Ok(Json.toJson(nodes.map(_.area))))
+
+    val areaJson = Json.toJson(nodes.map(_.area)).as[JsObject]
+
+    val name = lastArea.osmId.flatMap { osmId =>
+      tagService.tagsFor(osmId).flatMap { tags =>
+        tags.find(t => t._1 == "name").map { t =>
+          t._2
+        }
+      }
+    }.getOrElse(lastArea.id)
+
+    val withName = areaJson + "name" -> name
+
+    Future.successful(Ok(withName))
   }
 
   def tags(osmId: String) = Action.async { request =>
