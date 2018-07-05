@@ -68,7 +68,7 @@ class TagService @Inject()(configuration: Configuration) {
       val tagsMap = mutable.Map[Long, Seq[(Int, Int)]]()
 
       val input2 = new BufferedInputStream(tagsFile.openStream())
-      val counter2 = new ProgressCounter(step = 10000, label = Some("Reading area tags"))
+      val counter2 = new ProgressCounter(step = 10000, label = Some("Reading tags"))
       ok = true
       while (ok) {
         counter2.withProgress {
@@ -84,7 +84,7 @@ class TagService @Inject()(configuration: Configuration) {
       }
       input2.close()
 
-      Logger.info("Read " + tagsMap.size + " tagggings")
+      Logger.info("Read " + tagsMap.size + " taggings")
       (tagsMap.toMap, keysSeq, valuesSeq)
 
     } catch {
