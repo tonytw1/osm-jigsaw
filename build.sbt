@@ -18,5 +18,5 @@ dockerExposedPorts in Docker := Seq(9000)
 
 javaOptions in Universal ++= Seq(
   // -J params will be added as jvm parameters
-  "-J-XX:+UnlockExperimentalVMOptions", "-J-XX:+UseCGroupMemoryLimitForHeap", "-J-XX:MaxRAMFraction=1", "-J-XshowSettings:vm", "-J-XX:+UseConcMarkSweepGC", "-J-Xmx=32G"
+  "-J-XX:+UnlockExperimentalVMOptions", "-J-XX:+UseCGroupMemoryLimitForHeap", "-J-XX:MaxRAMFraction=1", "-J-XshowSettings:vm", "-J-XX:+UseConcMarkSweepGC", "-J-Xmx32G"
 )
