@@ -97,10 +97,7 @@ class TagService @Inject()(configuration: Configuration) {
   def smallKeyFor(osmId: String): Long = {
     val `type` = osmId.takeRight(1)
     val typeHash = `type`.charAt(0).hashCode()
-    val hash = (typeHash + osmId.dropRight(1)).toLong
-
-    Logger.info(osmId + ": " + `type` + ", " + typeHash + ", " + hash)
-    hash
+    (typeHash + osmId.dropRight(1)).toLong
   }
 
 }
