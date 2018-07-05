@@ -84,6 +84,7 @@ class TagService @Inject()(configuration: Configuration) {
       }
       input2.close()
 
+      Logger.info("Read " + tagsMap.size + " tagggings")
       (tagsMap.toMap, keysSeq, valuesSeq)
 
     } catch {
