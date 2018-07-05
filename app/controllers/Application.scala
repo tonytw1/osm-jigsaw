@@ -106,7 +106,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       }
     }.getOrElse(area.id.toString)
 
-    areaJson + ("name" -> Json.toJson(name))
+    areaJson + ("name" -> Json.toJson(name)) - "points"
   }
 
 }
