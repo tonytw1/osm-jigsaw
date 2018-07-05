@@ -17,27 +17,8 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
-
-    val lastArea = nodes.last.area
-    val lastAreaTags = lastArea.osmId.flatMap { osmId =>
-      graphService.tagsFor(osmId)
-    }
-    implicit val pw = Json.writes[graph.Point]
-    implicit val aw = Json.writes[Area]
-
-    val areaJson = Json.toJson(nodes.map(_.area)).as[JsObject]
-
-    val name = lastArea.osmId.flatMap { osmId =>
-      tagService.tagsFor(osmId).flatMap { tags =>
-        tags.find(t => t._1 == "name").map { t =>
-          t._2
-        }
-      }
-    }.getOrElse(lastArea.id)
-
-    val withName = areaJson + "name" -> name
-
-    Future.successful(Ok(withName))
+    val objects = nodes.map(n => renderArea(n.area))
+    Future.successful(Ok(Json.toJson(objects)))
   }
 
   def tags(osmId: String) = Action.async { request =>
@@ -66,9 +47,10 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val containing = nodesContaining(pt, graphService.head, Seq())
 
     def toJson(gn: GraphNode): JsValue = {
+      val name = renderArea(gn.area)
       val fields = Seq(
         Some("id" -> Json.toJson(gn.area.id)),
-        gn.area.osmId.map(n => "name" -> Json.toJson(n)), // TODO
+        Some("name" -> name),
         gn.area.osmId.map(o => "osmId" -> Json.toJson(o))
       ).flatten.toMap
       Json.toJson(fields)
@@ -109,6 +91,22 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     }
 
     nodes
+  }
+
+  private def renderArea(area: Area) = {
+    implicit val pw = Json.writes[graph.Point]
+    implicit val aw = Json.writes[Area]
+    val areaJson = Json.toJson(area).as[JsObject]
+
+    val name = area.osmId.flatMap { osmId =>
+      tagService.tagsFor(osmId).flatMap { tags =>
+        tags.find(t => t._1 == "name").map { t =>
+          t._2
+        }
+      }
+    }.getOrElse(area.id.toString)
+
+    areaJson + ("name" -> Json.toJson(name))
   }
 
 }
