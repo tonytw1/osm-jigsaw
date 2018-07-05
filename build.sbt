@@ -13,7 +13,7 @@ libraryDependencies += "com.google.guava" % "guava" % "25.1-jre"
 libraryDependencies += specs2 % Test
 
 enablePlugins(DockerPlugin)
-dockerBaseImage := "openjdk:8-jre"
+dockerBaseImage := "openjdk:10-jre"
 dockerExposedPorts in Docker := Seq(9000)
 
 javaOptions in Universal ++= Seq(
