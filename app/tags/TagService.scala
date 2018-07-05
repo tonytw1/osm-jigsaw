@@ -2,7 +2,7 @@ package tags
 
 import java.io.BufferedInputStream
 import java.net.URL
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 
 import outputtagging.OutputTagging
 import play.api.{Configuration, Logger}
@@ -10,6 +10,7 @@ import progress.ProgressCounter
 
 import scala.collection.{immutable, mutable}
 
+@Singleton
 class TagService @Inject()(configuration: Configuration) {
 
   val tagsFile = new URL(configuration.getString("tags.url").get)
