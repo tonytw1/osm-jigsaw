@@ -41,7 +41,7 @@ trait AreaComparison {
     polygonForArea(area).map { p =>
       OperatorContains.local().execute(p, pt, sr, null)
     }.getOrElse {
-      Logger.warn("Area has no polygon: " + area.name)
+      Logger.warn("Area has no polygon: " + area.id)
       false
     }
   }

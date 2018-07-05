@@ -55,7 +55,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     def toJson(gn: GraphNode): JsValue = {
       val fields = Seq(
         Some("id" -> Json.toJson(gn.area.id)),
-        gn.area.name.map(n => "name" -> Json.toJson(n)),
+        gn.area.osmId.map(n => "name" -> Json.toJson(n)), // TODO
         gn.area.osmId.map(o => "osmId" -> Json.toJson(o))
       ).flatten.toMap
       Json.toJson(fields)
@@ -64,10 +64,6 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val json = containing.map(g => g.map(i => toJson(i)))
 
     Future.successful(Ok(Json.toJson(json)))
-  }
-
-  private def renderAreaStack(stack: Seq[GraphNode]) = {
-    stack.map(a => a.area.name.getOrElse("?")).mkString(" / ")
   }
 
   private def parseComponents(q: String): Seq[Long] = {
