@@ -8,19 +8,18 @@ import graph.{Area, GraphNode, GraphService}
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
-import tags.TagService
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService, tagService: TagService) extends Controller with BoundingBox with AreaComparison {
+class Application @Inject()(configuration: Configuration, graphService: GraphService) extends Controller with BoundingBox with AreaComparison {
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
 
     val lastArea = nodes.last.area
-    val lastAreaTags: Option[Seq[(String, String)]] = lastArea.osmId.flatMap { osmId =>
-      tagService.tagsFor(osmId)
+    val lastAreaTags = lastArea.osmId.flatMap { osmId =>
+      graphService.tagsFor(osmId)
     }
     implicit val pw = Json.writes[graph.Point]
     implicit val aw = Json.writes[Area]
@@ -28,7 +27,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   }
 
   def tags(osmId: String) = Action.async { request =>
-    val tags = tagService.tagsFor(osmId).getOrElse(Seq()).toMap
+    val tags = graphService.tagsFor(osmId).getOrElse(Seq()).toMap
 
     Future.successful(Ok(Json.toJson(tags)))
   }
