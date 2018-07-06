@@ -17,8 +17,21 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
-    val objects = nodes.map(n => renderArea(n.area))
-    Future.successful(Ok(Json.toJson(objects)))
+    Future.successful(Ok(Json.toJson(nodes.map(n => renderArea(n.area)))))
+  }
+
+  def area(q: String) = Action.async { request =>
+    val area = nodesFor(parseComponents(q)).last.area
+    Future.successful(Ok(renderArea(area)))
+  }
+
+  def points(q: String) = Action.async { request =>
+    val area = nodesFor(parseComponents(q)).last.area
+
+    val points = area.points
+
+    implicit val pw = Json.writes[graph.Point]
+    Future.successful(Ok(Json.toJson(points)))
   }
 
   def tags(osmId: String) = Action.async { request =>
