@@ -81,15 +81,14 @@ class GraphReader {
   }
 
   private def outputAreaToArea(oa: OutputArea): Area = {
-    val doubles = (oa.latitudes ++ oa.longitudes).toVector
-    Area(id = oa.id.get, latitudesAndLongitudes = doubles, osmId = oa.osmId) // TODO Naked get of id
+    Area(id = oa.id.get, latitudes = oa.latitudes, longitudes = oa.longitudes, osmId = oa.osmId) // TODO Naked get of id
   }
 
 }
 
 case class Point(lat: Double, lon: Double)
 
-case class Area(id: Long, latitudesAndLongitudes: Seq[Double], osmId: Option[String]) {
+case class Area(id: Long, latitudes: Seq[Double], longitudes: Seq[Double], osmId: Option[String]) {
   override def hashCode() = id.hashCode()
 }
 

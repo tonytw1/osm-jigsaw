@@ -28,9 +28,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   def points(q: String) = Action.async { request =>
     val area = nodesFor(parseComponents(q)).last.area
 
-    val latitudes = area.latitudesAndLongitudes.splitAt(area.latitudesAndLongitudes.size / 2)._1
-    val longitudes = area.latitudesAndLongitudes.splitAt(area.latitudesAndLongitudes.size / 2)._2
-    val points = (latitudes zip longitudes).map(ll => graph.Point(ll._1, ll._2))
+    val points = (area.latitudes zip area.longitudes).map(ll => graph.Point(ll._1, ll._2))
 
     implicit val pw = Json.writes[graph.Point]
     Future.successful(Ok(Json.toJson(points)))
