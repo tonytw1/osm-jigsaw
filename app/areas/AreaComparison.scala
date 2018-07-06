@@ -29,7 +29,8 @@ trait AreaComparison {
     def polygonForArea(area: Area): Option[Polygon] = {
       val key = area.id
       Option(polygonCache.getIfPresent(key)).fold {
-        buildPolygonForPoints(area.points).map { p =>
+        val points = (area.latitudes zip area.longitudes).map(ll => graph.Point(ll._1, ll._2))
+        buildPolygonForPoints(points).map { p =>
           polygonCache.put(area.id, p)
           p
         }
