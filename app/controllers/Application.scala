@@ -5,7 +5,7 @@ import javax.inject.Inject
 import areas.BoundingBox
 import com.netaporter.uri.dsl._
 import graph.{Area, Point, SparseArea}
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
@@ -19,7 +19,8 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
 
   def index(qo: Option[String]) = Action.async { request =>
-    ws.url((apiUrl + "/show").addParam("q", qo.getOrElse(""))).get.flatMap { r =>
+    val q = qo.getOrElse("")
+    ws.url((apiUrl + "/show").addParam("q", q)).get.flatMap { r =>
 
       implicit val pr = Json.reads[Point]
       implicit val ar = Json.reads[Area]
@@ -27,24 +28,29 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
 
       val lastArea = areas.last
       val children = Seq() // TODO
-      val areaBoundingBox = boundingBoxFor(lastArea.points)
 
-      val crumbs = areasToCrumbs(areas)
+      ws.url((apiUrl + "/points").addParam("q", q)).get.flatMap { psr =>
+        implicit val pr = Json.reads[Point]
+        val points = Json.parse(psr.body).as[Seq[Point]]
+        val areaBoundingBox = boundingBoxFor(points)
 
-      val osmUrl = lastArea.osmId.map { osmId =>
-        val osmTypes = Set("node", "way", "relation")
-        val osmType = osmId.takeRight(1).toLowerCase()
-        "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
-      }
+        val crumbs = areasToCrumbs(areas)
 
-      val tags = lastArea.osmId.map { osmId =>
-        ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
-          r.body
+        val osmUrl = lastArea.osmId.map { osmId =>
+          val osmTypes = Set("node", "way", "relation")
+          val osmType = osmId.takeRight(1).toLowerCase()
+          "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
         }
-      }.getOrElse(Future.successful(""))
 
-      tags.map { ts =>
-        Ok(views.html.index(lastArea, crumbs, children, osmUrl, maxBoxApiKey, areaBoundingBox, ts))
+        val tags = lastArea.osmId.map { osmId =>
+          ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
+            r.body
+          }
+        }.getOrElse(Future.successful(""))
+
+        tags.map { ts =>
+          Ok(views.html.index(lastArea, crumbs, children, osmUrl, maxBoxApiKey, areaBoundingBox, ts))
+        }
       }
     }
   }
@@ -52,13 +58,11 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   def click(lat: Double, lon: Double) = Action.async { request =>
     val url = (apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)
     ws.url(url).get.map { r =>
-
-      implicit val pr = Json.reads[Point]
       implicit val ar = Json.reads[SparseArea]
       val results = Json.parse(r.body).as[Seq[Seq[SparseArea]]]
 
       val asAreas: Seq[Seq[Area]] = results.map { r =>
-        r.map(a => Area(a.id, a.name, Seq(), a.osmId))    // TODO figure out what todo with area points
+        r.map(a => Area(a.id, a.name, a.osmId))
       }
 
       val asCrumbs: Seq[Seq[(String, Seq[Long])]] = asAreas.map { as =>
