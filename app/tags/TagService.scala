@@ -70,7 +70,6 @@ class TagService @Inject()(configuration: Configuration) {
             val keys = ot.keys.map(k => keysIndex.get(k).get)
             val values = ot.values
             val tuples = keys.zip(values).toArray
-            Logger.info(tuples.getClass.getCanonicalName)
             tagsMap.put(smallKeyFor(osmId), tuples)
         }
           ok = outputTagging.nonEmpty
