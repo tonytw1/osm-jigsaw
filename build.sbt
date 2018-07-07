@@ -18,5 +18,5 @@ dockerExposedPorts in Docker := Seq(9000)
 
 javaOptions in Universal ++= Seq(
   // -J params will be added as jvm parameters
-  "-J-XshowSettings:vm", "-J-XX:+PrintCommandLineFlags", "-J-Xmx44G", "-J-XX:+UseConcMarkSweepGC"
+  "-J-XshowSettings:vm", "-J-XX:+PrintCommandLineFlags", "-J-Xmx40G", "-J-XX:+UseConcMarkSweepGC"
 )
