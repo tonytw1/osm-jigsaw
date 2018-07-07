@@ -69,8 +69,9 @@ class TagService @Inject()(configuration: Configuration) {
             val osmId = ot.osmId.get
             val keys = ot.keys.map(k => keysIndex.get(k).get)
             val values = ot.values
-            tagsMap.put(smallKeyFor(osmId), keys.zip(values))
-          }
+            Logger.info(keys.zip(values).toArray.getClass.getCanonicalName)
+            tagsMap.put(smallKeyFor(osmId), keys.zip(values).toArray)
+        }
           ok = outputTagging.nonEmpty
         }
       }
