@@ -71,9 +71,38 @@ class GraphReader {
       inputSecond.close()
 
       Logger.info("Finished reading")
-
       input.close()
-      head
+
+      def dedupeChildren(graphNode: GraphNode): GraphNode = {
+
+        if (graphNode.children.nonEmpty) {
+          val deduped: mutable.ListBuffer[GraphNode] = graphNode.children.map { c =>
+            graphNode.children.find { cl =>
+              c.childAreas == cl.childAreas
+            }.getOrElse(c)
+          }
+
+          if (deduped.toSet.size != graphNode.children.toSet.size) {
+            Logger.info("Deduped: " + graphNode.area.osmId + " was " + graphNode.children.toSet.size + " now " + deduped.toSet.size)
+          }
+
+          graphNode.children = deduped
+
+          graphNode.children.map { c =>
+            dedupeChildren(c)
+          }
+
+          graphNode
+
+        } else {
+          graphNode
+        }
+
+      }
+
+      Logger.info("Packing graph to remove duplications")
+
+      dedupeChildren(head)
 
     } catch {
       case e: Exception =>
@@ -96,4 +125,10 @@ case class Area(id: Long, points: Seq[Point], osmId: Option[String]) {
   override def hashCode() = id.hashCode()
 }
 
-case class GraphNode(area: Area, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer())
+case class GraphNode(area: Area, var children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer()) {
+
+  def childAreas: Set[Area] = {
+    children.map(gh => gh.area).toSet
+  }
+
+}
