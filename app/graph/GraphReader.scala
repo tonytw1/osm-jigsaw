@@ -52,13 +52,15 @@ class GraphReader {
         val outputGraphNode = OutputGraphNode.parseDelimitedFrom(inputSecond)
         outputGraphNode.map { oa =>
           counterSecond.withProgress {
-            val node = GraphNode(area = getCachedArea(oa.area.get))
             var insertInto = stack.pop
             while (Some(insertInto.area.id) != oa.parent) {
               insertInto = stack.pop
             }
 
+            val node = GraphNode(area = getCachedArea(oa.area.get))
+
             insertInto.children += node
+
             stack.push(insertInto)
             stack.push(node)
           }
