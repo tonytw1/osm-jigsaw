@@ -17,20 +17,39 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     logger.info("Building graph from " + areas.size + " areas")
 
     logger.info("Deduplicating areas")
+    logger.info("Sorting areas by size")
+    val sortedAreas = areas.sortBy(_.area)
+
+
     val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
 
     val deduplicatedAreas = mutable.ListBuffer[Area]()
-    areas.foreach{ a =>
+    sortedAreas.foreach{ a =>
       deduplicationCounter.withProgress {
-        val existing = deduplicatedAreas.find(e => areaSame(e, a))
-        existing.map { e =>
-          //logger.info("Ignoring area for " + a.osmId + "/" + areaOf(a) + "  which is the same area as: " + e.osmId + "/" + areaOf(e)) // TODO Don't silently drop; record this fact
+        var ok = deduplicatedAreas.nonEmpty
+        val i = deduplicatedAreas.iterator
+        var count = 0;
+        var found: Option[Area] = None
+        while(ok) {
+          var x = i.next()
+          ok = x.area >= a.area
+          if (x.area == a.area && areaSame(x, a)) {
+            found = Some(x)
+          }
+          count = count + 1
+        }
+
+        //logger.info("F: " + found + " after " + count)
+
+        found.map { e =>
+          logger.debug("Ignoring area for " + a.osmId + "/" + areaOf(a) + "  which is the same area as: " + e.osmId + "/" + areaOf(e)) // TODO Don't silently drop; record this fact
         }.getOrElse {
-          deduplicatedAreas += a
+          deduplicatedAreas.+=:(a)
         }
       }
     }
-
+    logger.info("Areas remaining after deduplication: " + deduplicatedAreas.size + "/" + areas.size)
+    logger.info("Starting area sort")
     var head = GraphNode(headArea)
     head.insert(deduplicatedAreas)
     siftDown(head)

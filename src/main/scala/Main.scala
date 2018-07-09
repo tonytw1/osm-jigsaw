@@ -1,5 +1,6 @@
 import java.io._
 
+import areas.AreaComparison
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
 import model.{Area, EntityRendering}
@@ -17,7 +18,7 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox {
+object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison {
 
   private val STEP = "s"
 
@@ -166,7 +167,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         longitudes.+=(p.getY)
       }
 
-      OutputArea(id = Some(area.id), osmId = area.osmId, latitudes = latitudes, longitudes = longitudes).writeDelimitedTo(output)
+      OutputArea(id = Some(area.id), osmId = area.osmId, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
     }
 
     def callback(newAreas: Seq[Area]): Unit = {
@@ -183,7 +184,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
     val earthPolygon = makePolygon((-180, 90),(180, -90))
-    val earth = Area(0, earthPolygon, boundingBoxFor(earthPolygon))
+    val earth = Area(0, earthPolygon, boundingBoxFor(earthPolygon), None, areaOf(earthPolygon))
     exportArea(earth, oos)
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
@@ -259,7 +260,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
     areaForPoints(points).map { p =>
-      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmId = oa.osmId) // TODO Naked gets
+      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmId = oa.osmId, oa.area.get) // TODO Naked gets
     }
   }
 

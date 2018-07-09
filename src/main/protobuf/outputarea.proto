@@ -5,4 +5,5 @@ message OutputArea {
    optional string osm_id = 2;
    repeated double latitudes = 3 [packed=true];
    repeated double longitudes = 4 [packed=true];
+   optional double area = 5;
 }

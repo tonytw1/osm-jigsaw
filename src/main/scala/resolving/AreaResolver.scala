@@ -1,5 +1,6 @@
 package resolving
 
+import areas.AreaComparison
 import model.{Area, AreaIdSequence, EntityRendering}
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, Relation, Way}
@@ -7,7 +8,7 @@ import progress.ProgressCounter
 
 import scala.collection.JavaConverters._
 
-class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding with WayJoining with Logging {
+class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding with WayJoining with Logging with AreaComparison {
 
   val outerNodeMapper = new OutlineBuilder()
 
@@ -24,8 +25,8 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
           outerRings.map { outerRingWays =>
             val outerPoints: Seq[(Double, Double)] = nodesFor(outerRingWays).map(nid => nodeResolver.resolvePointForNode(nid)).flatten
-            areaForPoints(outerPoints).map { a =>
-              Area(AreaIdSequence.nextId, a, boundingBoxFor(a), Some(osmIdFor(r)))
+            areaForPoints(outerPoints).map { p =>
+              Area(AreaIdSequence.nextId, p, boundingBoxFor(p), Some(osmIdFor(r)), areaOf(p))
             }
           }.flatten
 
@@ -35,8 +36,8 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
             val outerPoints = w.getWayNodes.asScala.map(nid => nodeResolver.resolvePointForNode(nid.getNodeId)).flatten
-            areaForPoints(outerPoints).map { a =>
-              Area(AreaIdSequence.nextId, a, boundingBoxFor(a), osmId)
+            areaForPoints(outerPoints).map { p =>
+              Area(AreaIdSequence.nextId, p, boundingBoxFor(p), osmId, areaOf(p))
             }
           } else {
             logger.info("Ignoring non closed way: " + w)
