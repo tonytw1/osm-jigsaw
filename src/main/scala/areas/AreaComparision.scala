@@ -1,6 +1,6 @@
 package areas
 
-import com.esri.core.geometry.{OperatorContains, OperatorEquals, OperatorOverlaps, SpatialReference}
+import com.esri.core.geometry.{OperatorContains, OperatorEquals, SpatialReference}
 import model.Area
 
 trait AreaComparison {
@@ -24,6 +24,11 @@ trait AreaComparison {
     }
   }
   */
+
+  def areaSame(a: Area, b: Area): Boolean = {
+    // TODO bounding box optimisation?
+    OperatorEquals.local().execute(a.polygon, b.polygon, sr, null)
+  }
 
   def areaOf(area: Area): Double = {
     Math.abs(area.polygon.calculateArea2D())

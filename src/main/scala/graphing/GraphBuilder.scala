@@ -9,14 +9,30 @@ import org.joda.time.{DateTime, Duration}
 import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
+import scala.collection.mutable
+
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
 
-    var head = GraphNode(headArea)
+    logger.info("Deduplicating areas")
+    val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
 
-    head.insert(areas)
+    val deduplicatedAreas = mutable.ListBuffer[Area]()
+    areas.foreach{ a =>
+      deduplicationCounter.withProgress {
+        val existing = deduplicatedAreas.find(e => areaSame(e, a))
+        existing.map { e =>
+          //logger.info("Ignoring area for " + a.osmId + "/" + areaOf(a) + "  which is the same area as: " + e.osmId + "/" + areaOf(e)) // TODO Don't silently drop; record this fact
+        }.getOrElse {
+          deduplicatedAreas += a
+        }
+      }
+    }
+
+    var head = GraphNode(headArea)
+    head.insert(deduplicatedAreas)
     siftDown(head)
     head
   }
