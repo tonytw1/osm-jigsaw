@@ -114,7 +114,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def tags(inputFilepath: String, outputFilepath: String): Unit = {
     logger.info("Extracting tags for OSM entities used by areas")
 
-    def usedByAnArea(entity: Entity): Boolean  = true // TODO optimise
+    val osmIdsInUse = readAreaOsmIdsFromPbfFile(inputFilepath)
+
+    def usedByAnArea(entity: Entity): Boolean  = {
+      osmIdsInUse.contains(osmIdFor(entity))
+    }
 
     var count = 0
     val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
@@ -123,7 +127,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       if (entitiesToGraph(entity)) {
         val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
         val values = entity.getTags.asScala.map(t => t.getValue).toSeq
-        OutputTagging(osmId = Some(entity.getId.toString + entity.getType.toString.take(1).toUpperCase), keys = keys, values = values).writeDelimitedTo(output)
+        OutputTagging(osmId = Some(osmIdFor(entity)), keys = keys, values = values).writeDelimitedTo(output)
         count = count + 1
       }
     }
@@ -245,6 +249,20 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     areas.toList
   }
 
+  private def readAreaOsmIdsFromPbfFile(inputFilename: String): Set[String] = {
+    val seenOsmIds = mutable.Set[String]()
+
+    def captureOsmId(area: Area) = {
+      area.osmId.map { osmId =>
+        seenOsmIds.++:(osmId)
+      }
+    }
+
+    processAreasFile(inputFilename, captureOsmId)
+
+    seenOsmIds.toSet
+  }
+
   private def processAreasFile(inputFilename: String, callback: Area => Unit): Unit = {
     val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
     val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
@@ -274,5 +292,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmId = oa.osmId, oa.area.get) // TODO Naked gets
     }
   }
+
+  def osmIdFor(entity: Entity): String = {  // TODO push to a trait
+    entity.getId.toString + entity.getType.toString.take(1).toUpperCase
+  }
+
 
 }
