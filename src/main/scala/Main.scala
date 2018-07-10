@@ -115,6 +115,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Extracting tags for OSM entities used by areas")
 
     val osmIdsInUse = readAreaOsmIdsFromPbfFile(areasInputPath)
+    logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for")
 
     def usedByAnArea(entity: Entity): Boolean  = {
       osmIdsInUse.contains(osmIdFor(entity))
@@ -254,7 +255,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     def captureOsmId(area: Area) = {
       area.osmId.map { osmId =>
-        seenOsmIds.++:(osmId)
+        seenOsmIds += osmId
       }
     }
 
