@@ -56,7 +56,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "split" => split(inputFilepath)
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
-      case "tags" => tags(inputFilepath, cmd.getArgList.get(1))
+      case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
       case "dumpareas" => dumpAreas(inputFilepath)
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
@@ -111,10 +111,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def tags(inputFilepath: String, outputFilepath: String): Unit = {
+  def tags(relationsInputFilepath: String, areasInputPath: String, outputFilepath: String): Unit = {
     logger.info("Extracting tags for OSM entities used by areas")
 
-    val osmIdsInUse = readAreaOsmIdsFromPbfFile(inputFilepath)
+    val osmIdsInUse = readAreaOsmIdsFromPbfFile(areasInputPath)
 
     def usedByAnArea(entity: Entity): Boolean  = {
       osmIdsInUse.contains(osmIdFor(entity))
@@ -131,7 +131,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         count = count + 1
       }
     }
-    new SinkRunner(inputFilepath, usedByAnArea, extractTags).run
+    new SinkRunner(relationsInputFilepath, usedByAnArea, extractTags).run
     logger.info("Finished extracting tags")
     output.flush()
     output.close
