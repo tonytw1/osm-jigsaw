@@ -5,7 +5,7 @@ import com.google.common.cache.CacheBuilder
 import graph.Area
 import play.api.Logger
 
-trait AreaComparison {
+trait AreaComparison extends BoundingBox {
 
   private val sr = SpatialReference.create(1)
 
@@ -38,10 +38,16 @@ trait AreaComparison {
       }
     }
 
-    polygonForArea(area).map { p =>
-      OperatorContains.local().execute(p, pt, sr, null)
-    }.getOrElse {
-      Logger.warn("Area has no polygon: " + area.id)
+    val boundingBox = boundingBoxFor(area.points)
+    val bounded = (pt.getX > boundingBox._1 && pt.getX < boundingBox._3 && pt.getY < boundingBox._2 && pt.getY > boundingBox._4)
+    if (bounded) {
+      polygonForArea(area).map { p =>
+        OperatorContains.local().execute(p, pt, sr, null)
+      }.getOrElse {
+        Logger.warn("Area has no polygon: " + area.id)
+        false
+      }
+    } else {
       false
     }
   }
