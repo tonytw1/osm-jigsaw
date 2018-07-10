@@ -47,7 +47,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
         areaContainsPoint(c.area, pt)
       }
 
-      val x = if (matchingChildren.nonEmpty) {
+      if (matchingChildren.nonEmpty) {
         matchingChildren.flatMap { m =>
           nodesContaining(pt, m, stack :+ node)
         }
@@ -57,7 +57,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     }
 
     val pt = new Point(lat, lon)
-    val containing: Seq[Seq[GraphNode]] = nodesContaining(pt, graphService.head, Seq())
+    val containing = nodesContaining(pt, graphService.head, Seq())
 
     val jsons = containing.map(g => g.map(i => renderArea(i.area)))
 
