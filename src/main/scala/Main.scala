@@ -112,10 +112,14 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   }
 
   def tags(inputFilepath: String, outputFilepath: String): Unit = {
-    val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
-    var count = 0
+    logger.info("Extracting tags for OSM entities used by areas")
 
-    def saveTags(entity: Entity) = {
+    def usedByAnArea(entity: Entity): Boolean  = true // TODO optimise
+
+    var count = 0
+    val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+
+    def extractTags(entity: Entity) = {
       if (entitiesToGraph(entity)) {
         val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
         val values = entity.getTags.asScala.map(t => t.getValue).toSeq
@@ -123,12 +127,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         count = count + 1
       }
     }
-
-    logger.info("Extracting tags")
-    def all(entity: Entity): Boolean  = true
-    new SinkRunner(inputFilepath, all, saveTags).run
+    new SinkRunner(inputFilepath, usedByAnArea, extractTags).run
     logger.info("Finished extracting tags")
-
     output.flush()
     output.close
     logger.info("Dumped " + count + " tags to file: " + outputFilepath)
@@ -229,10 +229,27 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {
     logger.info("Reading areas")
     var areas = ListBuffer[Area]()
-    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
     var withOsm = 0
+
+    def loadArea(area: Area) = {
+      if (area.osmId.nonEmpty) {
+        withOsm = withOsm + 1
+      }
+      areas = areas += area
+    }
+
+    processAreasFile(inputFilename, loadArea)
+
+    logger.info("Read " + areas.size + " areas")
+    logger.info("Of which " + withOsm + " had OSM ids")
+    areas.toList
+  }
+
+  private def processAreasFile(inputFilename: String, callback: Area => Unit): Unit = {
+    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
     val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
     var ok = true
+
     while (ok) {
       counter.withProgress {
         val outputArea = OutputArea.parseDelimitedFrom(fileInputStream)
@@ -241,10 +258,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
           area.fold {
             logger.warn("Could not build areas from: " + oa)
           } { a =>
-            if (a.osmId.nonEmpty) {
-              withOsm = withOsm + 1
-            }
-            areas = areas += a
+            callback(a)
           }
         }
         ok = outputArea.nonEmpty
@@ -252,9 +266,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     fileInputStream.close
-    logger.info("Read " + areas.size + " areas")
-    logger.info("Of which " + withOsm + " had OSM ids")
-    areas.toList
   }
 
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
