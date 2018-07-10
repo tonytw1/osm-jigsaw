@@ -6,7 +6,7 @@ import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
 import graph.{Area, GraphNode, GraphService}
 import play.api.Configuration
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
 import tags.TagService
 
@@ -47,7 +47,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
         areaContainsPoint(c.area, pt)
       }
 
-      if (matchingChildren.nonEmpty) {
+      val x = if (matchingChildren.nonEmpty) {
         matchingChildren.flatMap { m =>
           nodesContaining(pt, m, stack :+ node)
         }
@@ -96,11 +96,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     nodes
   }
 
-  private def renderArea(area: Area) = {
-    implicit val pw = Json.writes[graph.Point]
-    implicit val aw = Json.writes[Area]
-    val areaJson = Json.toJson(area).as[JsObject]
-
+  private def renderArea(area: Area): JsValue = {
     val name = area.osmId.flatMap { osmId =>
       tagService.tagsFor(osmId).flatMap { tags =>
         tags.find(t => t._1 == "name").map { t =>
@@ -109,7 +105,11 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       }
     }.getOrElse(area.id.toString)
 
-    areaJson + ("name" -> Json.toJson(name)) - "points"
+     Json.toJson(Seq(
+      Some("id" -> Json.toJson(area.id)),
+      area.osmId.map(o => "osmId" -> Json.toJson(o)),
+      Some("name" -> Json.toJson(name))
+    ).flatten.toMap)
   }
 
 }

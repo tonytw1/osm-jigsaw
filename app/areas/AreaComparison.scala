@@ -29,6 +29,7 @@ trait AreaComparison extends BoundingBox {
     def polygonForArea(area: Area): Option[Polygon] = {
       val key = area.id
       Option(polygonCache.getIfPresent(key)).fold {
+        Logger.info("Cache miss for area polygon: " + key)
         buildPolygonForPoints(area.points).map { p =>
           polygonCache.put(area.id, p)
           p
@@ -38,16 +39,10 @@ trait AreaComparison extends BoundingBox {
       }
     }
 
-    val boundingBox = boundingBoxFor(area.points)
-    val bounded = (pt.getX > boundingBox._1 && pt.getX < boundingBox._3 && pt.getY < boundingBox._2 && pt.getY > boundingBox._4)
-    if (bounded) {
-      polygonForArea(area).map { p =>
-        OperatorContains.local().execute(p, pt, sr, null)
-      }.getOrElse {
-        Logger.warn("Area has no polygon: " + area.id)
-        false
-      }
-    } else {
+    polygonForArea(area).map { p =>
+      OperatorContains.local().execute(p, pt, sr, null)
+    }.getOrElse {
+      Logger.warn("Area has no polygon: " + area.id)
       false
     }
   }
