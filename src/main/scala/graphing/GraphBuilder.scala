@@ -42,9 +42,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         //logger.info("F: " + found + " after " + count)
 
         found.map { e =>
-          logger.debug("Ignoring area for " + a.osmIds + "/" + areaOf(a) + "  which is the same area as: " + e.osmIds + "/" + areaOf(e))
-          e.osmIds ++ e.osmIds
-
+          e.osmIds ++= a.osmIds
         }.getOrElse {
           deduplicatedAreas.+=:(a)
         }
