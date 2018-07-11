@@ -2,7 +2,7 @@ package areas
 
 import com.esri.core.geometry.{OperatorContains, Point, Polygon, SpatialReference}
 import com.google.common.cache.CacheBuilder
-import graph.Area
+import graph.GraphNode
 import play.api.Logger
 
 trait AreaComparison extends BoundingBox {
@@ -13,7 +13,7 @@ trait AreaComparison extends BoundingBox {
     .maximumSize(100000)
     .build[java.lang.Long, Polygon]
 
-  def areaContainsPoint(area: Area, pt: Point): Boolean = {
+  def areaContainsPoint(node: GraphNode, pt: Point): Boolean = {
 
     def buildPolygonForPoints(points: Seq[graph.Point]): Option[Polygon] = {
       points.headOption.map { n =>
@@ -26,12 +26,12 @@ trait AreaComparison extends BoundingBox {
       }
     }
 
-    def polygonForArea(area: Area): Option[Polygon] = {
-      val key = area.id
+    def polygonForNode(node: GraphNode): Option[Polygon] = {
+      val key = node.id
       Option(polygonCache.getIfPresent(key)).fold {
         Logger.info("Cache miss for area polygon: " + key)
-        buildPolygonForPoints(area.points).map { p =>
-          polygonCache.put(area.id, p)
+        buildPolygonForPoints(node.points).map { p =>
+          polygonCache.put(key, p)
           p
         }
       }{ c =>
@@ -39,10 +39,10 @@ trait AreaComparison extends BoundingBox {
       }
     }
 
-    polygonForArea(area).map { p =>
+    polygonForNode(node).map { p =>
       OperatorContains.local().execute(p, pt, sr, null)
     }.getOrElse {
-      Logger.warn("Area has no polygon: " + area.id)
+      Logger.warn("Area has no polygon: " + node.id)
       false
     }
   }

@@ -1,6 +1,5 @@
 GET     /show       controllers.Application.show(q: Option[String])
 
-GET     /area       controllers.Application.area(q: String)
 GET     /points     controllers.Application.points(q: String)
 
 GET     /tags       controllers.Application.tags(osm_id: String)
