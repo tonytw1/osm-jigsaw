@@ -17,7 +17,7 @@ class RelationExtractor extends Logging {
 
   // Given an OSM pbf extract file and a predicate describing the relations we are interested in,
   // scan the input and extract the relations. Resolve the sub relations, ways and nodes required to build
-  // these relations. Filter this entities into the output file.
+  // these relations. Outing these entities into an output file.
   def extract(inputFilePath: String, predicate: Entity => Boolean, outputFilepath: String) = {
     val writer = new OsmWriter(outputFilepath)
 
