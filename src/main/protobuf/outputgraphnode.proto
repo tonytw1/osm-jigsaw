@@ -1,6 +1,9 @@
 syntax = "proto2";
 
 message OutputGraphNode {
-   optional int64 area  = 1;
+   optional int64 id  = 1;
    optional int64 parent  = 2;
+   repeated string osm_ids = 3;
+   repeated double latitudes = 4 [packed=true];
+   repeated double longitudes = 5 [packed=true];
 }
