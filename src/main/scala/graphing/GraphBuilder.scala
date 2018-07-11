@@ -17,37 +17,37 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     logger.info("Building graph from " + areas.size + " areas")
 
     logger.info("Deduplicating areas")
-    logger.info("Sorting areas by size")
-    val sortedAreas = areas.sortBy(_.area)
+    def deduplicateAreas(areas: Seq[Area]): Seq[Area] = {
+      logger.info("Sorting areas by size")
+      val sortedAreas = areas.sortBy(_.area)
 
+      val deduplicatedAreas = mutable.ListBuffer[Area]()
 
-    val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
-
-    val deduplicatedAreas = mutable.ListBuffer[Area]()
-    sortedAreas.foreach{ a =>
-      deduplicationCounter.withProgress {
-        var ok = deduplicatedAreas.nonEmpty
-        val i = deduplicatedAreas.iterator
-        var count = 0;
-        var found: Option[Area] = None
-        while(ok) {
-          var x = i.next()
-          ok = x.area >= a.area
-          if (x.area == a.area && areaSame(x, a)) {
-            found = Some(x)
+      val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
+      sortedAreas.foreach { a =>
+        deduplicationCounter.withProgress {
+          var ok = deduplicatedAreas.nonEmpty
+          val i = deduplicatedAreas.iterator
+          var found: Option[Area] = None
+          while (ok) {
+            var x = i.next()
+            ok = x.area >= a.area
+            if (x.area == a.area && areaSame(x, a)) {
+              found = Some(x)
+            }
           }
-          count = count + 1
-        }
 
-        //logger.info("F: " + found + " after " + count)
-
-        found.map { e =>
-          e.osmIds ++= a.osmIds
-        }.getOrElse {
-          deduplicatedAreas.+=:(a)
+          found.map { e =>
+            e.osmIds ++= a.osmIds
+          }.getOrElse {
+            deduplicatedAreas.+=:(a)
+          }
         }
       }
+      deduplicatedAreas
     }
+
+    val deduplicatedAreas = deduplicateAreas(areas)
 
     logger.info("Areas remaining after deduplication: " + deduplicatedAreas.size + "/" + areas.size)
     logger.info("Starting area sort")
