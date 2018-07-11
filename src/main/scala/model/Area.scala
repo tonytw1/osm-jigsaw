@@ -2,4 +2,6 @@ package model
 
 import com.esri.core.geometry.Polygon
 
-case class Area(id: Long, polygon: Polygon, boundingBox: (Double, Double, Double, Double), osmId: Option[String] = None, area: Double)
+import scala.collection.mutable.ListBuffer
+
+case class Area(id: Long, polygon: Polygon, boundingBox: (Double, Double, Double, Double), osmIds: ListBuffer[String] = ListBuffer(), area: Double)

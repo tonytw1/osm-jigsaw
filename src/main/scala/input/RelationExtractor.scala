@@ -1,7 +1,6 @@
 package input
 
 import org.apache.logging.log4j.scala.Logging
-import org.mapdb.volume.MappedFileVol
 import org.mapdb.{Serializer, SortedTableMap}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter

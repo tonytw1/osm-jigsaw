@@ -172,7 +172,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         longitudes.+=(p.getY)
       }
 
-      OutputArea(id = Some(area.id), osmId = area.osmId, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
+      OutputArea(id = Some(area.id), osmIds = area.osmIds, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
     }
 
     def callback(newAreas: Seq[Area]): Unit = {
@@ -189,7 +189,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
     val earthPolygon = makePolygon((-180, 90),(180, -90))
-    val earth = Area(0, earthPolygon, boundingBoxFor(earthPolygon), None, areaOf(earthPolygon))
+    val earth = Area(0, earthPolygon, boundingBoxFor(earthPolygon), ListBuffer.empty, areaOf(earthPolygon))
     exportArea(earth, oos)
 
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
@@ -237,7 +237,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var withOsm = 0
 
     def loadArea(area: Area) = {
-      if (area.osmId.nonEmpty) {
+      if (area.osmIds.nonEmpty) {
         withOsm = withOsm + 1
       }
       areas = areas += area
@@ -254,8 +254,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val seenOsmIds = mutable.Set[String]()
 
     def captureOsmId(area: Area) = {
-      area.osmId.map { osmId =>
-        seenOsmIds += osmId
+      area.osmIds.map { osmIds =>
+        seenOsmIds += osmIds
       }
     }
 
@@ -290,7 +290,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
     areaForPoints(points).map { p =>
-      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmId = oa.osmId, oa.area.get) // TODO Naked gets
+      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets
     }
   }
 

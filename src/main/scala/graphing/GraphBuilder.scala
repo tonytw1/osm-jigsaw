@@ -42,12 +42,15 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         //logger.info("F: " + found + " after " + count)
 
         found.map { e =>
-          logger.debug("Ignoring area for " + a.osmId + "/" + areaOf(a) + "  which is the same area as: " + e.osmId + "/" + areaOf(e)) // TODO Don't silently drop; record this fact
+          logger.debug("Ignoring area for " + a.osmIds + "/" + areaOf(a) + "  which is the same area as: " + e.osmIds + "/" + areaOf(e))
+          e.osmIds ++ e.osmIds
+
         }.getOrElse {
           deduplicatedAreas.+=:(a)
         }
       }
     }
+
     logger.info("Areas remaining after deduplication: " + deduplicatedAreas.size + "/" + areas.size)
     logger.info("Starting area sort")
     var head = GraphNode(headArea)
@@ -57,7 +60,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode): Unit = {
-    logger.debug("Sifting down: " + a.area.osmId  + " with " + a.children.size + " children")
+    logger.debug("Sifting down: " + a.area.osmIds  + " with " + a.children.size + " children")
     logger.debug("Presorting by area to assist sift down effectiveness")
     val sorted = a.children.toSeq.sortBy { a =>
       areaOf(a.area)
@@ -67,7 +70,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
     a.children = Set()
 
-    val counter = new ProgressCounter(1000, Some(inOrder.size), a.area.osmId)
+    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
     inOrder.foreach { b =>
       //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       counter.withProgress {
@@ -78,7 +81,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     a.children.par.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
     a.children.par.filter(i => i.children.nonEmpty && i.children.size > 1).foreach { c =>
-      logger.debug("Sifting down from " + a.area.osmId + " to " + c.area.osmId)
+      logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
       siftDown(c)
     }
   }
@@ -97,12 +100,12 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       a.children = a.children - b
       existingSiblingsWhichNewValueWouldFitIn.map { s =>
-        logger.debug("Found sibling which new value " + b.area.osmId + " would fit in: " + s.area.osmId)
+        logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
         s.children = s.children + b
       }
 
     } else {
-      logger.debug("Inserting " + b.area.osmId + " into " + a.area.osmId)
+      logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
       OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       a.children = a.children ++ Seq(b)
 
@@ -113,7 +116,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
-        logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.osmId)
+        logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.osmIds)
         a.children = a.children -- siblingsWhichFitInsideNewNode
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
@@ -145,7 +148,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   private def render(nodes: Set[GraphNode]): String = {
-    nodes.map(s => s.area.osmId).mkString(", ")
+    nodes.map(s => s.area.osmIds).mkString(", ")
   }
 
 }
