@@ -11,12 +11,14 @@ import outputgraphnode.OutputGraphNode
 
 class GraphReader {
 
-  def toGraphNode(oa: OutputGraphNode) = {
-    val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-    GraphNode(id = oa.id.get, osmIds = oa.osmIds, points = points)
-  }
-
   def loadGraph(graphFile: URL): GraphNode = {
+
+    def toGraphNode(oa: OutputGraphNode) = {
+      val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
+      val osmIds = oa.osmIds.toArray
+      GraphNode(id = oa.id.get, osmIds = osmIds, points = points)
+    }
+
     try {
       val input = new BufferedInputStream(graphFile.openStream())
       val graphNode = OutputGraphNode.parseDelimitedFrom(input).get
@@ -61,14 +63,6 @@ class GraphReader {
         throw e
     }
   }
-
-  /*
-  private def outputAreaToArea(oa: OutputArea): Area = {
-    val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-    // TODO Naked get of id
-    Area(id = oa.id.get, points = points, osmId = oa.osmId)
-  }
-  */
 
 }
 
