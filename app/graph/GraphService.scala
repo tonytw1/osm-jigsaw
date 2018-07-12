@@ -12,7 +12,7 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
 
   val head: GraphNode = new GraphReader().loadGraph(graphFile)
 
-  def tagsFor(osmId: String): Option[Seq[(String, String)]] = {
+  def tagsFor(osmId: OsmId): Option[Seq[(String, String)]] = {
     tagService.tagsFor(osmId)
   }
 

@@ -4,6 +4,7 @@ import java.io.BufferedInputStream
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 
+import graph.OsmId
 import outputtagging.OutputTagging
 import play.api.{Configuration, Logger}
 import progress.ProgressCounter
@@ -15,17 +16,17 @@ class TagService @Inject()(configuration: Configuration) {
 
   val tagsFile = new URL(configuration.getString("tags.url").get)
 
-  val tagsMap: (Map[Long, Seq[(Int, String)]], immutable.IndexedSeq[String]) = loadTags(tagsFile)
+  val tagsMap: (Map[OsmId, Seq[(Int, String)]], immutable.IndexedSeq[String]) = loadTags(tagsFile)
 
-  def tagsFor(osmId: String): Option[Seq[(String, String)]] = {
+  def tagsFor(osmId: OsmId): Option[Seq[(String, String)]] = {
     val keysIndex = tagsMap._2    // TODO push up
 
-    tagsMap._1.get(smallKeyFor(osmId)).map { i =>
+    tagsMap._1.get(osmId).map { i =>
       i.map( j => (keysIndex(j._1), j._2))
     }
   }
 
-  private def loadTags(tagsFile: URL): (Map[Long, Seq[(Int, String)]], immutable.IndexedSeq[String]) = {
+  private def loadTags(tagsFile: URL): (Map[OsmId, Seq[(Int, String)]], immutable.IndexedSeq[String]) = {
     try {
       val uniqueKeys = mutable.Set[String]()
 
@@ -57,7 +58,7 @@ class TagService @Inject()(configuration: Configuration) {
       val keysIndex: Map[String, Int] = keysSeq.zipWithIndex.toMap
 
       Logger.info("Rereading tags after indexing")
-      val tagsMap = mutable.Map[Long, Seq[(Int, String)]]()
+      val tagsMap = mutable.Map[OsmId, Seq[(Int, String)]]()
 
       val input2 = new BufferedInputStream(tagsFile.openStream())
       val counter2 = new ProgressCounter(step = 10000, label = Some("Reading tags"))
@@ -87,10 +88,8 @@ class TagService @Inject()(configuration: Configuration) {
     }
   }
 
-  def smallKeyFor(osmId: String): Long = {
-    val `type` = osmId.takeRight(1)
-    val typeHash = `type`.charAt(0).hashCode()
-    (typeHash + osmId.dropRight(1)).toLong
+  def smallKeyFor(osmId: String): OsmId = {
+    OsmId(osmId.dropRight(1).toLong, osmId.takeRight(1).charAt(0))  // TODO duplication
   }
 
 }

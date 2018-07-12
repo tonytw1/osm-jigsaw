@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
-import graph.{GraphNode, GraphService}
+import graph.{GraphNode, GraphService, OsmId}
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
@@ -30,7 +30,8 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   }
 
   def tags(osmId: String) = Action.async { request =>
-    val tags = graphService.tagsFor(osmId).getOrElse(Seq()).toMap
+    val id = OsmId(osmId.dropRight(1).toLong, osmId.takeRight(1).charAt(0)) // TODO duplication
+    val tags = graphService.tagsFor(id).getOrElse(Seq()).toMap
 
     Future.successful(Ok(Json.toJson(tags)))
   }
@@ -121,8 +122,9 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     Json.toJson(Seq(
       Some("id" -> Json.toJson(node.id)),
-      Some("osmIds" -> Json.toJson(node.osmIds)),
-      Some("name" -> Json.toJson(name))
+      Some("osmIds" -> Json.toJson(node.osmIds.map(i => i.id + i.`type`))),
+      Some("name" -> Json.toJson(name)),
+      Some("children" -> Json.toJson(node.children.size))
     ).flatten.toMap)
   }
 

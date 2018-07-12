@@ -3,11 +3,11 @@ package graph
 import java.io.BufferedInputStream
 import java.net.URL
 
+import outputgraphnode.OutputGraphNode
 import play.api.Logger
 import progress.ProgressCounter
 
 import scala.collection.mutable
-import outputgraphnode.OutputGraphNode
 
 class GraphReader {
 
@@ -15,7 +15,9 @@ class GraphReader {
 
     def toGraphNode(oa: OutputGraphNode) = {
       val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-      val osmIds = oa.osmIds.toArray
+      val osmIds = oa.osmIds.map(id => {
+        OsmId(id.dropRight(1).toLong, id.takeRight(1).charAt(0))
+      }).toArray
       GraphNode(id = oa.id.get, osmIds = osmIds, points = points)
     }
 
@@ -66,6 +68,7 @@ class GraphReader {
 
 }
 
-case class Point(lat: Double, lon: Double)
 
-case class GraphNode(id: Long, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer(), osmIds: Seq[String] = Seq(), points: Seq[Point] = Seq())
+case class Point(lat: Double, lon: Double)
+case class OsmId(id: Long, `type`: Char)
+case class GraphNode(id: Long, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer(), osmIds: Array[OsmId] = Array(), points: Array[Point])
