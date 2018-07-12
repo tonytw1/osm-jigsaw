@@ -46,7 +46,6 @@ class GraphReader {
     }
 
     try {
-
       val areas = loadAreas(areasFile)
 
       def getCachedArea(id: Long): Area = {
@@ -54,7 +53,7 @@ class GraphReader {
       }
 
       def toGraphNode(oa: OutputGraphNode) = {
-        GraphNode(area = getCachedArea(oa.id.get))
+        GraphNode(area = getCachedArea(oa.area.get))
       }
 
       val input = new BufferedInputStream(graphFile.openStream())
