@@ -3,6 +3,7 @@ package graph
 import java.io.BufferedInputStream
 import java.net.URL
 
+import outputarea.OutputArea
 import outputgraphnode.OutputGraphNode
 import play.api.Logger
 import progress.ProgressCounter
@@ -11,17 +12,51 @@ import scala.collection.mutable
 
 class GraphReader {
 
-  def loadGraph(graphFile: URL): GraphNode = {
+  def toOsmId(osmId: String): OsmId = {
+    OsmId(osmId.dropRight(1).toLong, osmId.takeRight(1).charAt(0))
+  }
 
-    def toGraphNode(oa: OutputGraphNode) = {
-      val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-      val osmIds = oa.osmIds.map(id => {
-        OsmId(id.dropRight(1).toLong, id.takeRight(1).charAt(0))
-      }).toArray
-      GraphNode(id = oa.id.get, osmIds = osmIds, points = points)
+  def loadGraph(areasFile: URL, graphFile: URL): GraphNode = {
+
+    def loadAreas(areasFile: URL): Map[Long, Area] = {
+
+      def outputAreaToArea(oa: OutputArea): Area = {
+        val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
+        Area(id = oa.id.get, points = points, osmIds = Seq.empty) // TODO Naked get of id
+
+      }
+
+      val areasMap = mutable.Map[Long, Area]()
+      val input = new BufferedInputStream(areasFile.openStream())
+      val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
+      var ok = true
+      while (ok) {
+        counter.withProgress {
+          val outputArea = OutputArea.parseDelimitedFrom(input)
+          outputArea.map { oa =>
+            val area = outputAreaToArea(oa)
+            areasMap += area.id -> area
+          }
+          ok = outputArea.nonEmpty
+        }
+      }
+      Logger.info("Mapped areas: " + areasMap.size)
+      input.close()
+      areasMap.toMap
     }
 
     try {
+
+      val areas = loadAreas(areasFile)
+
+      def getCachedArea(id: Long): Area = {
+        areas.get(id).get
+      }
+
+      def toGraphNode(oa: OutputGraphNode) = {
+        GraphNode(area = getCachedArea(oa.id.get))
+      }
+
       val input = new BufferedInputStream(graphFile.openStream())
       val graphNode = OutputGraphNode.parseDelimitedFrom(input).get
       Logger.info("Graph node: " + graphNode)
@@ -38,7 +73,7 @@ class GraphReader {
         outputGraphNode.map { oa =>
           counterSecond.withProgress {
             var insertInto = stack.pop
-            while (Some(insertInto.id) != oa.parent) {
+            while (Some(insertInto.area.id) != oa.parent) {
               insertInto = stack.pop
             }
 
@@ -67,6 +102,10 @@ class GraphReader {
 }
 
 
+case class Area(id: Long, points: Seq[Point], osmIds: Seq[OsmId]) {
+  override def hashCode() = id.hashCode()
+}
+
 case class Point(lat: Double, lon: Double)
 case class OsmId(id: Long, `type`: Char)
-case class GraphNode(id: Long, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer(), osmIds: Array[OsmId] = Array(), points: Array[Point])
+case class GraphNode(area: Area, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer())

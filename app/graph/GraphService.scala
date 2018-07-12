@@ -8,9 +8,10 @@ import tags.TagService
 
 class GraphService @Inject()(configuration: Configuration, tagService: TagService) {
 
+  val areasFile = new URL(configuration.getString("areas.url").get)
   val graphFile = new URL(configuration.getString("graph.url").get)
 
-  val head: GraphNode = new GraphReader().loadGraph(graphFile)
+  val head: GraphNode = new GraphReader().loadGraph(areasFile, graphFile)
 
   def tagsFor(osmId: OsmId): Option[Seq[(String, String)]] = {
     tagService.tagsFor(osmId)

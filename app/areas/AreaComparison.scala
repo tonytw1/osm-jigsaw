@@ -27,10 +27,10 @@ trait AreaComparison extends BoundingBox {
     }
 
     def polygonForNode(node: GraphNode): Option[Polygon] = {
-      val key = node.id
+      val key = node.area.id
       Option(polygonCache.getIfPresent(key)).fold {
         Logger.info("Cache miss for area polygon: " + key)
-        buildPolygonForPoints(node.points).map { p =>
+        buildPolygonForPoints(node.area.points).map { p =>
           polygonCache.put(key, p)
           p
         }
@@ -42,7 +42,7 @@ trait AreaComparison extends BoundingBox {
     polygonForNode(node).map { p =>
       OperatorContains.local().execute(p, pt, sr, null)
     }.getOrElse {
-      Logger.warn("Area has no polygon: " + node.id)
+      Logger.warn("Area has no polygon: " + node.area.id)
       false
     }
   }

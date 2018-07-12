@@ -23,7 +23,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   def points(q: String) = Action.async { request =>
     val node = nodesFor(parseComponents(q)).last
 
-    val points = node.points
+    val points = node.area.points
 
     implicit val pw = Json.writes[graph.Point]
     Future.successful(Ok(Json.toJson(points)))
@@ -66,7 +66,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   private def nodesFor(components: Seq[Long]): mutable.Seq[GraphNode] = {
     def nodeIdentifier(node: GraphNode): Long = {
-      node.id
+      node.area.id
     }
 
     val nodes = mutable.ListBuffer[GraphNode]()
@@ -112,17 +112,17 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   private def renderNode(node: GraphNode): JsValue = {
 
-    val name = node.osmIds.headOption.flatMap { osmId =>
+    val name = node.area.osmIds.headOption.flatMap { osmId =>
       tagService.tagsFor(osmId).flatMap { tags =>
         tags.find(t => t._1 == "name").map { t =>
           t._2
         }
       }
-    }.getOrElse(node.id.toString)
+    }.getOrElse(node.area.id.toString)
 
     Json.toJson(Seq(
-      Some("id" -> Json.toJson(node.id)),
-      Some("osmIds" -> Json.toJson(node.osmIds.map(i => i.id + i.`type`))),
+      Some("id" -> Json.toJson(node.area.id)),
+      Some("osmIds" -> Json.toJson(node.area.osmIds.map(i => i.id + i.`type`))),
       Some("name" -> Json.toJson(name)),
       Some("children" -> Json.toJson(node.children.size))
     ).flatten.toMap)
