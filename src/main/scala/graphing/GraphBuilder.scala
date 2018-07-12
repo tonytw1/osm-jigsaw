@@ -97,7 +97,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       a.children = a.children - b
-      existingSiblingsWhichNewValueWouldFitIn.map { s =>
+      existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
         logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
         s.children = s.children + b
       }
