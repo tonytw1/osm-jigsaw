@@ -31,10 +31,10 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
           var found: Option[Area] = None
           while (ok) {
             var x = i.next()
-            ok = x.area >= a.area
             if (x.area == a.area && areaSame(x, a)) {
               found = Some(x)
             }
+            ok = x.area >= a.area && i.hasNext
           }
 
           found.map { e =>
