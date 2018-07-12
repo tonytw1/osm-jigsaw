@@ -3,6 +3,7 @@ package graph
 import java.io.BufferedInputStream
 import java.net.URL
 
+import model.OsmIdParsing
 import outputarea.OutputArea
 import outputgraphnode.OutputGraphNode
 import play.api.Logger
@@ -10,11 +11,7 @@ import progress.ProgressCounter
 
 import scala.collection.mutable
 
-class GraphReader {
-
-  def toOsmId(osmId: String): OsmId = {
-    OsmId(osmId.dropRight(1).toLong, osmId.takeRight(1).charAt(0))
-  }
+class GraphReader extends OsmIdParsing {
 
   def loadGraph(areasFile: URL, graphFile: URL): GraphNode = {
 
@@ -22,8 +19,7 @@ class GraphReader {
 
       def outputAreaToArea(oa: OutputArea): Area = {
         val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-        Area(id = oa.id.get, points = points, osmIds = Seq.empty) // TODO Naked get of id
-
+        Area(id = oa.id.get, points = points, osmIds = oa.osmIds.map(toOsmId)) // TODO Naked get of id
       }
 
       val areasMap = mutable.Map[Long, Area]()

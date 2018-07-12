@@ -5,6 +5,7 @@ import java.net.URL
 import javax.inject.{Inject, Singleton}
 
 import graph.OsmId
+import model.OsmIdParsing
 import outputtagging.OutputTagging
 import play.api.{Configuration, Logger}
 import progress.ProgressCounter
@@ -12,7 +13,7 @@ import progress.ProgressCounter
 import scala.collection.{immutable, mutable}
 
 @Singleton
-class TagService @Inject()(configuration: Configuration) {
+class TagService @Inject()(configuration: Configuration) extends OsmIdParsing {
 
   val tagsFile = new URL(configuration.getString("tags.url").get)
 
@@ -71,7 +72,7 @@ class TagService @Inject()(configuration: Configuration) {
             val keys = ot.keys.map(k => keysIndex.get(k).get)
             val values = ot.values
             val tuples = keys.zip(values).toArray
-            tagsMap.put(smallKeyFor(osmId), tuples)
+            tagsMap.put(toOsmId(osmId), tuples)
         }
           ok = outputTagging.nonEmpty
         }
@@ -86,10 +87,6 @@ class TagService @Inject()(configuration: Configuration) {
         Logger.error("Error: " + e)
         throw e
     }
-  }
-
-  def smallKeyFor(osmId: String): OsmId = {
-    OsmId(osmId.dropRight(1).toLong, osmId.takeRight(1).charAt(0))  // TODO duplication
   }
 
 }

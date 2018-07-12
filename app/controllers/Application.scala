@@ -4,7 +4,8 @@ import javax.inject.Inject
 
 import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
-import graph.{GraphNode, GraphService, OsmId}
+import graph.{GraphNode, GraphService}
+import model.OsmIdParsing
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
@@ -13,7 +14,7 @@ import tags.TagService
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService, tagService: TagService) extends Controller with BoundingBox with AreaComparison {
+class Application @Inject()(configuration: Configuration, graphService: GraphService, tagService: TagService) extends Controller with BoundingBox with AreaComparison with OsmIdParsing {
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
@@ -30,7 +31,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   }
 
   def tags(osmId: String) = Action.async { request =>
-    val id = OsmId(osmId.dropRight(1).toLong, osmId.takeRight(1).charAt(0)) // TODO duplication
+    val id = toOsmId(osmId)
     val tags = graphService.tagsFor(id).getOrElse(Seq()).toMap
 
     Future.successful(Ok(Json.toJson(tags)))
@@ -122,7 +123,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     Json.toJson(Seq(
       Some("id" -> Json.toJson(node.area.id)),
-      Some("osmIds" -> Json.toJson(node.area.osmIds.map(i => i.id + i.`type`))),
+      Some("osmIds" -> Json.toJson(node.area.osmIds.map(i => i.id.toString + i.`type`.toString))),
       Some("name" -> Json.toJson(name)),
       Some("children" -> Json.toJson(node.children.size))
     ).flatten.toMap)
