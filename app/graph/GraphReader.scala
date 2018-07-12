@@ -55,8 +55,6 @@ class GraphReader {
       input.close()
 
       Logger.info("Finished reading")
-
-      input.close()
       head
 
     } catch {
