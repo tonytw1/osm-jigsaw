@@ -139,27 +139,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   }
 
   def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
-    def all(entity: Entity): Boolean  = true
-
-    var relations = LongMap[Relation]()
-    var waysToResolve = Set[Way]()
-
-    def addToFound(entity: Entity) = {
-      entity match {
-        case r: Relation => relations = relations + (r.getId -> r)
-        case w: Way => waysToResolve = waysToResolve + w
-        case _ =>
-      }
-    }
-
-    logger.info("Loading entities")
-    new SinkRunner(inputFilepath, all, addToFound).run
-    logger.info("Finished loading entities")
-
-    logger.info("Found " + relations.size + " relations to process")
-
-    logger.info("Resolving areas")
-    val oos = new BufferedOutputStream(new FileOutputStream(outputFilepath))
 
     def exportArea(area: Area, output: OutputStream): Unit = {
       val latitudes = mutable.ListBuffer[Double]()
@@ -174,77 +153,108 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       OutputArea(id = Some(area.id), osmIds = area.osmIds, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
     }
 
-    def callback(newAreas: Seq[Area]): Unit = {
-      newAreas.foreach { a =>
-        exportArea(a, oos)
-      }
-    }
+    def buildAreas = {
+      def all(entity: Entity): Boolean = true
 
-    logger.info("Filtering relations to resolve")
-    val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
+      var relations = LongMap[Relation]()
+      var waysToResolve = Set[Way]()
 
-    val areaResolver = new AreaResolver()
-    val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
-    val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
-
-    val earthPolygon = makePolygon((-180, 90),(180, -90))
-    val earth = Area(0, earthPolygon, boundingBoxFor(earthPolygon), ListBuffer.empty, areaOf(earthPolygon))
-    exportArea(earth, oos)
-
-    logger.info("Resolving areas for " + relationsToResolve.size + " relations")
-    areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, callback)
-
-    logger.info("Resolving areas for " + waysToResolve.size + " ways")
-    areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, callback)  // TODO why are two sets of ways in scope?
-    oos.flush()
-    oos.close
-    logger.info("Dumped areas to file: " + outputFilepath)
-
-    def deduplicateAreas(areas: Seq[Area]): Seq[Area] = {
-      logger.info("Sorting areas by size")
-      val sortedAreas = areas.sortBy(_.area)
-
-      val deduplicatedAreas = mutable.ListBuffer[Area]()
-
-      val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
-      sortedAreas.foreach { a =>
-        deduplicationCounter.withProgress {
-          var ok = deduplicatedAreas.nonEmpty
-          val i = deduplicatedAreas.iterator
-          var found: scala.Option[Area] = None
-          while (ok) {
-            var x = i.next()
-            if (x.area == a.area && areaSame(x, a)) {
-              found = Some(x)
-            }
-            ok = x.area >= a.area && i.hasNext
-          }
-
-          found.map { e =>
-            e.osmIds ++= a.osmIds
-          }.getOrElse {
-            deduplicatedAreas.+=:(a)
-          }
+      def addToFound(entity: Entity) = {
+        entity match {
+          case r: Relation => relations = relations + (r.getId -> r)
+          case w: Way => waysToResolve = waysToResolve + w
+          case _ =>
         }
       }
-      deduplicatedAreas
-    }
 
-    logger.info("Deduplicating areas")
-    val areas = readAreasFromPbfFile(outputFilepath)
-    val deduplicatedAreas = deduplicateAreas(areas)
+      logger.info("Loading entities")
+      new SinkRunner(inputFilepath, all, addToFound).run
+      logger.info("Finished loading entities")
 
-    logger.info("Writing deduplicated areas to file")
-    val finalOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
-    val outputCounter = new ProgressCounter(100000, Some(deduplicatedAreas.size))
-    deduplicatedAreas.foreach{ a =>
-      outputCounter.withProgress {
-        exportArea(a, finalOutput)
+      logger.info("Found " + relations.size + " relations to process")
+
+      logger.info("Resolving areas")
+      val oos = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+
+      def callback(newAreas: Seq[Area]): Unit = {
+        newAreas.foreach { a =>
+          exportArea(a, oos)
+        }
       }
+
+      logger.info("Filtering relations to resolve")
+      val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
+
+      val areaResolver = new AreaResolver()
+      val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
+      val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
+
+      val earthPolygon = makePolygon((-180, 90), (180, -90))
+      val earth = Area(0, earthPolygon, boundingBoxFor(earthPolygon), ListBuffer.empty, areaOf(earthPolygon))
+      exportArea(earth, oos)
+
+      logger.info("Resolving areas for " + relationsToResolve.size + " relations")
+      areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, callback)
+
+      logger.info("Resolving areas for " + waysToResolve.size + " ways")
+      areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, callback) // TODO why are two sets of ways in scope?
+      wayResolver.close()
+      nodeResolver.close()
+      oos.flush()
+      oos.close
+      logger.info("Dumped areas to file: " + outputFilepath)
     }
-    finalOutput.flush()
-    finalOutput.close
-    logger.info("Wrote deduplicated areas to file: " + outputFilepath)
+
+    def deduplicate = {
+      logger.info("Deduplicating areas")
+      def deduplicateAreas(areas: Seq[Area]): Seq[Area] = {
+        logger.info("Sorting areas by size")
+        val sortedAreas = areas.sortBy(_.area)
+
+        val deduplicatedAreas = mutable.ListBuffer[Area]()
+
+        val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
+        sortedAreas.foreach { a =>
+          deduplicationCounter.withProgress {
+            var ok = deduplicatedAreas.nonEmpty
+            val i = deduplicatedAreas.iterator
+            var found: scala.Option[Area] = None
+            while (ok) {
+              var x = i.next()
+              if (x.area == a.area && areaSame(x, a)) {
+                found = Some(x)
+              }
+              ok = x.area >= a.area && i.hasNext
+            }
+
+            found.map { e =>
+              e.osmIds ++= a.osmIds
+            }.getOrElse {
+              deduplicatedAreas.+=:(a)
+            }
+          }
+        }
+        deduplicatedAreas
+      }
+
+      val areas = readAreasFromPbfFile(outputFilepath)
+      val deduplicatedAreas = deduplicateAreas(areas)
+
+      logger.info("Writing deduplicated areas to file")
+      val finalOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+      val outputCounter = new ProgressCounter(100000, Some(deduplicatedAreas.size))
+      deduplicatedAreas.foreach { a =>
+        outputCounter.withProgress {
+          exportArea(a, finalOutput)
+        }
+      }
+      finalOutput.flush()
+      finalOutput.close
+      logger.info("Wrote deduplicated areas to file: " + outputFilepath)
+    }
+
+    buildAreas
+    deduplicate
   }
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
