@@ -60,7 +60,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   def siftDown(a: GraphNode): Unit = {
     logger.debug("Sifting down: " + a.area.osmIds  + " with " + a.children.size + " children")
     logger.debug("Presorting by area to assist sift down effectiveness")
-    val sorted = a.children.toSeq.sortBy(_.area)
+    val sorted = a.children.toSeq.sortBy(_.area.area)
     val inOrder = sorted.reverse
 
     //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
