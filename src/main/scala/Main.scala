@@ -57,7 +57,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
       case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
-      case "dumpareas" => dumpAreas(inputFilepath)
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -197,16 +196,55 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     logger.info("Resolving areas for " + waysToResolve.size + " ways")
     areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, callback)  // TODO why are two sets of ways in scope?
-
     oos.flush()
     oos.close
     logger.info("Dumped areas to file: " + outputFilepath)
-  }
 
-  def dumpAreas(inputFilename: String) = {
-    readAreasFromPbfFile(inputFilename).map { a =>
-      println(a)
+    def deduplicateAreas(areas: Seq[Area]): Seq[Area] = {
+      logger.info("Sorting areas by size")
+      val sortedAreas = areas.sortBy(_.area)
+
+      val deduplicatedAreas = mutable.ListBuffer[Area]()
+
+      val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
+      sortedAreas.foreach { a =>
+        deduplicationCounter.withProgress {
+          var ok = deduplicatedAreas.nonEmpty
+          val i = deduplicatedAreas.iterator
+          var found: scala.Option[Area] = None
+          while (ok) {
+            var x = i.next()
+            if (x.area == a.area && areaSame(x, a)) {
+              found = Some(x)
+            }
+            ok = x.area >= a.area && i.hasNext
+          }
+
+          found.map { e =>
+            e.osmIds ++= a.osmIds
+          }.getOrElse {
+            deduplicatedAreas.+=:(a)
+          }
+        }
+      }
+      deduplicatedAreas
     }
+
+    logger.info("Deduplicating areas")
+    val areas = readAreasFromPbfFile(outputFilepath)
+    val deduplicatedAreas = deduplicateAreas(areas)
+
+    logger.info("Writing deduplicated areas to file")
+    val finalOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+    val outputCounter = new ProgressCounter(100000, Some(deduplicatedAreas.size))
+    deduplicatedAreas.foreach{ a =>
+      outputCounter.withProgress {
+        exportArea(a, finalOutput)
+      }
+    }
+    finalOutput.flush()
+    finalOutput.close
+    logger.info("Wrote deduplicated areas to file: " + outputFilepath)
   }
 
   def buildGraph(inputFilename: String, outputFilename: String) = {

@@ -9,50 +9,15 @@ import org.joda.time.{DateTime, Duration}
 import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
-import scala.collection.mutable
-
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
 
-    logger.info("Deduplicating areas")
-    def deduplicateAreas(areas: Seq[Area]): Seq[Area] = {
-      logger.info("Sorting areas by size")
-      val sortedAreas = areas.sortBy(_.area)
-
-      val deduplicatedAreas = mutable.ListBuffer[Area]()
-
-      val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
-      sortedAreas.foreach { a =>
-        deduplicationCounter.withProgress {
-          var ok = deduplicatedAreas.nonEmpty
-          val i = deduplicatedAreas.iterator
-          var found: Option[Area] = None
-          while (ok) {
-            var x = i.next()
-            if (x.area == a.area && areaSame(x, a)) {
-              found = Some(x)
-            }
-            ok = x.area >= a.area && i.hasNext
-          }
-
-          found.map { e =>
-            e.osmIds ++= a.osmIds
-          }.getOrElse {
-            deduplicatedAreas.+=:(a)
-          }
-        }
-      }
-      deduplicatedAreas
-    }
-
-    val deduplicatedAreas = deduplicateAreas(areas)
-
-    logger.info("Areas remaining after deduplication: " + deduplicatedAreas.size + "/" + areas.size)
+    logger.info("Areas remaining after deduplication: " + areas.size + "/" + areas.size)
     logger.info("Starting area sort")
     var head = GraphNode(headArea)
-    head.insert(deduplicatedAreas)
+    head.insert(areas)
     siftDown(head)
     head
   }
