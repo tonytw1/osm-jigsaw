@@ -34,10 +34,6 @@ trait AreaComparison {
     }
   }
 
-  def areaOf(area: Area): Double = {
-    Math.abs(area.polygon.calculateArea2D())
-  }
-
   def areaOf(p: Polygon): Double = {
     Math.abs(p.calculateArea2D())
   }
