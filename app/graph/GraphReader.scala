@@ -96,7 +96,6 @@ class GraphReader extends OsmIdParsing {
 
 }
 
-
 case class Area(id: Long, points: Seq[Point], osmIds: Seq[OsmId]) {
   override def hashCode() = id.hashCode()
 }
