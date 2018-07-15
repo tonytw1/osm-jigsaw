@@ -16,9 +16,11 @@ import scala.concurrent.Future
 
 class Application @Inject()(configuration: Configuration, graphService: GraphService, tagService: TagService) extends Controller with BoundingBox with AreaComparison with OsmIdParsing {
 
+  val English = "en"  // TODO Push to Accepts header
+
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
-    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n)))))
+    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n, English)))))
   }
 
   def points(q: String) = Action.async { request =>
@@ -56,7 +58,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val pt = new Point(lat, lon)
     val containing = nodesContaining(pt, graphService.head, Seq())
 
-    val jsons = containing.map(g => g.map(i => renderNode(i)))
+    val jsons = containing.map(g => g.map(i => English))
 
     Future.successful(Ok(Json.toJson(jsons)))
   }
@@ -111,11 +113,13 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   }
   */
 
-  private def renderNode(node: GraphNode): JsValue = {
+  private def renderNode(node: GraphNode, preferredLanguage: String): JsValue = {
+    val usableNames = Seq("name:" + preferredLanguage, "name")
 
     val name = node.area.osmIds.headOption.flatMap { osmId =>
       tagService.tagsFor(osmId).flatMap { tags =>
-        tags.find(t => t._1 == "name").map { t =>
+        val bestName = tags.filter(t => usableNames.contains(t._1)).headOption
+        bestName.map { t =>
           t._2
         }
       }
