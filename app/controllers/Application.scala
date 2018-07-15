@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
-import graph.{GraphNode, GraphService}
+import graph.{GraphNode, GraphService, OsmId}
 import model.OsmIdParsing
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
@@ -58,7 +58,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val pt = new Point(lat, lon)
     val containing = nodesContaining(pt, graphService.head, Seq())
 
-    val jsons = containing.map(g => g.map(i => English))
+    val jsons = containing.map(g => g.map(i => renderNode(i, English)))
 
     Future.successful(Ok(Json.toJson(jsons)))
   }
@@ -116,19 +116,26 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   private def renderNode(node: GraphNode, preferredLanguage: String): JsValue = {
     val usableNames = Seq("name:" + preferredLanguage, "name")
 
-    val name = node.area.osmIds.headOption.flatMap { osmId =>
+    def nameForOsmId(osmId: OsmId): String = {
       tagService.tagsFor(osmId).flatMap { tags =>
         val bestName = tags.filter(t => usableNames.contains(t._1)).headOption
         bestName.map { t =>
           t._2
         }
-      }
-    }.getOrElse(node.area.id.toString)
+      }.getOrElse(node.area.id.toString)
+    }
+
+    val entities: Seq[JsValue] = node.area.osmIds.map { osmId =>
+      Json.toJson(Seq(
+      "osmId" -> Json.toJson(osmId.id.toString + osmId.`type`.toString),
+      "name" -> Json.toJson(nameForOsmId(osmId))
+      ).toMap
+      )
+    }
 
     Json.toJson(Seq(
       Some("id" -> Json.toJson(node.area.id)),
-      Some("osmIds" -> Json.toJson(node.area.osmIds.map(i => i.id.toString + i.`type`.toString))),
-      Some("name" -> Json.toJson(name)),
+      Some("entities" -> Json.toJson(entities)),
       Some("children" -> Json.toJson(node.children.size))
     ).flatten.toMap)
   }
