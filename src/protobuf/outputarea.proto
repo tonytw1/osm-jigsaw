@@ -1,9 +1,0 @@
-syntax = "proto2";
-
-message OutputArea {
-   optional int64 id = 1;
-   optional string name = 2;
-   optional string osm_id = 3;
-   repeated double latitudes = 4 [packed=true];
-   repeated double longitudes = 5 [packed=true];
-}
