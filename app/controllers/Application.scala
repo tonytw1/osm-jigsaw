@@ -6,7 +6,7 @@ import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
 import graph.{GraphNode, GraphService, OsmId}
 import model.OsmIdParsing
-import play.api.Configuration
+import play.api.{Configuration, Logger}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
 import tags.TagService
@@ -118,7 +118,9 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     def nameForOsmId(osmId: OsmId): String = {
       tagService.tagsFor(osmId).flatMap { tags =>
-        val bestName = tags.filter(t => usableNames.contains(t._1)).headOption
+        val availableNames = tags.filter(t => usableNames.contains(t._1))
+        Logger.info("Available names for " + osmId + ": " + availableNames)
+        val bestName = availableNames.headOption
         bestName.map { t =>
           t._2
         }
