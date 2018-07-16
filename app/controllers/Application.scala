@@ -114,11 +114,12 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   */
 
   private def renderNode(node: GraphNode, preferredLanguage: String): JsValue = {
-    val usableNames = Seq("name:" + preferredLanguage, "name")
+    val preferredName = "name:" + preferredLanguage
+    val otherUsableNames = Seq(preferredName, "name")
 
     def nameForOsmId(osmId: OsmId): String = {
       tagService.tagsFor(osmId).flatMap { tags =>
-        val availableNames = tags.filter(t => usableNames.contains(t._1))
+        val availableNames = tags.filter(t => otherUsableNames.contains(t._1)).sortBy(t => t._1 == preferredName)
         Logger.info("Available names for " + osmId + ": " + availableNames)
         val bestName = availableNames.headOption
         bestName.map { t =>
