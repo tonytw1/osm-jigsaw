@@ -6,21 +6,19 @@ import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
 import graph.{GraphNode, GraphService, OsmId}
 import model.OsmIdParsing
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
-import tags.TagService
+import tags.{EntityNameTags, TagService}
 
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService, tagService: TagService) extends Controller with BoundingBox with AreaComparison with OsmIdParsing {
-
-  val English = "en"  // TODO Push to Accepts header
+class Application @Inject()(configuration: Configuration, graphService: GraphService, val tagService: TagService) extends Controller with BoundingBox with AreaComparison with OsmIdParsing with EntityNameTags {
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
-    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n, English)))))
+    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n)))))
   }
 
   def points(q: String) = Action.async { request =>
@@ -58,7 +56,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val pt = new Point(lat, lon)
     val containing = nodesContaining(pt, graphService.head, Seq())
 
-    val jsons = containing.map(g => g.map(i => renderNode(i, English)))
+    val jsons = containing.map(g => g.map(i => renderNode(i)))
 
     Future.successful(Ok(Json.toJson(jsons)))
   }
@@ -95,43 +93,18 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     nodes
   }
 
-  /*
-  private def renderArea(area: Area): JsValue = {
-    val name = area.osmId.flatMap { osmId =>
-      tagService.tagsFor(osmId).flatMap { tags =>
-        tags.find(t => t._1 == "name").map { t =>
-          t._2
+  private def renderNode(node: GraphNode): JsValue = {
+    val entities = node.area.osmIds.map { osmId =>
+
+      def nameForOsmId(osmId: OsmId): Option[String] = {
+        tagService.tagsFor(osmId).flatMap { tags =>
+          getNameFromTags(tags)
         }
       }
-    }.getOrElse(area.id.toString)
 
-     Json.toJson(Seq(
-      Some("id" -> Json.toJson(area.id)),
-      area.osmId.map(o => "osmId" -> Json.toJson(o)),
-      Some("name" -> Json.toJson(name))
-    ).flatten.toMap)
-  }
-  */
-
-  private def renderNode(node: GraphNode, preferredLanguage: String): JsValue = {
-    val preferredName = "name:" + preferredLanguage
-    val otherUsableNames = Seq(preferredName, "name")
-
-    def nameForOsmId(osmId: OsmId): String = {
-      tagService.tagsFor(osmId).flatMap { tags =>
-        val availableNames = tags.filter(t => otherUsableNames.contains(t._1)).sortBy(t => t._1 == preferredName)
-        Logger.info("Available names for " + osmId + ": " + availableNames)
-        val bestName = availableNames.headOption
-        bestName.map { t =>
-          t._2
-        }
-      }.getOrElse(node.area.id.toString)
-    }
-
-    val entities: Seq[JsValue] = node.area.osmIds.map { osmId =>
       Json.toJson(Seq(
       "osmId" -> Json.toJson(osmId.id.toString + osmId.`type`.toString),
-      "name" -> Json.toJson(nameForOsmId(osmId))
+      "name" -> Json.toJson(nameForOsmId(osmId).getOrElse(node.area.id.toString))
       ).toMap
       )
     }
