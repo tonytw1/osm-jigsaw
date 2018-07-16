@@ -12,4 +12,12 @@ class EntityNameTagsSpec extends Specification with EntityNameTags {
     name must equalTo("Federal Republic of Germany")
   }
 
+  "fall back to default name if preferred langauge is not available" in {
+    val tags = Seq(("name:ace", "Jeureuman"), ("name", "Deutschland"), ("name:gb", "Alemaña"))
+
+    val name = getNameFromTags(tags).get
+
+    name must equalTo("Deutschland")
+  }
+
 }
