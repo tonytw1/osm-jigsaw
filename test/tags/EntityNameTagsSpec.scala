@@ -20,4 +20,12 @@ class EntityNameTagsSpec extends Specification with EntityNameTags {
     name must equalTo("Deutschland")
   }
 
+  "Use the shortest available preferred language responnse if multiple options are given" in {
+    val tags = Seq(("name", "Deutschland"), ("name:en", "Federal Republic of Germany"), ("name:en", "Germany"))
+
+    val name = getNameFromTags(tags).get
+
+    name must equalTo("Germany")
+  }
+
 }

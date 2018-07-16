@@ -8,8 +8,12 @@ trait EntityNameTags {
     val preferredName = "name:" + English
     val otherUsableNames = Seq(preferredName, "name")
 
-    val availableNames = tags.filter(t => otherUsableNames.contains(t._1)).sortBy(t => !(t._1 == preferredName))
-    val bestName = availableNames.headOption
+    val allAvailableNames = tags.filter(t => otherUsableNames.contains(t._1)).toSet
+
+    val preferredNames = allAvailableNames.filter(t => t._1 == preferredName)
+    val otherNames = allAvailableNames -- preferredNames
+
+    val bestName = (preferredNames.toSeq.sortBy(t => t._2.length) ++ otherNames.toSeq.sortBy(t => t._2.length)).headOption
     bestName.map { t =>
       t._2
     }
