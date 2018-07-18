@@ -27,23 +27,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   options.addOption(STEP, true, "Which step to apply to the input file")
 
   def entitiesToGraph(entity: Entity): Boolean = {
-
     (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)) &&
       nameFor(entity).nonEmpty && !entity.getTags.asScala.exists(t => t.getKey == "indoor:area")
-
-    /*
-    val tags = entity.getTags.asScala
-    val isAdminLevel = tags.exists(t => t.getKey == "admin_level")
-    val isBoundary = tags.exists(t => t.getKey == "type" && t.getValue == "boundary")
-    val isBoundaryAdministrativeTag = tags.exists(t => t.getKey == "boundary" && t.getValue == "administrative")
-
-    val isLeisurePark = tags.exists(t => tags.exists(t => t.getKey == "leisure"  && t.getValue == "park"))
-    val isIsland = tags.exists(t => tags.exists(t => t.getKey == "place"  && t.getValue == "island"))
-    val isNationalPark = tags.exists(t => tags.exists(t => t.getKey == "boundary"  && t.getValue == "national_park"))
-
-    (entity.getType == EntityType.Relation && isAdminLevel && isBoundary && isBoundaryAdministrativeTag) ||
-      ((entity.getType == EntityType.Relation || entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed) && isLeisurePark || isNationalPark || isIsland)
-      */
   }
 
   def main(args: Array[String]): Unit = {
