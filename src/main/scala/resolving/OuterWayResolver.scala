@@ -24,10 +24,10 @@ class OuterWayResolver extends Logging {
         case EntityType.Way => Seq(rm.getMemberId)
         case EntityType.Relation => // TODO want test case for this
           allRelations.get(rm.getMemberId).map { sr =>
-            logger.info("Relation " + r.getId + " has subrelation " + rm.getMemberId + " as an outer")
+            logger.debug("Relation " + r.getId + " has subrelation " + rm.getMemberId + " as an outer")
             resolveOuterWayIdsFor(sr, allRelations, usedRelations)
           }.getOrElse {
-            logger.warn("Could not resolve outer subrelation " + rm.getMemberId + " for relation " + r + "; ignoring this subrelation")
+            logger.warn("Could not resolve outer subrelation " + rm.getMemberId + " for relation " + r.getId + "; ignoring this subrelation")
             Seq()
           }
         case _ => Seq()
