@@ -6,8 +6,10 @@ import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.openstreetmap.osmosis.core.task.v0_6.Sink
 import progress.ProgressCounter
+import org.apache.logging.log4j.scala.Logging
 
-class OsmEntitySink(predicate: Entity => Boolean, callback: Entity => Unit) extends Sink {
+
+class OsmEntitySink(predicate: Entity => Boolean, callback: Entity => Unit) extends Sink with Logging {
 
   var matched = 0L
   val counter = new ProgressCounter(10000000)
@@ -28,7 +30,7 @@ class OsmEntitySink(predicate: Entity => Boolean, callback: Entity => Unit) exte
   override def complete() = {}
 
   override def close() = {
-    println("Matched " + matched)
+    logger.info("Sink matched " + matched + " entities")
   }
 
 }

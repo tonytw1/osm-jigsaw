@@ -50,40 +50,38 @@ Even if the former is the desired output, the graph should represent all of the 
 Starting with a raw OSM extract file, preform a number of independant steps to transform the extract into the desired output format.
 
 
+#### Extract interesting entities from the input file
 
-- Extract high level entities and their components =>
+To get the dataset down to managable size, extract any OSM entities which might represent closed areas into a working file.
 
-Select a high level set of entities; say admin boundary relations.
-Extract these from an OSM extract file. Resolve the sub relations, ways and nodes which they are composed of and dump
-these out into a smaller working file.
+Take all of the relations and the ways which are marked as closed.
+Discard any entities which do not have name tags.
+Collect the sub relations, ways and nodes which make up these entities.
 
 This step might take the 1Gb Great Britain extract down to something more like 50Mb.
 
 
-- Resolve these relations into bounding areas =>
+#### Resolve relations and closed ways into areas
 
-Load the high levek entities and attempt to build bounding areas for them.
-Relations may be composed of many shapes. Ways and nodes don't always appear into order.
+Attempt to build closed areas from the filtered entities.
+Relations may be composed multiple ways and sub relations which will need to be resolved.
+A single relation might represent multiple areas (ie. a group of islands).
 
+Ways within a relation may not always be in a sequential order.
+Ways within an area's outline may be pointing in different directions.
+A certain amount of trail and error might be needed.
 
-- Try to sort these areas into some sort of hierarchy
-
-Much like a gravel sorting sieve.
-Smaller areas should falled down inside larger areas.
-More important relations like countries should float to the top regardless of their tags.
-Ignore overlapping areas for now; does this mean than insertion order becomes important?
-
-
-- Iterate, pouring remaining entites into the top of this structure in batches
-
-Let them sift down to the smallest area which encloses them =>
-(if this is polygon matching would using a GPU be sensible?)
-
-This graph gives a path from each element back up to the the top level enclosing relation.
-The graph can be tranversed to give a list of candidate components got the resolved placename;
-the rendering decision can be deferred to run time.
+Output the resolved areas in an unsorted file.
 
 
+#### Sort the areas into a hierarchy
+
+Much like a gravel sorting sieve. Smaller areas should fall down into larger areas. More important relations like countries should float to the top.
+The resulting structure will look vaguely heap like with each child node presenting an area which fits inside it's parent.
+
+ie. England be a child of United Kingdom after sorting. Bournemouth should be a descendant of England.
+
+Output the graph as a file which can be sensibly parsed by a consumer.
 
 
 
