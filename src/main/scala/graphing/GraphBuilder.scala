@@ -13,8 +13,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
-
-    logger.info("Areas remaining after deduplication: " + areas.size + "/" + areas.size)
     logger.info("Starting area sort")
     var head = GraphNode(headArea)
     head.insert(areas)
