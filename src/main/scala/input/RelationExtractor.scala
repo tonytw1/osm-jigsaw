@@ -40,18 +40,17 @@ class RelationExtractor extends Logging {
     logger.info("Resolving relation ways")
     logger.info("Creating relation lookup map")
 
-    val relationWriter = new OsmWriter(outputFileprefix)
+    val entityWriter = new OsmWriter(outputFileprefix)
     val relationWayIds = mutable.Set[Long]()
     foundRelations.foreach { r =>
       relationExpander.expandRelation(r, allRelations).map { expanded =>
-        relationWriter.write(expanded)
+        entityWriter.write(expanded)
         val outerWayIds = expanded.flatMap { r =>
           outerWayResolver.resolveOuterWayIdsFor(r, allRelations)
         }
         relationWayIds ++= outerWayIds
       }
     }
-    relationWriter.close()
 
     logger.info("Need " + relationWayIds.size + " ways to resolve relations")
     logger.info("Reading required ways to determine required nodes")
@@ -69,13 +68,14 @@ class RelationExtractor extends Logging {
         entity match {
           case w: Way =>
             if (predicate(w)) {
-              relationWriter.write(w)
+              entityWriter.write(w)
             }
             waySink.put(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId).toArray)
             nodeIds.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
         }
     }
     new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
+    entityWriter.close()
     waySink.create()
     wayVolume.close()
 
