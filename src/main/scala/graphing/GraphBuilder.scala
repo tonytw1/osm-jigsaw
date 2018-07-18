@@ -79,26 +79,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         a.children = a.children -- siblingsWhichFitInsideNewNode
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
-
-      //val siblingsWhichOverlapWithNewNode = siblings.filter(c => c != b).filter{ s =>
-      //  areasOverlap(b.area, s.area)
-      //}
-
-      /*
-      siblingsWhichOverlapWithNewNode.map { s =>
-        logger.info("New area " + b.area.name + " intersects with sibling: " + s.area.name + " which has " + s.children.size + " children")
-
-        val inOverlap = s.children.filter{ sc =>
-          areaContains(b.area, sc.area)
-        }
-
-        logger.info("Found " + inOverlap.size + " overlap children to copy to new area")
-        b.children = b.children ++ inOverlap
-        inOverlap.map { u =>
-          siftDown(b, u)
-        }
-      }
-      */
     }
 
     val duration = new Duration(start, DateTime.now)
