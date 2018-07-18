@@ -159,12 +159,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       logger.info("Found " + relations.size + " relations to process")
 
       logger.info("Resolving areas")
-      val oos = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+      val areasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
 
-      def callback(newAreas: Seq[Area]): Unit = {
-        newAreas.foreach { a =>
-          exportArea(a, oos)
-        }
+      def outputAreasToFile(newAreas: Seq[Area]): Unit = {
+        newAreas.foreach(a => exportArea(a, areasOutput))
       }
 
       logger.info("Filtering relations to resolve")
@@ -174,19 +172,19 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
       val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
-      val earthPolygon = makePolygon((-180, 90), (180, -90))
-      val earth = Area(0, earthPolygon, boundingBoxFor(earthPolygon), ListBuffer.empty, areaOf(earthPolygon))
-      exportArea(earth, oos)
+      val planetPolygon = makePolygon((-180, 90), (180, -90))
+      val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))
+      exportArea(planet, areasOutput)
 
       logger.info("Resolving areas for " + relationsToResolve.size + " relations")
-      areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, callback)
+      areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, outputAreasToFile)
 
       logger.info("Resolving areas for " + waysToResolve.size + " ways")
-      areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, callback) // TODO why are two sets of ways in scope?
+      areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, outputAreasToFile) // TODO why are two sets of ways in scope?
       wayResolver.close()
       nodeResolver.close()
-      oos.flush()
-      oos.close()
+      areasOutput.flush()
+      areasOutput.close()
       logger.info("Dumped areas to file: " + outputFilepath)
     }
 
