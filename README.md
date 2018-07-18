@@ -184,7 +184,7 @@ The API can resolve a reverse query in around 30ms.
 ### Results
 
 This approach to geocoding does well for some use cases and less so for others.
-This is a reflection on the importance of node points such as cities and neighborhoods in the OpenStreetMap data; the area based approach neglects these points.
+This is a reflection of the importance of node points such as cities and neighborhoods in the OpenStreetMap data; the area based approach neglects these points.
 
 Richmond Park
 Nicely illustrates that Richmond Park is a large area which falls across multiple London boroughs.
