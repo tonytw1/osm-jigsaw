@@ -6,11 +6,13 @@ Gecoding is the art turning a location point into a human readable name (and vic
 Nominatim is the default OpenStreetMap geocoding solution.
 It does are really great job of interpreting an implied structure and using it to construct sensible geocodings.
 
-Nominatim uses a Postgres database. This can be operationally challenging for a number of reasons, including:
+Nominatim uses a Postgres database populated with the entire OpenStreetMap dataset.
+This can be operationally challenging for a number of reasons, including:
 
 - A full import required alot of storage (~1TB of SSD disk)
 - An initial import of the full dataset can take a long time (days).
-- Important parts of the Nominatim code are implemented as a Postgres module making it more differcult to alter.
+- The long lead time means than the database tends to become a permanent fixture rather than a disposable cloud entity.
+- Important parts of the Nominatim code are implemented as a Postgres module making it more difficult to alter.
 - Cloud deployments are prohibitively expensive.
 
 Is it possible to approach this problem from a more stateless angle?
@@ -24,7 +26,7 @@ The full dataset contains around 5 billion entities is in the region of 60Gb com
 
 These considerations come to mind:
 
-- Minimise processing by using the existing OSM extract format as input (likely the compressed .pbf format
+- Minimise preprocessing by using the existing OSM extract format as input (likely the compressed .pbf format)
 
 - Try not to use local knowledge. 
 ie. The system should infer that England and Wales are inside the United Kingdom and that Yosemite National Park is in Califonia from the shape of the data rather than hardcoded rules or
@@ -34,7 +36,7 @@ human intervention.
 
     ie. There could be multiple valid representions where an areas sits.
     London -> United Kingdom
-    London -> Greater London -> England -> United Kingdon.
+    London -> Greater London -> England -> United Kingdom.
 
     Even if the former is the desired output, the graph should represent all of the possible paths so that the consumer is free to change it's mind at runtime.
 
@@ -83,8 +85,92 @@ ie.
 England should be a child of United Kingdom after sorting.
 Bournemouth should be a descendant of England.
 
-Output the graph as a file which can be sensibly parsed by a consumer.
+Output the graph in a format which can be sensibly parsed by a consumer.
 
+
+### Usage
+
+#### Compiling
+This is a Scala / sbt project. Install sbt and build a jar file.
+
+```
+sbt clean assembly
+```
+
+
+#### Processing an extract file
+
+Obtain a planet.osm extract (user the protobuffer .pbf format).
+
+##### 1) Split the extract file
+
+An OSM extract seems to list nodes, ways and then relations. This is not the optimal ordering for our workflow.
+There are gains to be had by spliting the extract file by entity type to save time spent scanning past entites
+we are not interested in.
+
+```
+input="ireland-and-northern-ireland-180717"
+jarfile="target/scala/osm-jigsaw-assembly-0.1.0-SNAPSHOT.jar"
+java -jar $jarfile -s split $input.osm.pbf
+```
+
+This should produce 3 new files:
+
+```
+ireland-and-northern-ireland-180717.osm.pbf.nodes
+ireland-and-northern-ireland-180717.osm.pbf.relations
+ireland-and-northern-ireland-180717.osm.pbf.ways
+```
+
+
+##### 2) Extract the entities which represent areas
+
+```
+java -Xmx16G -jar $jarfile -s extract $input.osm.pbf $input.rels.pbf
+```
+
+The heap sizes have been choosen for a full planet extract on a machine with 32Gb of RAM.
+
+This step should produce 3 more files:
+
+```
+ireland-and-northern-ireland-180717.rels.pbf
+ireland-and-northern-ireland-180717.rels.pbf.nodes.vol
+ireland-and-northern-ireland-180717.rels.pbf.ways.vol
+```
+
+#### 3) Build areas from the extracted entities
+
+```
+java -Xmx16G -jar $jarfile -s areas $input.rels.pbf $input.areas.pbf
+```
+
+#### 4) Sort the areas into a graph
+
+```
+java -Xmx16G -jar $jarfile -s graph $input.areas.pbf $input.graph.pbf
+```
+
+The step may take some time (approximately 4 hours for a full planet extract).
+
+
+#### 5) Extract the tags for areas
+
+Extracts the OSM tags for the entities which produced areas. This allows name for the areas to be derived at runtime.
+
+```
+java -jar $jarfile -s tags $input.rels.pbf $input.tags.pbf
+```
+
+On completion you should have 3 files representing the extracted, sorted areas:
+
+```
+ireland-and-northern-ireland-180717.areas.pbf
+ireland-and-northern-ireland-180717.graph.pbf
+ireland-and-northern-ireland-180717.tags.pbf
+```
+
+The 3 files are in protobuffer format and contain [OutputArea](src/main/protobuf/outputarea.proto), [OutputGraphNode](src/main/protobuf/outputgraphnode.proto) and [OutputTagging](src/main/protobuf/outputtagging.proto) objects.
 
 
 ### Progress
