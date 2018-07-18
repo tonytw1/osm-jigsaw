@@ -7,30 +7,29 @@ import scala.collection.JavaConverters._
 
 class RelationExpander extends Logging {
 
-  def expandRelation(r: Relation, allRelations: Map[Long, Relation], parent: Option[Relation] = None): Seq[Relation] = {
+  def expandRelation(r: Relation, allRelations: Map[Long, Relation], upstream: Set[Relation] = Set()): Option[Seq[Relation]] = {
     val relationMembers = r.getMembers.asScala.filter(rm => rm.getMemberType == EntityType.Relation)
-    if (relationMembers.isEmpty) {
-      Seq(r)
+    if (relationMembers.exists(rm => upstream.exists(u => u.getId == rm.getMemberId))) {
+      logger.warn("Relation " + r.getId + " has a relation member which references it as a relation member; ignoring potential infinite loop")
+      None
 
     } else {
-      logger.debug("Relation " + r.getId + " has " + relationMembers.size + " relation members which are relations.")
-      if (relationMembers.exists(rm => {
-        val maybeLong: Option[Long] = parent.map(p => p.getId)
-        Some(rm.getMemberId) == maybeLong
-      })) { // TODO won't quick circles which are more than two nodes
-        logger.warn("Relation " + r.getId + " has a relation member which references it as a relation member; ignoring potential infinite loop: " + r.getId)
-        Seq()
+      val expandedRelationMembers = relationMembers.map { rm =>
+        val subrelation = allRelations.get(rm.getMemberId)
+        if (subrelation.isEmpty) {
+          logger.warn("Could not find sub relation " + rm.getMemberId + " of relation " + r.getId)
+        }
+        subrelation.flatMap { sr =>
+          expandRelation(sr, allRelations, upstream + r)
+        }
+      }
+
+      if (expandedRelationMembers.exists(e => e.isEmpty)) {
+        logger.warn("Failed to expand relation " + r.getId + " due to missing sub relation")
+        None
 
       } else {
-        relationMembers.flatMap { rm =>
-          logger.debug("Recursing to resolve sub relation: " + rm)
-          allRelations.get(rm.getMemberId).map { sr =>
-            Seq(r) ++ expandRelation(sr, allRelations, Some(r))
-          }.getOrElse {
-            logger.warn("Could not find subrelation " + rm.getMemberId + " of relation " + r.getId)
-            Seq()
-          }
-        }
+        Some(Seq(r) ++ expandedRelationMembers.flatten.flatten)
       }
     }
   }

@@ -43,12 +43,13 @@ class RelationExtractor extends Logging {
 
     val relationWayIds = mutable.Set[Long]()
     foundRelations.foreach { r =>
-      val expanded = relationExpander.expandRelation(r, allRelations)
-      writer.write(expanded)
-      val outerWayIds = expanded.flatMap { r =>
-        outerWayResolver.resolveOuterWayIdsFor(r, allRelations)
+      relationExpander.expandRelation(r, allRelations).map { expanded =>
+        writer.write(expanded)
+        val outerWayIds = expanded.flatMap { r =>
+          outerWayResolver.resolveOuterWayIdsFor(r, allRelations)
+        }
+        relationWayIds ++= outerWayIds
       }
-      relationWayIds ++= outerWayIds
     }
 
     logger.info("Need " + relationWayIds.size + " ways to resolve relations")

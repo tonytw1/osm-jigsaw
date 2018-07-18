@@ -28,13 +28,13 @@ class RelationExpanderSpec extends FlatSpec with TestValues with LoadTestEntitie
   val nodes = ns.map { i => (i.getId, (i.getId, i.getLatitude, i.getLongitude)) }.toMap
   val relationsMap = relations.map(r => r.getId -> r).toMap
 
-  "relation expander" should "return the top level relation only if it has no subrelations" in {
+  "relation expander" should "include the top level relation" in {
     val richmond = relations.find(r => r.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1).head
 
     val expanded = relationExpander.expandRelation(richmond, relationsMap)
 
-    assert(expanded.size == 1)
-    assert(expanded.head.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1)
+    assert(expanded.get.size == 1)
+    assert(expanded.get.head.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1)
   }
 
   "relation expander" should "append the top level subrelations of the relation" in {
@@ -42,11 +42,16 @@ class RelationExpanderSpec extends FlatSpec with TestValues with LoadTestEntitie
 
     val expanded = relationExpander.expandRelation(bournemouth, relationsMap)
 
-    assert(expanded.size == 2)
-    assert(expanded.head.getId == BOURNEMOUTH._1)
-    assert(expanded.last.getId == 3565145L)
+    assert(expanded.get.size == 2)
+    assert(expanded.get.head.getId == BOURNEMOUTH._1)
+    assert(expanded.get.last.getId == 3565145L)
   }
 
+  /*
+  "should return none if any sub relations fail to resolve" {
+    fail  // TODO test
+  }
+  */
   // TODO find a recursive 2nd level example
 
 }
