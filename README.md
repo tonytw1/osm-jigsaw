@@ -3,27 +3,53 @@
 Gecoding is the art turning a location point into a human readable sentence (and vice versa).
 (ie. 51.0, -0.3 <--> London, United Kingdon).
 
-The OpenStreetMap data model is a fairly unstructured, flat format.
-The implied structure comes from a loosely applied hierarchy of tags.
-A full dataset contains around 5 billion entities and is in the region of 60Gb compressed and unindexed.
+The OpenStreetMap data model is a fairly unstructured, flat format. The implied structure comes from a loosely applied hierarchy of tags.
+The full dataset contains around 5 billion entities and is in the region of 60Gb compressed and unindexed.
 
 Nominatim is the default geocoding solution for OpenStreetMap.
 It does are really great job of interpreting an implied structure and using it to construct sensible geocodings.
 
 Nominatim uses a Postgres database as it's native data structure.
-This can be operationally challenging. Important parts of the Nominatim code are implemented as a
-Postgres module making it more differcult to alter or scale the application seperately from the data store.
-Cloud deployments are prohibitively expensive.
+This can be operationally challenging for a number of reasons, including:
+
+- A full import required alot of storage (~1TB of SSD disks)
+- An initial import of the full dataset can take along time (days).
+- Important parts of the Nominatim code are implemented as a Postgres module making it more differcult to alter or scale the application seperately from the data store.
+- Cloud deployments are prohibitively expensive.
 
 Is it possible to approach this problem from a more stateless angle?
-Can we transform a raw OSM data extract into a structured graph in application code without having to import and persist the entire dataset?
+Can we transform a raw OSM data extract into a structured graph in application code without an imported database?
 
-- The input format should be OSM extract files (probably in the compressed pbf format)
-- Happy live without partial updates so long as a full update can be performed in a sensible timeframe.
-- Should be able to process a full planet file on a reasonable well equiped dev machine (say 32Gb of RAM).
+
+
+### Considerations
+
+- Try not to use local knowledge. 
+ie. The system should infer that England and Wales are inside the United Kingdom and that Yosemite National Park is in Califonia from the shape of the data rather than hardcoded rules or
+human intervention.
+
+- Try to defer decision making; try to avoid discarding information or baking decisions into the structure too early; try to produce a structure which allows for the rendering to vary at runtime.
+
+ie. There could he multiple valid representions where an areas sits.
+
+London -> United Kingdom
+London -> Greater London -> England -> United Kingdon.
+
+Even if the former is the desired output, the graph should represent all of the possible paths so that the consumer is free to change it's mind at runtime.
+
+
+- Minimise processing by using the existing OSM extract format as input (likely the compressed .pbf format
+
+- We're happy to live without partial updates so long as a full update can be performed in a reasonable timeframe (hours not days).
+
+- It should be possible to process a full planet file on a reasonably well equiped developer machine (say 32Gb of RAM).
 
 
 ### Proposed approach
+
+Starting with a raw OSM extract file, preform a number of independant steps to transform the extract into the desired output format.
+
+
 
 - Extract high level entities and their components =>
 
@@ -58,21 +84,7 @@ The graph can be tranversed to give a list of candidate components got the resol
 the rendering decision can be deferred to run time.
 
 
-### Considerations
 
-- Try not to use local knowledge
-ie. the system should infer that England and Wales are under United Kingdom and that Yosemite National Park is in Califonia from
-the shape of the data rather than hardcoded rules.
-
-- Try to defer decision making; try to avoid baking decisions into the structure too early; try to produce a
-structure which allows for the rendering to vary at runtime.
-
-ie.
-London -> United Kingdom
-London -> Greater London -> England -> United Kingdon.
-
-Even if the former is the desired output, the graph should represent all of the possible paths (the later)
-so as to not comprise the renderer's right to change it's mind at runtime.
 
 
 ### Progress
