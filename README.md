@@ -29,7 +29,7 @@ These considerations come to mind:
 - Minimise preprocessing by using the existing OSM extract format as input (likely the compressed .pbf format)
 
 - Try not to use local knowledge. 
-ie. The system should infer that England and Wales are inside the United Kingdom and that Yosemite National Park is in Califonia from the shape of the data rather than hardcoded rules or
+ie. The system should infer that England and Wales are inside the United Kingdom and that Yosemite National Park is in California from the shape of the data rather than hardcoded rules or
 human intervention.
 
 - Try to defer decision making; try to avoid discarding information or baking decisions into the structure too early; try to produce a structure which allows for the rendering to vary at runtime.
@@ -148,7 +148,7 @@ java -Xmx16G -jar $jarfile -s areas $input.rels.pbf $input.areas.pbf
 #### 4) Sort the areas into a graph
 
 ```
-java -Xmx16G -jar $jarfile -s graph $input.areas.pbf $input.graph.pbf
+java -Xmx28G -jar $jarfile -s graph $input.areas.pbf $input.graph.pbf
 ```
 
 The step may take some time (approximately 4 hours for a full planet extract).
@@ -162,7 +162,7 @@ Extracts the OSM tags for the entities which produced areas. This allows name fo
 java -jar $jarfile -s tags $input.rels.pbf $input.tags.pbf
 ```
 
-On completion you should have 3 files representing the extracted, sorted areas:
+On completion you should have 3 files representing the extracted, sorted areas.
 
 ```
 ireland-and-northern-ireland-180717.areas.pbf
@@ -172,22 +172,32 @@ ireland-and-northern-ireland-180717.tags.pbf
 
 The 3 files are in protobuffer format and contain [OutputArea](src/main/protobuf/outputarea.proto), [OutputGraphNode](src/main/protobuf/outputgraphnode.proto) and [OutputTagging](src/main/protobuf/outputtagging.proto) objects.
 
+These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](https://github.com/tonytw1/osm-jigsaw-api).
+
 
 ### Progress
 
-22 April - Full extract runs to completion producing 8.5 million areas (all named relations, and named closed ways).
-Resulting graph requires 50Gb of heap to load. 
- 
-```
-java -Xmx24G -jar osm-jigsaw-assembly-0.1.0-SNAPSHOT.jar -s split great-britain-latest.osm.pbf
-java -Xmx24G -jar osm-jigsaw-assembly-0.1.0-SNAPSHOT.jar -s extract great-britain-latest.osm.pbf great-britain-latest.rels.pbf
-java -Xmx24G -jar osm-jigsaw-assembly-0.1.0-SNAPSHOT.jar -s areas great-britain-latest.rels.pbf great-britain-latest.areas.ser
-java -Xmx24G -jar osm-jigsaw-assembly-0.1.0-SNAPSHOT.jar -s graph great-britain-latest.areas.ser great-britain-latest.graph.ser
-```
+18 June - Full extract runs to completion on a machine with 32Gb of RAM producing 9 million areas and a graph contain 19 million nodes.
+Resulting graph can be loaded into a JVM with 30Gb of heap.
 
 
+### Results
 
+This approach to geocoding does well for some use cases and less so for others.
+This is a reflection on the importance of node points such as cities and neighborhoods in the OpenStreetMap data; the area based approach neglects these points.
 
-```
-sbt clean assembly
-```
+Richmond Park
+Nicely illustrates that Richmond Park is a large area which falls across multiple London boroughs.
+
+Twickenham Rowing Club
+Correctly places the rowing club on the Eel Pie Island matching it's coallocate address.
+
+Yosemite National Park
+Correctly placed in California.
+
+Perth, Australia
+The lack of an enclosing city area means that Perth is not mentioned in results. 
+
+Bournemouth Pier
+Interesting outlier; the pier sits just outside of the local authority and county boundaries, losing locality.
+
