@@ -58,6 +58,8 @@ Take all of the relations and the ways which are marked as closed.
 Discard any entities which do not have name tags.
 Collect the sub relations, ways and nodes which make up these entities.
 
+Some relations have sub relations which form circular references; we should ignore these.
+
 This step might take the 1Gb Great Britain extract down to something more like 50Mb.
 
 

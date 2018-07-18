@@ -47,11 +47,29 @@ class RelationExpanderSpec extends FlatSpec with TestValues with LoadTestEntitie
     assert(expanded.get.last.getId == 3565145L)
   }
 
+  "relation expander" should "reject relations which contain circular sub relations" in {
+    val rs = mutable.Set[Relation]()
+    loadEntities("circular.pbf").map {
+      case r: Relation => {
+        println(r)
+        rs.+=(r)
+      }
+      case _ =>
+    }
+
+    val sheepsHeadWay = rs.find(r => r.getId == 7120700L).get
+    val relationsMap = rs.map(r => r.getId -> r).toMap
+
+    val expanded = relationExpander.expandRelation(sheepsHeadWay, relationsMap)
+
+    assert(expanded == None)
+  }
+
   /*
   "should return none if any sub relations fail to resolve" {
     fail  // TODO test
   }
-  */
   // TODO find a recursive 2nd level example
+  */
 
 }
