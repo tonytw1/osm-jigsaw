@@ -84,13 +84,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   }
 
   def extractRelations(inputFilepath: String, outputFilepath: String, relationIds: Seq[Long]): Unit = {
-    logger.info(relationIds)
+    logger.info("Extracting specific relations: " + relationIds)
 
     def selectedRelations(entity: Entity): Boolean = {
       entity.getType == EntityType.Relation && relationIds.contains(entity.getId)
     }
 
-    val extractedRelationsWithComponents = new RelationExtractor().extract(inputFilepath, selectedRelations, outputFilepath)
+    new RelationExtractor().extract(inputFilepath, selectedRelations, outputFilepath)
 
     logger.info("Done")
   }
@@ -165,9 +165,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         newAreas.foreach(a => exportArea(a, areasOutput))
       }
 
-      logger.info("Filtering relations to resolve")
-      val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
-
       val areaResolver = new AreaResolver()
       val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
       val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
@@ -176,6 +173,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))
       exportArea(planet, areasOutput)
 
+      logger.info("Filtering relations to resolve")
+      val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
       logger.info("Resolving areas for " + relationsToResolve.size + " relations")
       areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, outputAreasToFile)
 
