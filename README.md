@@ -14,7 +14,7 @@ Nominatim uses a Postgres database. This can be operationally challenging for a 
 - Cloud deployments are prohibitively expensive.
 
 Is it possible to approach this problem from a more stateless angle?
-Can we transform a raw OSM data extract into a structured graph in application code without needing an imported database?
+Can we transform a raw OSM data extract into a structured graph in application code without having to import a database?
 
 
 ### Considerations
