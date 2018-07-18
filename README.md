@@ -7,11 +7,11 @@ Nominatim is the default OpenStreetMap geocoding solution.
 It does are really great job of interpreting an implied structure and using it to construct sensible geocodings.
 
 Nominatim uses a Postgres database populated with the entire OpenStreetMap dataset.
-This can be operationally challenging for a number of reasons, including:
+This can be operationally challenging for a number of reasons including:
 
-- A full import required alot of storage (~1TB of SSD disk)
+- A full import requires alot of storage (~1TB of SSD disk)
 - An initial import of the full dataset can take a long time (days).
-- The long lead time means than the database tends to become a permanent fixture rather than a disposable cloud entity.
+- The long lead time means that the database tends to become a permanent fixture rather than a disposable cloud citizen.
 - Important parts of the Nominatim code are implemented as a Postgres module making it more difficult to alter.
 - Cloud deployments are prohibitively expensive.
 
@@ -177,9 +177,9 @@ These 3 files should be placed in a location where they are accessible to the [O
 
 ### Progress
 
-18 June - Full extract runs to completion on a machine with 32Gb of RAM producing 9 million areas and a graph contain 19 million nodes.
-Resulting graph can be loaded into a JVM with 30Gb of heap.
-
+Full extract runs to completion on a machine with 32Gb of RAM producing 9 million areas and a graph contain 19 million nodes.
+The resulting graph can be loaded into a JVM with 30Gb of heap.
+The API can resolve a reverse query in around 30ms.
 
 ### Results
 
@@ -190,7 +190,7 @@ Richmond Park
 Nicely illustrates that Richmond Park is a large area which falls across multiple London boroughs.
 
 Twickenham Rowing Club
-Correctly places the rowing club on the Eel Pie Island matching it's coallocate address.
+Correctly places the rowing club on the Eel Pie Island matching it's colloquial address.
 
 Yosemite National Park
 Correctly placed in California.
@@ -200,4 +200,3 @@ The lack of an enclosing city area means that Perth is not mentioned in results.
 
 Bournemouth Pier
 Interesting outlier; the pier sits just outside of the local authority and county boundaries, losing locality.
-
