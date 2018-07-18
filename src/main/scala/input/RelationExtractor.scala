@@ -17,11 +17,11 @@ class RelationExtractor extends Logging {
   private val outerWayResolver = new OuterWayResolver()
 
   // Given an OSM pbf extract file and a predicate describing the relations we are interested in,
-  // scan the input and extract the relations. Resolve the sub relations, ways and nodes required to build
-  // these relations. Outing these entities into an output file.
-  def extract(inputFilePath: String, predicate: Entity => Boolean, outputFilepath: String) = {
-    val writer = new OsmWriter(outputFilepath)
-
+  // extract those relations from the input. Resolve the sub relations, ways and nodes required to build
+  // those relations.
+  // Output the relations and sub relations to a file.
+  // Output the way and node information to mapdb volumes
+  def extract(inputFilePath: String, predicate: Entity => Boolean, outputFileprefix: String) = {
     var allRelations = LongMap[Relation]()
     def addToAllRelations(entity: Entity) = {
         entity match {
@@ -40,24 +40,24 @@ class RelationExtractor extends Logging {
     logger.info("Resolving relation ways")
     logger.info("Creating relation lookup map")
 
-
+    val relationWriter = new OsmWriter(outputFileprefix)
     val relationWayIds = mutable.Set[Long]()
     foundRelations.foreach { r =>
       relationExpander.expandRelation(r, allRelations).map { expanded =>
-        writer.write(expanded)
+        relationWriter.write(expanded)
         val outerWayIds = expanded.flatMap { r =>
           outerWayResolver.resolveOuterWayIdsFor(r, allRelations)
         }
         relationWayIds ++= outerWayIds
       }
     }
+    relationWriter.close()
 
     logger.info("Need " + relationWayIds.size + " ways to resolve relations")
-
     logger.info("Reading required ways to determine required nodes")
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && (relationWayIds.contains(entity.getId) || predicate(entity))
 
-    val wayVolume = MappedFileVol.FACTORY.makeVolume(outputFilepath + ".ways.vol", false)
+    val wayVolume = MappedFileVol.FACTORY.makeVolume(outputFileprefix + ".ways.vol", false)
     val waySink = SortedTableMap.create(
       wayVolume,
       Serializer.LONG,
@@ -69,25 +69,23 @@ class RelationExtractor extends Logging {
         entity match {
           case w: Way =>
             if (predicate(w)) {
-              writer.write(w)
+              relationWriter.write(w)
             }
             waySink.put(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId).toArray)
             nodeIds.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
         }
     }
     new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
-    writer.close()
     waySink.create()
     wayVolume.close()
 
-    var extractedNodesCount = nodeIds.size
+    val extractedNodesCount = nodeIds.size
     logger.info("Found ways containing " + extractedNodesCount + " nodes")
 
     logger.info("Need " + extractedNodesCount + " nodes to resolve relation ways")
     logger.info("Loading required nodes")
 
-
-    val nodeVolume = MappedFileVol.FACTORY.makeVolume(outputFilepath + ".nodes.vol", false)
+    val nodeVolume = MappedFileVol.FACTORY.makeVolume(outputFileprefix + ".nodes.vol", false)
     val nodeSink = SortedTableMap.create(
       nodeVolume,
       Serializer.LONG,
@@ -111,7 +109,7 @@ class RelationExtractor extends Logging {
 
     logger.info("relations: " + foundRelations.size + ", ways: " + relationWayIds.size + ", nodes: " + extractedNodesCount)
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")
-    logger.info("Finished outputing selected relations and resolved components to: " + outputFilepath)
+    logger.info("Finished outputing selected relations and resolved components to: " + outputFileprefix)
   }
 
 }
