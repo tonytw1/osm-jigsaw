@@ -70,7 +70,7 @@ Attempt to build closed shapes from the filtered entities.
 Relations may be composed multiple ways and sub relations which will need to be resolved.
 A single relation might represent multiple areas (ie. a group of islands).
 
-Ways within a relation may not always be in a sequential order. 
+Ways within a relation might not always be in sequential order. 
 Ways within an area's outline may be pointing in different directions. A certain amount of trail and error might be needed.
 
 Output the resolved areas in an unsorted file.
