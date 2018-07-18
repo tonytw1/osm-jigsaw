@@ -23,11 +23,11 @@ class RelationExpander extends Logging {
 
       } else {
         relationMembers.flatMap { rm =>
-          logger.debug("Recursing to resolve subrelation: " + rm)
+          logger.debug("Recursing to resolve sub relation: " + rm)
           allRelations.get(rm.getMemberId).map { sr =>
             Seq(r) ++ expandRelation(sr, allRelations, Some(r))
           }.getOrElse {
-            logger.warn("Could not find subrelation to resolve: " + rm.getMemberId)
+            logger.warn("Could not find subrelation " + rm.getMemberId + " of relation " + r.getId)
             Seq()
           }
         }
