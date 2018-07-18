@@ -138,7 +138,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       OutputArea(id = Some(area.id), osmIds = area.osmIds, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
     }
 
-    def buildAreas = {
+    def buildAreas: Unit = {
       def all(entity: Entity): Boolean = true
 
       var relations = LongMap[Relation]()
@@ -186,7 +186,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       wayResolver.close()
       nodeResolver.close()
       oos.flush()
-      oos.close
+      oos.close()
       logger.info("Dumped areas to file: " + outputFilepath)
     }
 
@@ -234,7 +234,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         }
       }
       finalOutput.flush()
-      finalOutput.close
+      finalOutput.close()
       logger.info("Wrote deduplicated areas to file: " + outputFilepath)
     }
 
@@ -306,8 +306,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       counter.withProgress {
         val outputArea = OutputArea.parseDelimitedFrom(fileInputStream)
         outputArea.map { oa =>
-          val area = outputAreaToArea(oa)
-          area.fold {
+          outputAreaToArea(oa).fold {
             logger.warn("Could not build areas from: " + oa)
           } { a =>
             callback(a)
@@ -317,7 +316,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
     }
 
-    fileInputStream.close
+    fileInputStream.close()
   }
 
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
@@ -330,6 +329,5 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def osmIdFor(entity: Entity): String = {  // TODO push to a trait
     entity.getId.toString + entity.getType.toString.take(1).toUpperCase
   }
-
 
 }
