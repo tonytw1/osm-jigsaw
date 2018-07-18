@@ -144,7 +144,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       var relations = LongMap[Relation]()
       var waysToResolve = Set[Way]()
 
-      def addToFound(entity: Entity) = {
+      def loadIntoMemory(entity: Entity) = {
         entity match {
           case r: Relation => relations = relations + (r.getId -> r)
           case w: Way => waysToResolve = waysToResolve + w
@@ -153,7 +153,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
 
       logger.info("Loading entities")
-      new SinkRunner(inputFilepath, all, addToFound).run
+      new SinkRunner(inputFilepath, all, loadIntoMemory).run
       logger.info("Finished loading entities")
 
       logger.info("Found " + relations.size + " relations to process")
