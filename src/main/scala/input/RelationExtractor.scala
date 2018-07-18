@@ -40,16 +40,18 @@ class RelationExtractor extends Logging {
     logger.info("Resolving relation ways")
     logger.info("Creating relation lookup map")
 
-    val relationWayIds = foundRelations.flatMap { r =>
+
+    val relationWayIds = mutable.Set[Long]()
+    foundRelations.foreach { r =>
       val expanded = relationExpander.expandRelation(r, allRelations)
       writer.write(expanded)
-      expanded.flatMap { r =>
+      val outerWayIds = expanded.flatMap { r =>
         outerWayResolver.resolveOuterWayIdsFor(r, allRelations)
       }
-    }.toSet
+      relationWayIds ++= outerWayIds
+    }
 
-    var extractedWaysCount = relationWayIds.size
-    logger.info("Need " + extractedWaysCount + " ways to resolve relations")
+    logger.info("Need " + relationWayIds.size + " ways to resolve relations")
 
     logger.info("Reading required ways to determine required nodes")
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && (relationWayIds.contains(entity.getId) || predicate(entity))
@@ -106,7 +108,7 @@ class RelationExtractor extends Logging {
 
     logger.info("Found " + foundNodes + " nodes")
 
-    logger.info("relations: " + foundRelations.size + ", ways: " + extractedWaysCount + ", nodes: " + extractedNodesCount)
+    logger.info("relations: " + foundRelations.size + ", ways: " + relationWayIds.size + ", nodes: " + extractedNodesCount)
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")
     logger.info("Finished outputing selected relations and resolved components to: " + outputFilepath)
   }
