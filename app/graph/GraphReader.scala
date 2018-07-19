@@ -17,9 +17,11 @@ class GraphReader extends OsmIdParsing {
 
     def loadAreas(areasFile: URL): Map[Long, Area] = {
 
-      def outputAreaToArea(oa: OutputArea): Area = {
-        val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-        Area(id = oa.id.get, points = points, osmIds = oa.osmIds.map(toOsmId)) // TODO Naked get of id
+      def outputAreaToArea(oa: OutputArea): Option[Area] = {
+        oa.id.map { id =>
+          val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
+          Area(id = oa.id.get, points = points, osmIds = oa.osmIds.map(toOsmId))
+        }
       }
 
       val areasMap = mutable.Map[Long, Area]()
@@ -28,12 +30,13 @@ class GraphReader extends OsmIdParsing {
       var ok = true
       while (ok) {
         counter.withProgress {
-          val outputArea = OutputArea.parseDelimitedFrom(input)
-          outputArea.map { oa =>
-            val area = outputAreaToArea(oa)
-            areasMap += area.id -> area
+          val added = OutputArea.parseDelimitedFrom(input).flatMap { oa =>
+            outputAreaToArea(oa).map { area =>
+              areasMap += area.id -> area
+              area
+            }
           }
-          ok = outputArea.nonEmpty
+          ok = added.nonEmpty
         }
       }
       Logger.info("Mapped areas: " + areasMap.size)
