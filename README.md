@@ -177,14 +177,15 @@ These 3 files should be placed in a location where they are accessible to the [O
 
 ### Progress
 
-Full extract runs to completion on a machine with 32Gb of RAM (no swap) producing 9 million areas and a graph contain 19 million nodes.
-The resulting graph can be loaded into a JVM with 30Gb of heap.
-The API can resolve a reverse query in around 30ms.
+Full extract runs to completion on a machine with 32Gb of RAM (no swap) producing 9 million areas and a graph containing 19 million nodes.
+The graph can be loaded into a JVM with 30Gb of heap.
+
+The [API](https://github.com/tonytw1/osm-jigsaw-api) can resolve a reverse query in around 30ms.
 
 ### Results
 
 This approach to geocoding does well for some use cases and less so for others.
-This is a reflection of the importance of node points such as cities and neighborhoods in the OpenStreetMap data; the area based approach neglects these points.
+This is a reflection of the importance of node points such as cities and neighborhoods in the OpenStreetMap data; an area based approach neglects these important points.
 
 Richmond Park
 Nicely illustrates that Richmond Park is a large area which falls across multiple London boroughs.
