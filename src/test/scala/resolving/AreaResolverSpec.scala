@@ -57,7 +57,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val relations = rs.toSet
     val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
-    val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
+    val nodes = ns.map(i => (i.getId, (i.getLatitude, i.getLongitude))).toMap
     val relationsMap = relations.map(r => r.getId -> r).toMap
 
     val newYorkCity = relations.find(r => r.getId == NEW_YORK_CITY._1).head
