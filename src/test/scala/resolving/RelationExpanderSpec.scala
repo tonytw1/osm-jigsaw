@@ -51,7 +51,6 @@ class RelationExpanderSpec extends FlatSpec with TestValues with LoadTestEntitie
     val rs = mutable.Set[Relation]()
     loadEntities("circular.pbf").map {
       case r: Relation => {
-        println(r)
         rs.+=(r)
       }
       case _ =>
