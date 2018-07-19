@@ -47,19 +47,20 @@ class GraphReader extends OsmIdParsing {
     try {
       val areas = loadAreas(areasFile)
 
-      def getCachedArea(id: Long): Area = {
-        areas.get(id).get
+      def getArea(id: Long): Option[Area] = {
+        areas.get(id)
       }
 
-      def toGraphNode(oa: OutputGraphNode) = {
-        GraphNode(area = getCachedArea(oa.area.get))
+      def toGraphNode(oa: OutputGraphNode): Option[GraphNode] = {
+        oa.area.flatMap { areaId =>
+          getArea(areaId).map { area =>
+            GraphNode(area = area)
+          }
+        }
       }
 
       val input = new BufferedInputStream(graphFile.openStream())
-      val graphNode = OutputGraphNode.parseDelimitedFrom(input).get
-      Logger.info("Graph node: " + graphNode)
-      val head = toGraphNode(graphNode)
-      Logger.info("Head element: " + head)
+      val head = toGraphNode(OutputGraphNode.parseDelimitedFrom(input).get).get
 
       val stack = mutable.Stack[GraphNode]()
       stack.push(head)
@@ -75,7 +76,7 @@ class GraphReader extends OsmIdParsing {
               insertInto = stack.pop
             }
 
-            val node = toGraphNode(oa)
+            val node = toGraphNode(oa).get
             insertInto.children += node
 
             stack.push(insertInto)
