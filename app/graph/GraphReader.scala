@@ -66,23 +66,21 @@ class GraphReader extends OsmIdParsing {
       val counterSecond = new ProgressCounter(step = 10000, label = Some("Building graph"))
       var ok = true
       while (ok) {
-        val outputGraphNode = OutputGraphNode.parseDelimitedFrom(input)
-        outputGraphNode.map { oa =>
-          counterSecond.withProgress {
-            var insertInto = stack.pop
-            while (Some(insertInto.area.id) != oa.parent) {
-              insertInto = stack.pop
+        counterSecond.withProgress {
+          ok = OutputGraphNode.parseDelimitedFrom(input).flatMap { oa =>
+            toGraphNode(oa).map { node =>
+              var insertInto = stack.pop
+              while (Some(insertInto.area.id) != oa.parent) {
+                insertInto = stack.pop
+              }
+
+              insertInto.children += node
+              stack.push(insertInto)
+              stack.push(node)
+              node
             }
-
-            val node = toGraphNode(oa).get
-            insertInto.children += node
-
-            stack.push(insertInto)
-            stack.push(node)
-          }
+          }.nonEmpty
         }
-        ok = outputGraphNode.nonEmpty
-
       }
       input.close()
 
