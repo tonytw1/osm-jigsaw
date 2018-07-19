@@ -1,6 +1,6 @@
 package areas
 
-import graph.Point
+import model.Point
 
 trait BoundingBox {
 

@@ -2,7 +2,7 @@ package areas
 
 import com.esri.core.geometry.{OperatorContains, Point, Polygon, SpatialReference}
 import com.google.common.cache.CacheBuilder
-import graph.GraphNode
+import model.GraphNode
 import play.api.Logger
 
 trait AreaComparison extends BoundingBox {
@@ -15,11 +15,11 @@ trait AreaComparison extends BoundingBox {
 
   def areaContainsPoint(node: GraphNode, pt: Point): Boolean = {
 
-    def buildPolygonForPoints(points: Seq[graph.Point]): Option[Polygon] = {
+    def buildPolygonForPoints(points: Seq[model.Point]): Option[Polygon] = {
       points.headOption.map { n =>
         val polygon = new Polygon()
         polygon.startPath(n.lat, n.lon)
-        points.drop(1).map { on =>
+        points.drop(1).foreach { on =>
           polygon.lineTo(on.lat, on.lon)
         }
         polygon

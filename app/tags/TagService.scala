@@ -4,8 +4,7 @@ import java.io.BufferedInputStream
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 
-import graph.OsmId
-import model.OsmIdParsing
+import model.{OsmId, OsmIdParsing}
 import outputtagging.OutputTagging
 import play.api.{Configuration, Logger}
 import progress.ProgressCounter
@@ -39,7 +38,7 @@ class TagService @Inject()(configuration: Configuration) extends OsmIdParsing {
       while (ok) {
         counter.withProgress {
           val outputTagging = OutputTagging.parseDelimitedFrom(input)
-          outputTagging.map { ot =>
+          outputTagging.foreach { ot =>
             val osmId = ot.osmId.get
             val keys = ot.keys
 

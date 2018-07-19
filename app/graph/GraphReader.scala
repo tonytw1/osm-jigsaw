@@ -3,7 +3,7 @@ package graph
 import java.io.BufferedInputStream
 import java.net.URL
 
-import model.OsmIdParsing
+import model.{Area, GraphNode, OsmIdParsing, Point}
 import outputarea.OutputArea
 import outputgraphnode.OutputGraphNode
 import play.api.Logger
@@ -95,11 +95,3 @@ class GraphReader extends OsmIdParsing {
   }
 
 }
-
-case class Area(id: Long, points: Seq[Point], osmIds: Seq[OsmId]) {
-  override def hashCode() = id.hashCode()
-}
-
-case class Point(lat: Double, lon: Double)
-case class OsmId(id: Long, `type`: Char)
-case class GraphNode(area: Area, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer())

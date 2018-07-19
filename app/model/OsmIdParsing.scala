@@ -1,7 +1,5 @@
 package model
 
-import graph.OsmId
-
 trait OsmIdParsing {
 
   def toOsmId(osmId: String): OsmId = {

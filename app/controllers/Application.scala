@@ -4,8 +4,8 @@ import javax.inject.Inject
 
 import areas.{AreaComparison, BoundingBox}
 import com.esri.core.geometry.Point
-import graph.{GraphNode, GraphService, OsmId}
-import model.OsmIdParsing
+import graph.GraphService
+import model.{GraphNode, OsmId, OsmIdParsing}
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
@@ -26,7 +26,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     val points = node.area.points
 
-    implicit val pw = Json.writes[graph.Point]
+    implicit val pw = Json.writes[model.Point]
     Future.successful(Ok(Json.toJson(points)))
   }
 
