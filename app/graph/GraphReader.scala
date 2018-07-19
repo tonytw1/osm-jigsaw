@@ -20,7 +20,7 @@ class GraphReader extends OsmIdParsing {
       def outputAreaToArea(oa: OutputArea): Option[Area] = {
         oa.id.map { id =>
           val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-          Area(id = oa.id.get, points = points, osmIds = oa.osmIds.map(toOsmId))
+          Area(id = id, points = points, osmIds = oa.osmIds.map(toOsmId))
         }
       }
 
@@ -47,8 +47,6 @@ class GraphReader extends OsmIdParsing {
     try {
       val areas = loadAreas(areasFile)
 
-
-
       def toGraphNode(ogn: OutputGraphNode): Option[GraphNode] = {
         ogn.area.flatMap { areaId =>
           areas.get(areaId).map { area =>
@@ -58,10 +56,7 @@ class GraphReader extends OsmIdParsing {
       }
 
       val input = new BufferedInputStream(graphFile.openStream())
-      val head = toGraphNode(OutputGraphNode.parseDelimitedFrom(input).get).get
-
       val stack = mutable.Stack[GraphNode]()
-      stack.push(head)
 
       val counterSecond = new ProgressCounter(step = 10000, label = Some("Building graph"))
       var ok = true
@@ -69,13 +64,18 @@ class GraphReader extends OsmIdParsing {
         counterSecond.withProgress {
           ok = OutputGraphNode.parseDelimitedFrom(input).flatMap { oa =>
             toGraphNode(oa).map { node =>
-              var insertInto = stack.pop
-              while (Some(insertInto.area.id) != oa.parent) {
-                insertInto = stack.pop
+              val insertInto: GraphNode = if (stack.nonEmpty) {
+                var insertInto = stack.pop
+                while (Some(insertInto.area.id) != oa.parent) {
+                  insertInto = stack.pop
+                }
+                insertInto
+              } else {
+                node
               }
+              stack.push(insertInto)
 
               insertInto.children += node
-              stack.push(insertInto)
               stack.push(node)
               node
             }
@@ -85,7 +85,7 @@ class GraphReader extends OsmIdParsing {
       input.close()
 
       Logger.info("Finished reading")
-      head
+      stack.last
 
     } catch {
       case e: Exception =>
