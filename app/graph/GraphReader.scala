@@ -47,13 +47,11 @@ class GraphReader extends OsmIdParsing {
     try {
       val areas = loadAreas(areasFile)
 
-      def getArea(id: Long): Option[Area] = {
-        areas.get(id)
-      }
 
-      def toGraphNode(oa: OutputGraphNode): Option[GraphNode] = {
-        oa.area.flatMap { areaId =>
-          getArea(areaId).map { area =>
+
+      def toGraphNode(ogn: OutputGraphNode): Option[GraphNode] = {
+        ogn.area.flatMap { areaId =>
+          areas.get(areaId).map { area =>
             GraphNode(area = area)
           }
         }
