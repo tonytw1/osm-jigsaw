@@ -156,7 +156,7 @@ The step may take some time (approximately 4 hours for a full planet extract).
 
 #### 5) Extract the tags for areas
 
-Extracts the OSM tags for the entities which produced areas. This allows name for the areas to be derived at runtime.
+Extracts the OSM tags for the entities which produced areas. This allows names for the areas to be derived at runtime.
 
 ```
 java -jar $jarfile -s tags $input.rels.pbf $input.tags.pbf
