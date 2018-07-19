@@ -68,7 +68,7 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
     assert(areas.size == 3)
   }
 
-  "area resolver"should "resolve new zealand" in {
+  "area resolver" should "resolve new zealand" in { // TODO remind us again why this is special?s
     val entities = loadEntities("new-zealand.pbf")
 
     val rs = mutable.Set[Relation]()
