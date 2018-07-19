@@ -100,7 +100,7 @@ sbt clean assembly
 
 #### Processing an extract file
 
-Obtain a planet.osm extract (user the protobuffer .pbf format).
+Obtain a planet.osm extract (using the protocol buffer .pbf format).
 
 ##### 1) Split the extract file
 
@@ -170,7 +170,7 @@ ireland-and-northern-ireland-180717.graph.pbf
 ireland-and-northern-ireland-180717.tags.pbf
 ```
 
-The 3 files are in protobuffer format and contain [OutputArea](src/main/protobuf/outputarea.proto), [OutputGraphNode](src/main/protobuf/outputgraphnode.proto) and [OutputTagging](src/main/protobuf/outputtagging.proto) objects.
+The 3 files are in protocol buffer format and contain [OutputArea](src/main/protobuf/outputarea.proto), [OutputGraphNode](src/main/protobuf/outputgraphnode.proto) and [OutputTagging](src/main/protobuf/outputtagging.proto) objects.
 
 These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](https://github.com/tonytw1/osm-jigsaw-api).
 
