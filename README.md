@@ -34,7 +34,7 @@ human intervention.
 
 - Try to defer decision making; try to avoid discarding information or baking decisions into the structure too early; try to produce a structure which allows for the rendering to vary at runtime.
 
-    ie. There could be multiple valid representions where an areas sits.
+    ie. There could be multiple valid representions of where an areas sits.
     London -> United Kingdom
     London -> Greater London -> England -> United Kingdom.
 
