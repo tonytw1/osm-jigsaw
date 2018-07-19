@@ -177,7 +177,7 @@ These 3 files should be placed in a location where they are accessible to the [O
 
 ### Progress
 
-Full extract runs to completion on a machine with 32Gb of RAM producing 9 million areas and a graph contain 19 million nodes.
+Full extract runs to completion on a machine with 32Gb of RAM (no swap) producing 9 million areas and a graph contain 19 million nodes.
 The resulting graph can be loaded into a JVM with 30Gb of heap.
 The API can resolve a reverse query in around 30ms.
 
