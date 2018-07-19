@@ -1,5 +1,8 @@
 ## OpenStreetMap Jigsaw
 
+An area based approach to geocoding with OpenStreetMap extracts.
+
+
 Gecoding is the art turning a location point into a human readable name (and vice versa).
 (ie. 51.0, -0.3 <--> London, United Kingdon).
 
