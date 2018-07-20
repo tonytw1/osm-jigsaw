@@ -1,0 +1,2 @@
+GET     /           controllers.Application.index(q: Option[String])
+GET     /click      controllers.Application.click(lat: Double, lon: Double)
