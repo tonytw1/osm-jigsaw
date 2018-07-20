@@ -174,10 +174,12 @@ ireland-and-northern-ireland-180717.tags.pbf
 ```
 
 The 3 files are in protocol buffer format and contain [OutputArea](src/main/protobuf/outputarea.proto), [OutputGraphNode](src/main/protobuf/outputgraphnode.proto) and [OutputTagging](src/main/protobuf/outputtagging.proto) objects.
+These formats are described below.
+
 These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](https://github.com/tonytw1/osm-jigsaw-api).
 
 
-### Output format
+### Output formats
 
 #### OutputArea
 
@@ -185,12 +187,32 @@ Describes and areas extracted from an OSM relation or way.
 
 |Field | Type | Description|
 | ------------- | ------------- | ------------- |
-|id  |  Long  | A disposible id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time.|
+|id  |  Long  | A disposable id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time.|
 |osm_ids     | List of String | A list of OSM ids for the OSM entities which have this area. ie. 123W, 456W|
 |latitudes   | List of Double | A list of the latitudes of the points which form the outline for this area.|
 |longitudes  | List of Double  | A list of the longitudes of the points which form the outline for this area.|
 |area | Double | The size of the the area.|
 
+#### OutputGraphNode
+
+Describes a node on the graph of sorted areas.
+
+|Field | Type | Description|
+| ------------- | ------------- | ------------- |
+|area  |  Long  | The id of the area which occupies this node.|
+|parent  |  Long  | The (optional) id of the graph node which is the parent of this node.|
+
+The graph protocol buffer file is written in the order of a depth first traversal.
+
+#### OutputTagging
+
+Represents the OSM tags for an OSM id.
+
+|Field | Type | Description|
+| ------------- | ------------- | ------------- |
+|osm_ids     | String | The OSM ids these tags apply to. ie. 123R |
+|keys     | List of String | The tag keys. ie. name:en |
+|osm_ids     | List of String | The tag values. ie. England |
 
 
 ### Progress
