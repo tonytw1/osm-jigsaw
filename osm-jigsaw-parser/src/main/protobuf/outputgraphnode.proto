@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message OutputGraphNode {
+   optional int64 area = 1;
+   optional int64 parent = 2;
+}
