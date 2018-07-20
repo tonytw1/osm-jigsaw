@@ -88,10 +88,13 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   }
 
   "graph builder" should "items which fit inside overlapping siblings should become children of both of the overlapping regions" in {
-    val sorted = graphBuilder.buildGraph(earth, Seq(large, left, overlapping, fitsInLeftAndOverlapping))
+    val sorted = graphBuilder.buildGraph(earth, Seq(left, overlapping, fitsInLeftAndOverlapping))
+    print(sorted.children.size)
+    val leftNode = sorted.children.find(c => c.area.id == left.id).head
+    val overlappingNode = sorted.children.find(c => c.area.id == overlapping.id).head
 
-    val overlappingNode = sorted.children.head.children.head
-    val leftNode = sorted.children.head.children.last
+    println(leftNode.children)
+    println(overlappingNode.children)
 
     assert(overlappingNode.children.head.area.osmIds.head == "Fits")
     assert(leftNode.children.head.area.osmIds.head == "Fits")
