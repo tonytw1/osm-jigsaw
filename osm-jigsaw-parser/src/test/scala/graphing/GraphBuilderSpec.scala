@@ -40,11 +40,12 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     val graph = graphBuilder.buildGraph(earth, Seq(large, left, right))
 
     assert(graph.children.size == 1)
-    var largeNode = graph.children.head
+    var largeNode = graph.children.find(c => c.area.id == large.id).head
     assert(largeNode.area.osmIds.head == "Large")
     assert(largeNode.children.size == 2)
-    assert(largeNode.children.last.area.osmIds.head == "Left")
-    assert(largeNode.children.head.area.osmIds.head == "Right")
+
+    assert(largeNode.children.find(c => c.area.id == left.id).head.area.osmIds.head == "Left")
+    assert(largeNode.children.find(c => c.area.id == right.id).head.area.osmIds.head == "Right")
   }
 
   "graph builder" should "sift new nodes down into enclosing siblings" in {
@@ -93,12 +94,8 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
     val leftNode = sorted.children.find(c => c.area.id == left.id).head
     val overlappingNode = sorted.children.find(c => c.area.id == overlapping.id).head
 
-    println(leftNode.children)
-    println(overlappingNode.children)
-
-    assert(overlappingNode.children.head.area.osmIds.head == "Fits")
     assert(leftNode.children.head.area.osmIds.head == "Fits")
-    // TODO
+    assert(overlappingNode.children.head.area.osmIds.head == "Fits")
   }
 
   def makeArea(name: String, topLeft: (Int, Int), bottomRight: (Int, Int)): Area = {
