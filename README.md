@@ -235,8 +235,8 @@ This is a reflection of the importance of node points such as cities and neighbo
 
 | Location | Outcome |
 | ------------- | ------------- | ------------- |
-| Richmond Park | Nicely illustrates that Richmond Park is a large area which falls across multiple London boroughs.|
-| Twickenham Rowing Club | Correctly places the rowing club on the Eel Pie Island matching it's colloquial address.|
-| Yosemite National Park | Correctly placed in California.|
-| Perth, Australia | The lack of an enclosing city area means that Perth is not mentioned in results.| 
-| Bournemouth Pier | Interesting outlier; the pier sits just outside of the local authority and county boundaries, losing locality.|
+| Richmond Park | Nicely illustrates that Richmond Park is a large area which falls across multiple London boroughs. |
+| Twickenham Rowing Club | Correctly places the rowing club on the Eel Pie Island matching it's colloquial address. |
+| Yosemite National Park | Correctly placed in California. |
+| Perth, Australia | The lack of an enclosing city area means that Perth is not mentioned in results. | 
+| Bournemouth Pier | Interesting outlier; the pier sits just outside of the local authority and county boundaries, losing locality. |
