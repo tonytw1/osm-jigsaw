@@ -21,8 +21,8 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode): Unit = {
-    logger.debug("Sifting down: " + a.area.osmIds  + " with " + a.children.size + " children")
-    logger.debug("Presorting by area to assist sift down effectiveness")
+    //logger.debug("Sifting down: " + a.area.osmIds  + " with " + a.children.size + " children")
+    //logger.debug("Presorting by area to assist sift down effectiveness")
     val sorted = a.children.toSeq.sortBy(_.area.area)
     val inOrder = sorted.reverse
 
@@ -42,7 +42,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     a.children = a.children -- a.children.map(a => a.children).flatten
 
     a.children.par.filter(i => i.children.nonEmpty && i.children.size > 1).foreach { c =>
-      logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
+      // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
       siftDown(c)
     }
   }
@@ -60,7 +60,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
-        logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
+        // logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
         s.children = s.children + b
       }
 
@@ -76,13 +76,13 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
-        logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.osmIds)
+        // logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.osmIds)
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
     }
 
     val duration = new Duration(start, DateTime.now)
-    logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
+    // logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
     Unit
   }
 
