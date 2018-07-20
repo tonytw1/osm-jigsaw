@@ -39,6 +39,8 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     a.children.par.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
+    a.children = a.children -- a.children.map(a => a.children).flatten
+
     a.children.par.filter(i => i.children.nonEmpty && i.children.size > 1).foreach { c =>
       logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
       siftDown(c)
@@ -57,7 +59,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     var secondFilterDuration: Option[Duration] = None
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
-      a.children = a.children - b
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
         logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
         s.children = s.children + b
@@ -76,7 +77,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
         logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.osmIds)
-        a.children = a.children -- siblingsWhichFitInsideNewNode
         b.children = b.children ++ siblingsWhichFitInsideNewNode
       }
     }

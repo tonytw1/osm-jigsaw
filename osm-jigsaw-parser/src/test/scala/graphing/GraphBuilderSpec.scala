@@ -1,7 +1,7 @@
 package graphing
 
 import input.TestValues
-import model.{Area, AreaIdSequence, EntityRendering, GraphNode}
+import model.{Area, AreaIdSequence, EntityRendering}
 import org.scalatest.FlatSpec
 import resolving.{BoundingBox, PolygonBuilding}
 
@@ -90,7 +90,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
 
   "graph builder" should "items which fit inside overlapping siblings should become children of both of the overlapping regions" in {
     val sorted = graphBuilder.buildGraph(earth, Seq(left, overlapping, fitsInLeftAndOverlapping))
-    print(sorted.children.size)
     val leftNode = sorted.children.find(c => c.area.id == left.id).head
     val overlappingNode = sorted.children.find(c => c.area.id == overlapping.id).head
 
