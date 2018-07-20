@@ -215,6 +215,12 @@ Represents the OSM tags for an OSM id.
 |osm_ids     | List of String | The tag values. ie. England |
 
 
+
+Why aren't the areas and tags inlined into the graph file?
+Keeping the areas and tags separate from the grapg allows for deduplication of the areas which appear in overlaps.
+This provides a worth having memory saving when reloading the graph.
+
+
 ### Progress
 
 Full extract runs to completion on a machine with 32Gb of RAM (no swap) producing 9 million areas and a graph containing 19 million nodes.
