@@ -4,7 +4,7 @@ An area based approach to geocoding with OpenStreetMap extracts.
 
 
 Gecoding is the art turning a location point into a human readable name (and vice versa).
-(ie. 51.0, -0.3 <--> London, United Kingdon).
+(ie. 51.0, -0.3 <--> London, United Kingdom).
 
 Nominatim is the default OpenStreetMap geocoding solution.
 It does are really great job of interpreting an implied structure and using it to construct sensible geocodings.
@@ -174,8 +174,23 @@ ireland-and-northern-ireland-180717.tags.pbf
 ```
 
 The 3 files are in protocol buffer format and contain [OutputArea](src/main/protobuf/outputarea.proto), [OutputGraphNode](src/main/protobuf/outputgraphnode.proto) and [OutputTagging](src/main/protobuf/outputtagging.proto) objects.
-
 These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](https://github.com/tonytw1/osm-jigsaw-api).
+
+
+### Output format
+
+#### OutputArea
+
+Describes and areas extracted from an OSM relation or way.
+
+|Field | Type | Description|
+| ------------- | ------------- | ------------- |
+|id  |  Long  | A disposible id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time.|
+|osm_ids     | List of String | A list of OSM ids for the OSM entities which have this area. ie. 123W, 456W|
+|latitudes   | List of Double | A list of the latitudes of the points which form the outline for this area.|
+|longitudes  | List of Double  | A list of the longitudes of the points which form the outline for this area.|
+|area | Double | The size of the the area.|
+
 
 
 ### Progress
@@ -185,7 +200,7 @@ The graph can be loaded into a JVM with 30Gb of heap.
 
 The [API](https://github.com/tonytw1/osm-jigsaw-api) can resolve a reverse query in around 30ms.
 
-### Results
+### Results
 
 This approach to geocoding does well for some use cases and less so for others.
 This is a reflection of the importance of node points such as cities and neighborhoods in the OpenStreetMap data; an area based approach neglects these important points.
