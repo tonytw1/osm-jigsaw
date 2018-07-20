@@ -185,22 +185,22 @@ These 3 files should be placed in a location where they are accessible to the [O
 
 Describes and areas extracted from an OSM relation or way.
 
-|Field | Type | Description|
+| Field | Type | Description|
 | ------------- | ------------- | ------------- |
-|id  |  Long  | A disposable id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time.|
-|osm_ids     | List of String | A list of OSM ids for the OSM entities which have this area. ie. 123W, 456W|
-|latitudes   | List of Double | A list of the latitudes of the points which form the outline for this area.|
-|longitudes  | List of Double  | A list of the longitudes of the points which form the outline for this area.|
-|area | Double | The size of the the area.|
+| id  |  Long  | A disposable id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time.|
+| osm_ids     | List of String | A list of OSM ids for the OSM entities which have this area. ie. 123W, 456W|
+| latitudes   | List of Double | A list of the latitudes of the points which form the outline for this area.|
+| longitudes  | List of Double  | A list of the longitudes of the points which form the outline for this area.|
+| area | Double | The size of the the area.|
 
 #### OutputGraphNode
 
 Describes a node on the graph of sorted areas.
 
-|Field | Type | Description|
+| Field | Type | Description|
 | ------------- | ------------- | ------------- |
-|area  |  Long  | The id of the area which occupies this node.|
-|parent  |  Long  | The (optional) id of the graph node which is the parent of this node.|
+| area  |  Long  | The id of the area which occupies this node.|
+| parent  |  Long  | The (optional) id of the graph node which is the parent of this node.|
 
 The graph protocol buffer file is written in the order of a depth first traversal.
 
@@ -208,11 +208,11 @@ The graph protocol buffer file is written in the order of a depth first traversa
 
 Represents the OSM tags for an OSM id.
 
-|Field | Type | Description|
+| Field | Type | Description|
 | ------------- | ------------- | ------------- |
-|osm_ids     | String | The OSM ids these tags apply to. ie. 123R |
-|keys     | List of String | The tag keys. ie. name:en |
-|osm_ids     | List of String | The tag values. ie. England |
+| osm_ids     | String | The OSM ids these tags apply to. ie. 123R |
+| keys     | List of String | The tag keys. ie. name:en |
+| osm_ids     | List of String | The tag values. ie. England |
 
 
 
@@ -223,7 +223,7 @@ This provides a worth having memory saving when reloading the graph.
 
 ### Progress
 
-Full extract runs to completion on a machine with 32Gb of RAM (no swap) producing 9 million areas and a graph containing 19 million nodes.
+A full extract runs to completion on a machine with 32Gb of RAM (no swap) producing 9 million areas and a graph containing 19 million nodes.
 The graph can be loaded into a JVM with 30Gb of heap.
 
 The [API](https://github.com/tonytw1/osm-jigsaw-api) can resolve a reverse query in around 30ms.
@@ -234,9 +234,10 @@ This approach to geocoding does well for some use cases and less so for others.
 This is a reflection of the importance of node points such as cities and neighborhoods in the OpenStreetMap data; an area based approach neglects these important points.
 
 | Location | Outcome |
-| ------------- | ------------- | ------------- |
+| ------------- | ------------- |
 | Richmond Park | Nicely illustrates that Richmond Park is a large area which falls across multiple London boroughs. |
 | Twickenham Rowing Club | Correctly places the rowing club on the Eel Pie Island matching it's colloquial address. |
 | Yosemite National Park | Correctly placed in California. |
 | Perth, Australia | The lack of an enclosing city area means that Perth is not mentioned in results. | 
-| Bournemouth Pier | Interesting outlier; the pier sits just outside of the local authority and county boundaries, losing locality. |
+| Bournemouth Pier | An interesting outlier. The pier sits just outside of the local authority and county boundaries, losing locality. |
+
