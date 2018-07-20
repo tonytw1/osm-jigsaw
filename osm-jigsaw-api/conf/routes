@@ -1,0 +1,6 @@
+GET     /show       controllers.Application.show(q: Option[String])
+
+GET     /points     controllers.Application.points(q: String)
+
+GET     /tags       controllers.Application.tags(osm_id: String)
+GET     /reverse    controllers.Application.reverse(lat: Double, lon: Double)

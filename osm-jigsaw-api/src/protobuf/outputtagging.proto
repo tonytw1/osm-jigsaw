@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message OutputTagging {
+   optional string osm_id = 1;
+   repeated string keys = 2;
+   repeated string values = 3;
+}
