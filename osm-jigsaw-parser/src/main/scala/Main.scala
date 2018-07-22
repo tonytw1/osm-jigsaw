@@ -28,7 +28,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
   def entitiesToGraph(entity: Entity): Boolean = {
     (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)) &&
-      nameFor(entity).nonEmpty && !entity.getTags.asScala.exists(t => t.getKey == "indoor:area")
+      nameFor(entity).nonEmpty
   }
 
   def main(args: Array[String]): Unit = {
