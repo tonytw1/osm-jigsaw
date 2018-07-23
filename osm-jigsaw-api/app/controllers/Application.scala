@@ -56,7 +56,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val pt = new Point(lat, lon)
     val containing = nodesContaining(pt, graphService.head, Seq())
 
-    val jsons = containing.map(g => g.map(i => renderNode(i)))
+    val jsons = containing.map(g => g.drop(1).map(i => renderNode(i)))
 
     Future.successful(Ok(Json.toJson(jsons)))
   }
