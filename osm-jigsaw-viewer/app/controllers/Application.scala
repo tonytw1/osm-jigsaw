@@ -24,25 +24,25 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
     ws.url((apiUrl + "/show").addParam("q", q)).get.flatMap { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
-      val areas = Json.parse(r.body).as[Seq[GraphNode]]
+      val graphNodes = Json.parse(r.body).as[Seq[GraphNode]]
 
-      val lastArea = areas.last
+      val lastNode = graphNodes.last
 
       ws.url((apiUrl + "/points").addParam("q", q)).get.flatMap { psr =>
         implicit val pr = Json.reads[Point]
         val points = Json.parse(psr.body).as[Seq[Point]]
         val areaBoundingBox = boundingBoxFor(points)
 
-        val crumbs = areasToCrumbs(areas)
+        val crumbs = areasToCrumbs(graphNodes)
 
-        val osmUrl = lastArea.entities.headOption.map { e =>
+        val osmUrl = lastNode.entities.headOption.map { e =>
           val osmId = e.osmId
           val osmTypes = Set("node", "way", "relation")
           val osmType = osmId.takeRight(1).toLowerCase()
           "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
         }
 
-        val tags = lastArea.entities.headOption.map { e =>
+        val tags = lastNode.entities.headOption.map { e =>
           val osmId = e.osmId
           ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
             r.body
@@ -50,7 +50,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         }.getOrElse(Future.successful(""))
 
         tags.map { ts =>
-          Ok(views.html.index(lastArea, crumbs, osmUrl, maxBoxApiKey, areaBoundingBox, ts))
+          Ok(views.html.index(lastNode, crumbs, osmUrl, maxBoxApiKey, areaBoundingBox, ts))
         }
       }
     }
