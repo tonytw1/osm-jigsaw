@@ -72,14 +72,13 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     }
 
     val nodes = mutable.ListBuffer[GraphNode]()
-    var show = graphService.head
-    nodes.+=(show)
 
     val queue = new mutable.Queue() ++ components
 
+    var currentNode = graphService.head
     while (queue.nonEmpty) {
       val next = queue.dequeue()
-      val children = show.children
+      val children = currentNode.children
 
       val found = children.find { c =>
         nodeIdentifier(c) == next
@@ -87,7 +86,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
       found.map { f =>
         nodes.+=(f)
-        show = f
+        currentNode = f
       }
     }
 
