@@ -22,12 +22,14 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   }
 
   def points(q: String) = Action.async { request =>
-    val node = nodesFor(parseComponents(q)).last
+    nodesFor(parseComponents(q)).lastOption.map { node =>
 
-    val points = node.area.points
-
-    implicit val pw = Json.writes[model.Point]
-    Future.successful(Ok(Json.toJson(points)))
+      val points = node.area.points
+      implicit val pw = Json.writes[model.Point]
+      Future.successful(Ok(Json.toJson(points)))
+    }.getOrElse{
+      Future.successful(NotFound(Json.toJson("Not found")))
+    }
   }
 
   def tags(osmId: String) = Action.async { request =>
