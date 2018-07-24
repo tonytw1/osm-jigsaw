@@ -19,8 +19,8 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
 
   def index(qo: Option[String]) = Action.async { request =>
-
     val q = qo.getOrElse("")
+
     ws.url((apiUrl + "/show").addParam("q", q)).get.flatMap { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
@@ -28,34 +28,44 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
 
       val lastNode = graphNodes.lastOption
 
-      ws.url((apiUrl + "/points").addParam("q", q)).get.flatMap { psr =>
-        implicit val pr = Json.reads[Point]
-        val points = Json.parse(psr.body).as[Seq[Point]]
-        val areaBoundingBox = boundingBoxFor(points)
+      val crumbs = lastNode.map { ln =>
+        areasToCrumbs(graphNodes)
+      }
 
-        val crumbs = areasToCrumbs(graphNodes)
+      val eventualAreaBoundingBox = lastNode.map { _ =>
+        ws.url((apiUrl + "/points").addParam("q", q)).get.map { psr =>
+          implicit val pr = Json.reads[Point]
+          val points = Json.parse(psr.body).as[Seq[Point]]
+          val b: (Double, Double, Double, Double) = boundingBoxFor(points)
+          Some(b)
+        }
+      }.getOrElse {
+        Future.successful(None)
+      }
 
-        val osmUrl = lastNode.flatMap { ln =>
-          ln.entities.headOption.map { e =>
-            val osmId = e.osmId
-            val osmTypes = Set("node", "way", "relation")
-            val osmType = osmId.takeRight(1).toLowerCase()
-            "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
+      val osmUrl = lastNode.flatMap { ln =>
+        ln.entities.headOption.map { e =>
+          val osmId = e.osmId
+          val osmTypes = Set("node", "way", "relation")
+          val osmType = osmId.takeRight(1).toLowerCase()
+          "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
+        }
+      }
+
+      val eventualTags = lastNode.flatMap { ln =>
+        ln.entities.headOption.map { e =>
+          val osmId = e.osmId
+          ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
+            r.body
           }
         }
+      }.getOrElse(Future.successful(""))
 
-        val tags = lastNode.flatMap { ln =>
-          ln.entities.headOption.map { e =>
-            val osmId = e.osmId
-            ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
-              r.body
-            }
-          }
-        }.getOrElse(Future.successful(""))
-
-        tags.map { ts =>
-          Ok(views.html.index(lastNode, crumbs, osmUrl, maxBoxApiKey, areaBoundingBox, ts))
-        }
+      for {
+        areaBoundingBox <- eventualAreaBoundingBox
+        tags <- eventualTags
+      } yield {
+        Ok(views.html.index(lastNode, crumbs, osmUrl, maxBoxApiKey, areaBoundingBox, tags))
       }
     }
   }

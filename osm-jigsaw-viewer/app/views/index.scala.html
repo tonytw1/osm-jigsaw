@@ -1,5 +1,5 @@
 @import graph.GraphNode
-@(node: Option[GraphNode], cs: Seq[(String, Seq[Long])], osmUrl: Option[String], mapBoxApiKey: String, areaBoundingBox: (Double, Double, Double, Double), tags: String)
+@(node: Option[GraphNode], crumb: Option[Seq[(String, Seq[Long])]], osmUrl: Option[String], mapBoxApiKey: String, areaBoundingBox: Option[(Double, Double, Double, Double)], tags: String)
 <link rel="stylesheet" href="https://unpkg.com/leaflet@@1.3.1/dist/leaflet.css"
       integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
       crossorigin=""/>
@@ -8,7 +8,9 @@
         crossorigin=""></script>
 <script   src="https://code.jquery.com/jquery-3.3.1.min.js"   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
-<h2>@crumbs(cs)</h2>
+@crumb.map { cs =>
+    <h2>@crumbs(cs)</h2>
+}
 
 @node.map { area =>
     <p>@area.id / @osmUrl.map{ u => @area.entities.headOption.map{ i => <a href="@u">@i.osmId</a>}}</p>
@@ -24,11 +26,13 @@
 <script>
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
-    mymap.fitBounds([
-            [@areaBoundingBox._1, @areaBoundingBox._2],
-            [@areaBoundingBox._3, @areaBoundingBox._4]
-        ]
-    );
+    @areaBoundingBox.map { boundingBox =>
+        mymap.fitBounds([
+                [@boundingBox._1, @boundingBox._2],
+                [@boundingBox._3, @boundingBox._4]
+            ]
+        );
+    }
 
     L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
