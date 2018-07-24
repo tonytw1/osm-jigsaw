@@ -43,7 +43,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         Future.successful(None)
       }
 
-      val osmUrls: Option[Seq[(String, String)]] = lastNode.map { ln =>
+      val osmUrls = lastNode.map { ln =>
         ln.entities.map { e =>
           val osmId = e.osmId
           val osmTypes = Set("node", "way", "relation")
