@@ -90,7 +90,9 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       i :+ (i.lastOption.getOrElse(Seq.empty) :+ a.id)
     }
     val chumbLabels = nodes.map { a =>
-      a.entities.headOption.map(e => e.name).getOrElse(a.id.toString) // TODO expose all names for overlapped areas
+      a.entities.map { e =>
+        e.name
+      }.mkString(", ")
     }
 
     chumbLabels.zip(crumbIdChains)
