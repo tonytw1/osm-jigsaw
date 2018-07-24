@@ -43,8 +43,9 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         Future.successful(None)
       }
 
-      val osmUrl = lastNode.flatMap { ln =>
-        ln.entities.headOption.map { e =>
+      val osmUrls = lastNode.map { ln =>
+        Logger.info("lN: " + ln.entities.size)
+        ln.entities.map { e =>
           val osmId = e.osmId
           val osmTypes = Set("node", "way", "relation")
           val osmType = osmId.takeRight(1).toLowerCase()
@@ -65,7 +66,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         areaBoundingBox <- eventualAreaBoundingBox
         tags <- eventualTags
       } yield {
-        Ok(views.html.index(lastNode, crumbs, osmUrl, maxBoxApiKey, areaBoundingBox, tags))
+        Ok(views.html.index(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags))
       }
     }
   }
