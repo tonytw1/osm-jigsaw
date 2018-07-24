@@ -14,11 +14,14 @@
 
 @node.map { area =>
     <p>@area.id / @osmUrl.map{ u => @area.entities.headOption.map{ i => <a href="@u">@i.osmId</a>}}</p>
-    <p>@areaBoundingBox</p>
-    <p>@tags</p>
 }
 
 <div id="mapid"></div>
+
+@node.map { area =>
+    <p>@tags</p>
+}
+
 <style>
     #mapid { height: 400px; }
 </style>
