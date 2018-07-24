@@ -85,13 +85,15 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
     }
   }
 
-  private def areasToCrumbs(nodes: Seq[GraphNode]) = {
-    val ids = nodes.foldLeft(Seq[Seq[Long]]()) { (i, a) =>
-      val next = i.lastOption.getOrElse(Seq.empty) :+ a.id
-      i :+ next
+  private def areasToCrumbs(nodes: Seq[GraphNode]): Seq[(String, Seq[Long])] = {
+    val crumbIdChains = nodes.foldLeft(Seq[Seq[Long]]()) { (i, a) =>
+      i :+ (i.lastOption.getOrElse(Seq.empty) :+ a.id)
     }
-    val crumbs = nodes.map(a => a.entities.headOption.map(e => e.name).getOrElse(a.id.toString)).zip(ids) // TODO
-    crumbs
+    val chumbLabels = nodes.map { a =>
+      a.entities.headOption.map(e => e.name).getOrElse(a.id.toString) // TODO expose all names for overlapped areas
+    }
+
+    chumbLabels.zip(crumbIdChains)
   }
 
 }
