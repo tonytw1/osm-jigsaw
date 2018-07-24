@@ -43,13 +43,12 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         Future.successful(None)
       }
 
-      val osmUrls = lastNode.map { ln =>
-        Logger.info("lN: " + ln.entities.size)
+      val osmUrls: Option[Seq[(String, String)]] = lastNode.map { ln =>
         ln.entities.map { e =>
           val osmId = e.osmId
           val osmTypes = Set("node", "way", "relation")
           val osmType = osmId.takeRight(1).toLowerCase()
-          "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1)
+          (osmId, "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1))
         }
       }
 
