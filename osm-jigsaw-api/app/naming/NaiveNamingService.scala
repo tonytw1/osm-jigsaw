@@ -7,7 +7,10 @@ import tags.TagService
 
 class NaiveNamingService @Inject()(tagService: TagService) {
 
-  private val ExcludedTags = Set(("boundary", "timezone"))
+  private val ExcludedTags = Set(
+    "boundary" -> "timezone",
+    "historic" -> "yes"
+  )
 
   def nameFor(paths: Seq[Seq[Seq[OsmId]]]): String = {
     val pathToUse: Seq[Seq[OsmId]] = paths.head  // TODO naive and ignores interesting nodes the other paths
