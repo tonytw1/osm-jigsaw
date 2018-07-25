@@ -1,7 +1,14 @@
 ## OpenStreetMap Jigsaw
 
 An area based approach to geocoding with OpenStreetMap extracts.
+This system attempts to arrange the contents of an OpenStreetMap extract into a graph of nested areas.
 
+This graph is then exported as a JSON API.
+
+Reverse geocoding place names can be quickly inferred from the hierarchy of areas enclosing a given point.
+
+
+### Background
 
 Gecoding is the art turning a location point into a human readable name (and vice versa).
 (ie. 51.0, -0.3 <--> London, United Kingdom).
@@ -173,13 +180,15 @@ ireland-and-northern-ireland-180717.graph.pbf
 ireland-and-northern-ireland-180717.tags.pbf
 ```
 
-The 3 files are in protocol buffer format and contain [OutputArea](src/main/protobuf/outputarea.proto), [OutputGraphNode](src/main/protobuf/outputgraphnode.proto) and [OutputTagging](src/main/protobuf/outputtagging.proto) objects.
-These formats are described below.
-
-These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](https://github.com/tonytw1/osm-jigsaw-api).
-
 
 ### Output formats
+
+The 3 files are in protocol buffer format and contain [OutputArea](osm-jigsaw-parser/src/main/protobuf/outputarea.proto), [OutputGraphNode](osm-jigsaw-parser/src/main/protobuf/outputgraphnode.proto) and [OutputTagging](osm-jigsaw-parser/src/main/protobuf/outputtagging.proto) objects.
+These formats are described below.
+These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](osm-jigsaw-api).
+
+Protocol buffer was choosen for it's relatively small file size and fast import; it's also consistant with the OSM extract files.
+
 
 #### OutputArea
 
@@ -221,12 +230,47 @@ Keeping the areas and tags separate from the grapg allows for deduplication of t
 This provides a worth having memory saving when reloading the graph.
 
 
-### Progress
+### Execution
 
-A full extract runs to completion on a machine with 32Gb of RAM (no swap) producing 9 million areas and a graph containing 19 million nodes.
+A full extract runs to completion on a machine with 32Gb of RAM (no swap) in approximately 5 hours, producing 9 million areas and a graph containing 19 million nodes.
+
 The graph can be loaded into a JVM with 30Gb of heap.
+This includes all of the point data for every area and every OSM tag for the area entities.
 
 The [API](https://github.com/tonytw1/osm-jigsaw-api) can resolve a reverse query in around 30ms.
+
+
+### Deriving a location name from the area hirecacy
+
+Given a point location it is a cheap operation (vaguly like descending a b-tree) to step down the hirarcy of nested areas in the graph,
+extracting all of the possible paths down to the smallest area enclosing the point of interest.
+
+The geocoding step then becomes inferrering a human readable name from this collection of paths.
+
+- As each area in the graph was derived from an OSM entity (a relation of a closed way), we can inspect the OSM tags for each area.
+This should give a name for each step in the path down to the point.
+
+- There will be classes of entity in the path which are not relivant, such as time zones, electoral boundaries and historal data; these can be ignored at runtime.
+
+- Useful components of the name may come from more than one of the paths down to the point.
+
+- We can ignore overlapping entities with the same name as these probably aren't adding value.
+ ie. New Zealand, Wellington, Wellington
+
+- Rules can probably be applied to drop portions of some paths.
+ie. Drop anything element between a country areas and a capital city.
+United Kingdom, England, London -> United Kingdom, London.
+
+- Transform the into a localised output
+In english this means collecting the name:en tags and joining the smallest to largest.
+ie. Bournemouth, England, United Kingdom.
+
+
+A naive implementation is provided in the API.
+
+The feels like a problem which may react well to a supervised machine learning approach.
+
+
 
 ### Results
 
@@ -240,4 +284,3 @@ This is a reflection of the importance of node points such as cities and neighbo
 | Yosemite National Park | Correctly placed in California. |
 | Perth, Australia | The lack of an enclosing city area means that Perth is not mentioned in results. | 
 | Bournemouth Pier | An interesting outlier. The pier sits just outside of the local authority and county boundaries, losing locality. |
-
