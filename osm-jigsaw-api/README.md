@@ -21,9 +21,38 @@ Given a latitude / longitude point return a list of possible paths down to that 
 Example response
 ```
 [
-    "Earth / England / London / London Borough of Richmond upon Thames / River Thames / Eel Pie Island / Twickenham Rowing Club",
-    "Earth / England / Metropolitan Police / London Borough of Richmond upon Thames / River Thames / Eel Pie Island / Twickenham Rowing Club",
-    "Earth / England / Greater London / London Borough of Richmond upon Thames / River Thames / Eel Pie Island / Twickenham Rowing Club"
+  [
+    {
+      "id": 22277,
+      "entities": [
+        {
+          "osmId": "80500R",
+          "name": "Australia"
+        }
+      ],
+      "children": 98
+    },
+    {
+      "id": 329799,
+      "entities": [
+        {
+          "osmId": "2316598R",
+          "name": "Western Australia"
+        }
+      ],
+      "children": 3
+    },
+    {
+      "id": 1063321,
+      "entities": [
+        {
+          "osmId": "8165171R",
+          "name": "Ngaanyatjarra Indigenous Protected Area"
+        }
+      ],
+      "children": 68
+    }
+  ]
 ]
 ```
 
