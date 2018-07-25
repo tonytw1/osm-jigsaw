@@ -1,7 +1,8 @@
-@(results:  Seq[Seq[(String, Seq[Long])]], name: String)
+@(results:  Seq[Seq[(String, Seq[Long])]], name: String, apiUrl: String)
 <h4>@name</h4>
 <ul>
 @results.map { r =>
     <li>@crumbs(r)</li>
 }
 </ul>
+<a href="@apiUrl" target="_blank">API</a>
