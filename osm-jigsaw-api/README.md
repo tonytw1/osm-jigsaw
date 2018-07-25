@@ -28,6 +28,17 @@ Example response
 ```
 
 
+#### GET /name
+
+Given a latitude / longitude point infer a human readable name for that point.
+
+| Parameter | Description |
+| ------------- | ------------- |
+| lat           | Latitude of point |
+| lon           | Longitude of point |
+
+
+
 #### GET /show
 
 Return the details the single node at the end of the given chain of areas.

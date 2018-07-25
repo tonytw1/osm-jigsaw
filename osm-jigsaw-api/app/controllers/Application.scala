@@ -46,6 +46,23 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     Future.successful(Ok(Json.toJson(jsons)))
   }
 
+  def name(lat: Double, lon: Double) = Action.async { request =>
+    val pt = new Point(lat, lon)
+
+    def reallyNaiveNamingAlgorithm(paths: Seq[Seq[GraphNode]]) = {
+      val pathToUse: Seq[GraphNode] = paths.head
+      val name: String = pathToUse.map { p =>
+        nameForOsmId(p.area.osmIds.head)
+      }.reverse.mkString(", ")
+    }
+
+    val paths: Seq[Seq[GraphNode]] = graphService.pathsDownTo(pt)
+
+    val name = reallyNaiveNamingAlgorithm(paths)
+
+    Future.successful(Ok(Json.toJson(name)))
+  }
+
   private def parseComponents(q: String): Seq[Long] = {
     q.split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
   }
@@ -80,12 +97,6 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   private def renderNode(node: GraphNode): JsValue = {
     val entities = node.area.osmIds.map { osmId =>
 
-      def nameForOsmId(osmId: OsmId): Option[String] = {
-        tagService.tagsFor(osmId).flatMap { tags =>
-          getNameFromTags(tags)
-        }
-      }
-
       Json.toJson(Seq(
       "osmId" -> Json.toJson(osmId.id.toString + osmId.`type`.toString),
       "name" -> Json.toJson(nameForOsmId(osmId).getOrElse(node.area.id.toString))
@@ -98,6 +109,12 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       Some("entities" -> Json.toJson(entities)),
       Some("children" -> Json.toJson(node.children.size))
     ).flatten.toMap)
+  }
+
+  def nameForOsmId(osmId: OsmId): Option[String] = {  // TODO push somewhere
+    tagService.tagsFor(osmId).flatMap { tags =>
+      getNameFromTags(tags)
+    }
   }
 
 }
