@@ -1,10 +1,9 @@
 package controllers
 
-import javax.inject.Inject
-
-import areas.{AreaComparison, BoundingBox}
+import areas.BoundingBox
 import com.esri.core.geometry.Point
 import graph.GraphService
+import javax.inject.Inject
 import model.{GraphNode, OsmId, OsmIdParsing}
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
@@ -14,7 +13,7 @@ import tags.{EntityNameTags, TagService}
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService, val tagService: TagService) extends Controller with BoundingBox with AreaComparison with OsmIdParsing with EntityNameTags {
+class Application @Inject()(configuration: Configuration, graphService: GraphService, val tagService: TagService) extends Controller with BoundingBox with OsmIdParsing with EntityNameTags {
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
@@ -40,30 +39,9 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   }
 
   def reverse(lat: Double, lon: Double) = Action.async { request =>
-
-    def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
-      def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
-        val matchingChildren = node.children.filter { c =>
-          areaContainsPoint(c, pt)
-        }
-
-        if (matchingChildren.nonEmpty) {
-          matchingChildren.flatMap { m =>
-            nodesContaining(pt, m, stack :+ node)
-          }
-        } else {
-          Seq(stack :+ node)
-        }
-      }
-
-      val containing = nodesContaining(pt, graphService.head, Seq())
-      val withoutRoot= containing.map(r => r.drop(1)).filter(_.nonEmpty)
-      withoutRoot
-    }
-
     val pt = new Point(lat, lon)
 
-    val jsons = pathsDownTo(pt).map(_.map(i => renderNode(i)))
+    val jsons = graphService.pathsDownTo(pt).map(_.map(i => renderNode(i)))
 
     Future.successful(Ok(Json.toJson(jsons)))
   }
