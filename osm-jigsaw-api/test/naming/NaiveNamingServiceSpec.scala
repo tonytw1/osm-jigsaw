@@ -7,6 +7,7 @@ import tags.TagService
 
 class NaiveNamingServiceSpec extends Specification  {
 
+  /*
   "place name is a concatenation of the the enclosing area names" in {
     val australia = OsmId(80500L, "R".charAt(0))
     val westernAustralia = OsmId(2316598, "R".charAt(0))
@@ -44,5 +45,6 @@ class NaiveNamingServiceSpec extends Specification  {
 
     name must equalTo("Douglas, Middle, Isle of Man")
   }
+  */
 
 }
