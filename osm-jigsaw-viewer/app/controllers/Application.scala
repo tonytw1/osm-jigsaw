@@ -71,17 +71,24 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   }
 
   def click(lat: Double, lon: Double) = Action.async { request =>
-    val url = (apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)
-    ws.url(url).get.map { r =>
+    val eventualCrumbs = ws.url((apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)).get.map { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
-      val results = Json.parse(r.body).as[Seq[Seq[GraphNode]]]
-
-      val asCrumbs: Seq[Seq[(String, Seq[Long])]] = results.map { as =>
+      Json.parse(r.body).as[Seq[Seq[GraphNode]]].map { as =>
         areasToCrumbs(as)
       }
+    }
 
-      Ok(views.html.click(asCrumbs))
+    val eventualName = ws.url((apiUrl + "/name").addParam("lat", lat).addParam("lon", lon)).get.map { r =>
+      Json.parse(r.body).as[String]
+    }
+
+    for {
+      crumbs <- eventualCrumbs
+      name <- eventualName
+
+    } yield {
+      Ok(views.html.click(crumbs, name))
     }
   }
 

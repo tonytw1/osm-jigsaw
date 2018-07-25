@@ -1,6 +1,8 @@
-@(results:  Seq[Seq[(String, Seq[Long])]])
+@(results:  Seq[Seq[(String, Seq[Long])]], name: String)
 <ul>
 @results.map { r =>
     <li>@crumbs(r)</li>
 }
 </ul>
+
+<h4>@name</h4>
