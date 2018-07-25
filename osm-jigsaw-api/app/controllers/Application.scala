@@ -5,7 +5,7 @@ import com.esri.core.geometry.Point
 import graph.GraphService
 import javax.inject.Inject
 
-import model.{GraphNode, OsmIdParsing, OutputEntity, OutputNode}
+import model._
 import naming.NaiveNamingService
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
@@ -36,8 +36,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   def tags(osmId: String) = Action.async { request =>
     val id = toOsmId(osmId)
-    val tags = graphService.tagsFor(id).getOrElse(Seq()).toMap
-
+    val tags = graphService.tagsFor(id).getOrElse(Map())
     Future.successful(Ok(Json.toJson(tags)))
   }
 
@@ -52,7 +51,15 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   def name(lat: Double, lon: Double) = Action.async { request =>
     val pt = new Point(lat, lon)
 
-    val name = naiveNamingService.nameFor(graphService.pathsDownTo(pt))
+    val paths = graphService.pathsDownTo(pt)
+
+    val pathInformationNeededToInferPlaceName: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
+      path.map { node =>
+        node.area.osmIds
+      }
+    }
+
+    val name = naiveNamingService.nameFor(pathInformationNeededToInferPlaceName)
 
     Future.successful(Ok(Json.toJson(name)))
   }
@@ -79,7 +86,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
         nodeIdentifier(c) == next
       }
 
-      found.map { f =>
+      found.foreach { f =>
         nodes.+=(f)
         currentNode = f
       }
@@ -99,7 +106,6 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     implicit val ew = Json.writes[OutputEntity]
     implicit val nw = Json.writes[OutputNode]
-
     Json.toJson(outputNode)
   }
 

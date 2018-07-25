@@ -11,6 +11,7 @@ scalaVersion := "2.11.7"
 libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.1.0"
 libraryDependencies += "com.google.guava" % "guava" % "25.1-jre"
 libraryDependencies += specs2 % Test
+libraryDependencies += "org.mockito" % "mockito-core" % "1.9.5" % Test
 
 enablePlugins(DockerPlugin)
 dockerBaseImage := "openjdk:10-jre"

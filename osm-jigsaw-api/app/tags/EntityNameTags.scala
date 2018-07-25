@@ -4,7 +4,7 @@ trait EntityNameTags {
 
   private val English = "en"  // TODO Push to Accepts header
 
-  def getNameFromTags(tags: Seq[(String, String)]): Option[String] = {
+  def getNameFromTags(tags: Map[String, String]): Option[String] = {
     val preferredName = "name:" + English
     val otherUsableNames = Seq(preferredName, "name")
 

@@ -36,7 +36,7 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
     withoutRoot
   }
 
-  def tagsFor(osmId: OsmId): Option[Seq[(String, String)]] = {
+  def tagsFor(osmId: OsmId): Option[Map[String, String]] = {
     tagService.tagsFor(osmId)
   }
 
