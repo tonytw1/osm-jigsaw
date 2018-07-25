@@ -4,7 +4,8 @@ import areas.BoundingBox
 import com.esri.core.geometry.Point
 import graph.GraphService
 import javax.inject.Inject
-import model.{GraphNode, OsmIdParsing}
+
+import model.{GraphNode, OsmIdParsing, OutputEntity, OutputNode}
 import naming.NaiveNamingService
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
@@ -101,8 +102,5 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     Json.toJson(outputNode)
   }
-
-  case class OutputEntity(osmId: String, name: String)
-  case class OutputNode(id: Long, entities: Seq[OutputEntity], children: Long)
 
 }
