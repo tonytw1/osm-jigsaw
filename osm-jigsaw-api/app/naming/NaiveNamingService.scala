@@ -7,17 +7,17 @@ import tags.TagService
 
 class NaiveNamingService @Inject()(tagService: TagService) {
 
-  private val ExcludedTags = Set("boundary:timezone")
+  private val ExcludedTags = Set(("boundary", "timezone"))
 
   def nameFor(paths: Seq[Seq[Seq[OsmId]]]): String = {
-    val pathToUse = paths.head  // TODO naive and ignores interesting nodes the other paths
+    val pathToUse: Seq[Seq[OsmId]] = paths.head  // TODO naive and ignores interesting nodes the other paths
 
     val withoutExcludedTags: Seq[Seq[OsmId]] = pathToUse.filter { nodeOsmIds =>
       val nodeTags: Map[String, String] = nodeOsmIds.map { osmId =>
         tagService.tagsFor(osmId)
       }.flatten.flatten.toMap
 
-      nodeTags.keys.toSet.intersect(ExcludedTags).isEmpty
+      nodeTags.toSet.intersect(ExcludedTags).isEmpty
     }
 
     val names = withoutExcludedTags.map { n =>
@@ -34,7 +34,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       i :+ toAdd
     }.flatten
 
-    withoutExcludedTags.reverse.mkString(", ")
+    withoutConsecutiveDuplicateNames.reverse.mkString(", ")
   }
 
 }
