@@ -41,25 +41,29 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   def reverse(lat: Double, lon: Double) = Action.async { request =>
 
-    def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
-      val matchingChildren = node.children.filter { c =>
-        areaContainsPoint(c, pt)
+    def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
+      def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
+        val matchingChildren = node.children.filter { c =>
+          areaContainsPoint(c, pt)
+        }
+
+        if (matchingChildren.nonEmpty) {
+          matchingChildren.flatMap { m =>
+            nodesContaining(pt, m, stack :+ node)
+          }
+        } else {
+          Seq(stack :+ node)
+        }
       }
 
-      if (matchingChildren.nonEmpty) {
-        matchingChildren.flatMap { m =>
-          nodesContaining(pt, m, stack :+ node)
-        }
-      } else {
-        Seq(stack :+ node)
-      }
+      val containing = nodesContaining(pt, graphService.head, Seq())
+      val withoutRoot= containing.map(r => r.drop(1)).filter(_.nonEmpty)
+      withoutRoot
     }
 
     val pt = new Point(lat, lon)
-    val containing = nodesContaining(pt, graphService.head, Seq())
-    val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
 
-    val jsons = withoutRoot.map(_.map(i => renderNode(i)))
+    val jsons = pathsDownTo(pt).map(_.map(i => renderNode(i)))
 
     Future.successful(Ok(Json.toJson(jsons)))
   }
