@@ -5,6 +5,7 @@ import com.esri.core.geometry.Point
 import graph.GraphService
 import javax.inject.Inject
 import model.{GraphNode, OsmIdParsing}
+import naming.NaiveNamingService
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
@@ -13,7 +14,8 @@ import tags.{EntityNameTags, TagService}
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService, val tagService: TagService) extends Controller with BoundingBox with OsmIdParsing with EntityNameTags {
+class Application @Inject()(configuration: Configuration, graphService: GraphService, val tagService: TagService,
+                            naiveNamingService: NaiveNamingService) extends Controller with BoundingBox with OsmIdParsing with EntityNameTags {
 
   def show(qo: Option[String]) = Action.async { request =>
     val nodes = nodesFor(qo.map(parseComponents).getOrElse(Seq()))
@@ -26,7 +28,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       val points = node.area.points
       implicit val pw = Json.writes[model.Point]
       Future.successful(Ok(Json.toJson(points)))
-    }.getOrElse{
+    }.getOrElse {
       Future.successful(NotFound(Json.toJson("Not found")))
     }
   }
@@ -49,16 +51,9 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   def name(lat: Double, lon: Double) = Action.async { request =>
     val pt = new Point(lat, lon)
 
-    def reallyNaiveNamingAlgorithm(paths: Seq[Seq[GraphNode]]): String = {
-      val pathToUse = paths.head
-      pathToUse.map { p =>
-        tagService.nameForOsmId(p.area.osmIds.head)
-      }.reverse.mkString(", ")
-    }
+    val paths = graphService.pathsDownTo(pt)
 
-    val paths: Seq[Seq[GraphNode]] = graphService.pathsDownTo(pt)
-
-    val name = reallyNaiveNamingAlgorithm(paths)
+    val name = naiveNamingService.nameFor(paths)
 
     Future.successful(Ok(Json.toJson(name)))
   }
@@ -98,8 +93,8 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     val entities = node.area.osmIds.map { osmId =>
 
       Json.toJson(Seq(
-      "osmId" -> Json.toJson(osmId.id.toString + osmId.`type`.toString),
-      "name" -> Json.toJson(tagService.nameForOsmId(osmId).getOrElse(node.area.id.toString))
+        "osmId" -> Json.toJson(osmId.id.toString + osmId.`type`.toString),
+        "name" -> Json.toJson(tagService.nameForOsmId(osmId).getOrElse(node.area.id.toString))
       ).toMap
       )
     }
