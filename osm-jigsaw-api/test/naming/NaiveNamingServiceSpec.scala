@@ -25,4 +25,24 @@ class NaiveNamingServiceSpec extends Specification  {
     name must equalTo("Ngaanyatjarra Indigenous Protected Area, Western Australia, Australia")
   }
 
+  "consecutive duplicated place names are not adding value and can be removed" in {
+    val isleOfManAdminBoundary = OsmId(62269, "R".charAt(0))
+    val isleOfManIsland = OsmId(6041206, "R".charAt(0))
+    val middle = OsmId(1061146, "R".charAt(0))
+    val douglas = OsmId(1061138, "R".charAt(0))
+
+    val paths = Seq(Seq(Seq(isleOfManAdminBoundary), Seq(isleOfManIsland), Seq(middle), Seq(douglas)))
+    val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
+
+    Mockito.when(tagServiceMock.nameForOsmId(isleOfManAdminBoundary)).thenReturn(Some("Isle of Man"))
+    Mockito.when(tagServiceMock.nameForOsmId(isleOfManIsland)).thenReturn(Some("Isle of Man"))
+    Mockito.when(tagServiceMock.nameForOsmId(middle)).thenReturn(Some("Middle"))
+    Mockito.when(tagServiceMock.nameForOsmId(douglas)).thenReturn(Some("Douglas"))
+    val namingService = new NaiveNamingService(tagServiceMock)
+
+    val name = namingService.nameFor(paths)
+
+    name must equalTo("Ngaanyatjarra Indigenous Protected Area, Western Australia, Australia")
+  }
+
 }
