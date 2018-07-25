@@ -1,0 +1,86 @@
+[
+  [
+    {
+      "id": 50237,
+      "entities": [
+        {
+          "osmId": "148838R",
+          "name": "United States of America"
+        }
+      ],
+      "children": 1
+    },
+    {
+      "id": 844646,
+      "entities": [
+        {
+          "osmId": "6496694R",
+          "name": "America/Los_Angeles Timezone"
+        }
+      ],
+      "children": 1
+    },
+    {
+      "id": 54774,
+      "entities": [
+        {
+          "osmId": "165475R",
+          "name": "California"
+        }
+      ],
+      "children": 1
+    },
+    {
+      "id": 116524,
+      "entities": [
+        {
+          "osmId": "396465R",
+          "name": "Mariposa County"
+        }
+      ],
+      "children": 1
+    }
+  ],
+  [
+    {
+      "id": 50237,
+      "entities": [
+        {
+          "osmId": "148838R",
+          "name": "United States of America"
+        }
+      ],
+      "children": 1
+    },
+    {
+      "id": 844646,
+      "entities": [
+        {
+          "osmId": "6496694R",
+          "name": "America/Los_Angeles Timezone"
+        }
+      ],
+      "children": 1
+    },
+    {
+      "id": 54774,
+      "entities": [
+        {
+          "osmId": "165475R",
+          "name": "California"
+        }
+      ],
+      "children": 1
+    },
+    {
+      "id": 234530,
+      "entities": [
+        {
+          "osmId": "1643367R",
+          "name": "Yosemite National Park"
+        }
+      ],
+      "children": 1
+    }
+  ]
+]
