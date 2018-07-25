@@ -10,7 +10,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     val pathToUse = paths.head
     pathToUse.map { p =>
       tagService.nameForOsmId(p.area.osmIds.head)
-    }.reverse.mkString(", ")
+    }.flatten.reverse.mkString(", ")
   }
 
 }
