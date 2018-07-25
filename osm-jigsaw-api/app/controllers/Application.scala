@@ -89,19 +89,20 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
   private def renderNode(node: GraphNode): JsValue = {
     val entities = node.area.osmIds.map { osmId =>
-
-      Json.toJson(Seq(
-        "osmId" -> Json.toJson(osmId.id.toString + osmId.`type`.toString),
-        "name" -> Json.toJson(tagService.nameForOsmId(osmId).getOrElse(node.area.id.toString))
-      ).toMap
-      )
+      val osmIdString = osmId.id.toString + osmId.`type`.toString
+      val name = tagService.nameForOsmId(osmId).getOrElse(node.area.id.toString)
+      OutputEntity(osmIdString, name)
     }
 
-    Json.toJson(Seq(
-      Some("id" -> Json.toJson(node.area.id)),
-      Some("entities" -> Json.toJson(entities)),
-      Some("children" -> Json.toJson(node.children.size))
-    ).flatten.toMap)
+    val outputNode = OutputNode(node.area.id, entities, entities.size)
+
+    implicit val ew = Json.writes[OutputEntity]
+    implicit val nw = Json.writes[OutputNode]
+
+    Json.toJson(outputNode)
   }
+
+  case class OutputEntity(osmId: String, name: String)
+  case class OutputNode(id: Long, entities: Seq[OutputEntity], children: Long)
 
 }
