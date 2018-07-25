@@ -51,9 +51,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   def name(lat: Double, lon: Double) = Action.async { request =>
     val pt = new Point(lat, lon)
 
-    val paths = graphService.pathsDownTo(pt)
-
-    val name = naiveNamingService.nameFor(paths)
+    val name = naiveNamingService.nameFor(graphService.pathsDownTo(pt))
 
     Future.successful(Ok(Json.toJson(name)))
   }
