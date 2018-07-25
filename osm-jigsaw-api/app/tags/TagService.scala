@@ -12,7 +12,7 @@ import progress.ProgressCounter
 import scala.collection.{immutable, mutable}
 
 @Singleton
-class TagService @Inject()(configuration: Configuration) extends OsmIdParsing {
+class TagService @Inject()(configuration: Configuration) extends OsmIdParsing with EntityNameTags {
 
   val tagsFile = new URL(configuration.getString("tags.url").get)
 
@@ -23,6 +23,12 @@ class TagService @Inject()(configuration: Configuration) extends OsmIdParsing {
 
     tagsMap._1.get(osmId).map { i =>
       i.map( j => (keysIndex(j._1), j._2))
+    }
+  }
+
+  def nameForOsmId(osmId: OsmId): Option[String] = {
+    tagsFor(osmId).flatMap { tags =>
+      getNameFromTags(tags)
     }
   }
 

@@ -4,7 +4,7 @@ import areas.BoundingBox
 import com.esri.core.geometry.Point
 import graph.GraphService
 import javax.inject.Inject
-import model.{GraphNode, OsmId, OsmIdParsing}
+import model.{GraphNode, OsmIdParsing}
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
@@ -49,10 +49,10 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   def name(lat: Double, lon: Double) = Action.async { request =>
     val pt = new Point(lat, lon)
 
-    def reallyNaiveNamingAlgorithm(paths: Seq[Seq[GraphNode]]) = {
-      val pathToUse: Seq[GraphNode] = paths.head
-      val name: String = pathToUse.map { p =>
-        nameForOsmId(p.area.osmIds.head)
+    def reallyNaiveNamingAlgorithm(paths: Seq[Seq[GraphNode]]): String = {
+      val pathToUse = paths.head
+      pathToUse.map { p =>
+        tagService.nameForOsmId(p.area.osmIds.head)
       }.reverse.mkString(", ")
     }
 
@@ -99,7 +99,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
       Json.toJson(Seq(
       "osmId" -> Json.toJson(osmId.id.toString + osmId.`type`.toString),
-      "name" -> Json.toJson(nameForOsmId(osmId).getOrElse(node.area.id.toString))
+      "name" -> Json.toJson(tagService.nameForOsmId(osmId).getOrElse(node.area.id.toString))
       ).toMap
       )
     }
@@ -109,12 +109,6 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       Some("entities" -> Json.toJson(entities)),
       Some("children" -> Json.toJson(node.children.size))
     ).flatten.toMap)
-  }
-
-  def nameForOsmId(osmId: OsmId): Option[String] = {  // TODO push somewhere
-    tagService.tagsFor(osmId).flatMap { tags =>
-      getNameFromTags(tags)
-    }
   }
 
 }
