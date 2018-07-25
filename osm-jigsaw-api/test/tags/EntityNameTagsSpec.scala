@@ -5,7 +5,9 @@ import org.specs2.mutable._
 class EntityNameTagsSpec extends Specification with EntityNameTags {
 
   "use the preferred language if available" in {
-    val tags = Seq(("name", "Deutschland"), ("name:en", "Federal Republic of Germany")).toMap
+    val tags = Map(
+      "name" -> "Deutschland",
+      "name:en" -> "Federal Republic of Germany")
 
     val name = getNameFromTags(tags).get
 
@@ -13,7 +15,10 @@ class EntityNameTagsSpec extends Specification with EntityNameTags {
   }
 
   "fall back to default name if preferred langauge is not available" in {
-    val tags = Seq(("name:ace", "Jeureuman"), ("name", "Deutschland"), ("name:gb", "Alemaña")).toMap
+    val tags = Map(
+      "name:ace" -> "Jeureuman",
+      "name" -> "Deutschland",
+      "name:gb" -> "Alemaña")
 
     val name = getNameFromTags(tags).get
 
@@ -21,7 +26,10 @@ class EntityNameTagsSpec extends Specification with EntityNameTags {
   }
 
   "Use the shortest available preferred language responnse if multiple options are given" in {
-    val tags = Seq(("name", "Deutschland"), ("name:en", "Federal Republic of Germany"), ("name:en", "Germany")).toMap
+    val tags = Map(
+      "name" -> "Deutschland",
+      "name:en" -> "Federal Republic of Germany",
+      "name:en" -> "Germany")
 
     val name = getNameFromTags(tags).get
 
