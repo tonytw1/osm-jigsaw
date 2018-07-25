@@ -42,7 +42,7 @@ class NaiveNamingServiceSpec extends Specification  {
 
     val name = namingService.nameFor(paths)
 
-    name must equalTo("Ngaanyatjarra Indigenous Protected Area, Western Australia, Australia")
+    name must equalTo("Douglas, Middle, Isle of Man")
   }
 
 }
