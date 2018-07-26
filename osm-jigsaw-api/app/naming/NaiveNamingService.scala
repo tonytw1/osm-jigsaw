@@ -13,17 +13,20 @@ class NaiveNamingService @Inject()(tagService: TagService) {
   )
 
   def nameFor(paths: Seq[Seq[Seq[OsmId]]]): String = {
-    val pathToUse: Seq[Seq[OsmId]] = paths.head  // TODO naive and ignores interesting nodes the other paths
 
-    val withoutExcludedTags: Seq[Seq[OsmId]] = pathToUse.filter { nodeOsmIds =>
-      val nodeTags: Map[String, String] = nodeOsmIds.map { osmId =>
-        tagService.tagsFor(osmId)
-      }.flatten.flatten.toMap
+    val pathsWithoutExcludedTags: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
+      path.filter { nodeOsmIds =>
+        val nodeTags: Map[String, String] = nodeOsmIds.map { osmId =>
+          tagService.tagsFor(osmId)
+        }.flatten.flatten.toMap
 
-      nodeTags.toSet.intersect(ExcludedTags).isEmpty
+        nodeTags.toSet.intersect(ExcludedTags).isEmpty
+      }
     }
 
-    val names = withoutExcludedTags.map { n =>
+    val pathToUse = pathsWithoutExcludedTags.head
+
+    val names = pathToUse.map { n =>
       tagService.nameForOsmId(n.head)
     }.flatten
 

@@ -68,6 +68,7 @@ class NaiveNamingServiceSpec extends Specification {
     Mockito.when(tagServiceMock.nameForOsmId(california)).thenReturn(Some("California"))
     Mockito.when(tagServiceMock.nameForOsmId(mariposaCounty)).thenReturn(Some("Mariposa County"))
     Mockito.when(tagServiceMock.nameForOsmId(yosemite)).thenReturn(Some("Yosemite National Park"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
 
