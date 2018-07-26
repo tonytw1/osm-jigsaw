@@ -7,7 +7,7 @@ import tags.TagService
 
 class NaiveNamingService @Inject()(tagService: TagService) {
 
-  private val ExcludedTags = Set(
+  private val TagsWhichDoNotContributeToLocationNames = Set(
     "boundary" -> "timezone",
     "historic" -> "yes"
   )
@@ -20,7 +20,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
           tagService.tagsFor(osmId)
         }.flatten.flatten.toMap
 
-        nodeTags.toSet.intersect(ExcludedTags).isEmpty
+        nodeTags.toSet.intersect(TagsWhichDoNotContributeToLocationNames).isEmpty
       }
     }
 
