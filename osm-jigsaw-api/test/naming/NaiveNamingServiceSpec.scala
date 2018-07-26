@@ -74,7 +74,7 @@ class NaiveNamingServiceSpec extends Specification {
 
     val name = namingService.nameFor(paths)
 
-    name must contain("Yosemite National park")
+    name must contain("Yosemite National Park")
   }
 
 }

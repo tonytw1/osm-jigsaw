@@ -16,7 +16,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
 
     val pathsWithoutExcludedTags: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
       path.filter { nodeOsmIds =>
-        val nodeTags: Map[String, String] = nodeOsmIds.map { osmId =>
+        val nodeTags = nodeOsmIds.map { osmId =>
           tagService.tagsFor(osmId)
         }.flatten.flatten.toMap
 
@@ -24,9 +24,9 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       }
     }
 
-    val pathToUse = pathsWithoutExcludedTags.head
+    val combined = pathsWithoutExcludedTags.flatten // TODO needs a more sensible algorithm
 
-    val names = pathToUse.map { n =>
+    val names = combined.map { n =>
       tagService.nameForOsmId(n.head)
     }.flatten
 
