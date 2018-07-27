@@ -19,7 +19,6 @@ class NaiveNamingService @Inject()(tagService: TagService) {
 
   def nameFor(paths: Seq[Seq[Seq[OsmId]]]): String = {
 
-
     def hasExcludedTags(osmId: OsmId): Boolean = {
       val osmIdTags = tagService.tagsFor(osmId).getOrElse(Map.empty).toSet
       osmIdTags.intersect(TagsWhichDoNotContributeToLocationNames).nonEmpty
@@ -28,8 +27,8 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     val pathsWithoutExcludedTags: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
       path.map { p =>
         p.filter(e => !hasExcludedTags(e))
-      }
-    } // TODO remove now empty nodes
+      }.filter(_.nonEmpty)
+    }
 
     // Merge the multiple paths into a graph represented with adjacent pairs
     val adjacentPairs: mutable.ListBuffer[(OsmId, OsmId)] = mutable.ListBuffer[(OsmId, OsmId)]()
