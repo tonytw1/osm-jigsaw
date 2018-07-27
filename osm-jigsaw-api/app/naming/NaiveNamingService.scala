@@ -9,6 +9,9 @@ import scala.collection.mutable
 class NaiveNamingService @Inject()(tagService: TagService) {
 
   private val TagsWhichDoNotContributeToLocationNames = Set(
+    "boundary" -> "eez",
+    "boundary" -> "maritime",
+    "boundary" -> "police",
     "boundary" -> "timezone",
     "historic" -> "yes"
   )
