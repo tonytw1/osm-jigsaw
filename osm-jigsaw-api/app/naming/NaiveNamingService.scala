@@ -10,6 +10,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
 
   private val TagsWhichDoNotContributeToLocationNames = Set(
     "boundary" -> "eez",
+    "boundary" -> "historic",
     "boundary" -> "maritime",
     "boundary" -> "police",
     "boundary" -> "timezone",
