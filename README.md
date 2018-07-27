@@ -5,7 +5,7 @@ This system attempts to arrange the contents of an OpenStreetMap extract into a 
 
 This graph is then exported as a JSON API.
 
-Reverse geocoding place names can be quickly inferred from the hierarchy of areas enclosing a given point.
+Place names can be quickly inferred from the hierarchy of areas enclosing a given point.
 
 
 ### Background
@@ -237,10 +237,10 @@ A full extract runs to completion on a machine with 32Gb of RAM (no swap) in app
 The graph can be loaded into a JVM with 30Gb of heap.
 This includes all of the point data for every area and every OSM tag for the area entities.
 
-The [API](https://github.com/tonytw1/osm-jigsaw-api) can resolve a reverse query in around 30ms.
+The [API](osm-jigsaw-api can resolve a reverse query in around 30ms.
 
 
-### Deriving a location name from the area hirecacy
+### Deriving a location name from the area hierarchy
 
 Given a point location it is a cheap operation (vaguly like descending a b-tree) to step down the hirarcy of nested areas in the graph,
 extracting all of the possible paths down to the smallest area enclosing the point of interest.
@@ -266,9 +266,9 @@ In english this means collecting the name:en tags and joining the smallest to la
 ie. Bournemouth, England, United Kingdom.
 
 
-A naive implementation is provided in the API.
+A [naive implementation is provided](osm-jigsaw-api/app/naming/NaiveNamingService.scala) in the API.
 
-The feels like a problem which may react well to a supervised machine learning approach.
+The feels like a problem which could be suited to a supervised machine learning approach.
 
 
 
