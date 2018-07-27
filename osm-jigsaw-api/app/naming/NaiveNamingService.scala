@@ -1,9 +1,10 @@
 package naming
 
 import javax.inject.Inject
-
 import model.OsmId
 import tags.TagService
+
+import scala.collection.mutable
 
 class NaiveNamingService @Inject()(tagService: TagService) {
 
@@ -24,23 +25,42 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       }
     }
 
-    val combined = pathsWithoutExcludedTags.flatten // TODO needs a more sensible algorithm
+    // Merge the multiple paths into a graph represented with adjacent pairs
+    val adjacentPairs: mutable.ListBuffer[(OsmId, OsmId)] = mutable.ListBuffer[(OsmId, OsmId)]()
+    pathsWithoutExcludedTags.map { path =>
+      path.foldLeft(mutable.Stack[OsmId]()) { (i, a) =>
+        a.map { n =>  // TODO need to decide which name to take for an overlap
+          val node = n
+          i.headOption.map { l =>
+            val pair: (OsmId, OsmId) = ((l, node))
+            if (!adjacentPairs.contains(pair)) {
+              adjacentPairs += pair
+            }
+          }
+          i.push(node)
+        }
+        i
+      }
+    }
+
+    val combined = adjacentPairs.foldLeft(Seq[OsmId]()) { (i, a) =>
+      i ++ Seq(a._1, a._2).filter(n => !i.contains(n))
+    }
 
     val names = combined.map { n =>
-      tagService.nameForOsmId(n.head)
+      tagService.nameForOsmId(n)
     }.flatten
 
-    val withoutConsecutiveDuplicateNames = names.foldLeft(Seq[Option[String]]()) { (i, a) =>
-      val previous = i.lastOption.flatten
-      val toAdd = if (Some(a) != previous) {
-        Some(a)
+
+    val withDeduplicatedNames = names.foldLeft(Seq[String]()) { (i, a) =>
+      if (!i.contains(a)) {
+        i :+ a
       } else {
-        None
+        i
       }
-      i :+ toAdd
-    }.flatten
+    }
 
-    withoutConsecutiveDuplicateNames.reverse.mkString(", ")
+    withDeduplicatedNames.reverse.mkString(", ")
   }
 
 }
