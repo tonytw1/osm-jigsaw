@@ -50,7 +50,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
 
     val combined = adjacentPairs.foldLeft(Seq[OsmId]()) { (i, a) =>
       if (!i.contains(a._2)) {
-        val insertAfter = i.indexOf(a._2) + 1
+        val insertAfter = i.indexOf(a._1) + 1
         if (insertAfter > 0) {
           val (before, after) = i.splitAt(insertAfter)
           before ++ Seq(a._2) ++ after

@@ -102,7 +102,7 @@ class NaiveNamingServiceSpec extends Specification {
 
     val name = namingService.nameFor(paths)
 
-    name must equalTo("Bournemouth, Dorset. South West England, England, United Kingdom")
+    name must equalTo("Bournemouth, Dorset, England, South West England, United Kingdom")
   }
 
   /*
