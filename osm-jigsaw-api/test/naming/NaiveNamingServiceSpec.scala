@@ -62,6 +62,7 @@ class NaiveNamingServiceSpec extends Specification {
     val yosemitePath = Seq(Seq(unitedStates), Seq(california), Seq(yosemite))
 
     val paths = Seq(mariposaPath, yosemitePath)
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
     Mockito.when(tagServiceMock.nameForOsmId(unitedStates)).thenReturn(Some("United States of America"))
@@ -77,10 +78,34 @@ class NaiveNamingServiceSpec extends Specification {
     name must contain("Yosemite National Park")
   }
 
-  /*
   "merging overlapping areas should preserve the ordering of nested areas" in {
+    val unitedKingdom = OsmId(16689, R)
+    val england =OsmId(16137, R)
+    val southWestEngland =OsmId(151339, R)
+    val dorset =OsmId(375535, R)
+    val bournemouth =OsmId(42134, R)
+
+    val viaEnglandPath = Seq(Seq(unitedKingdom), Seq(england), Seq(dorset), Seq(bournemouth))
+    val viaSouthWestEnglandPath = Seq(Seq(unitedKingdom), Seq(southWestEngland), Seq(dorset), Seq(bournemouth))
+
+    val paths = Seq(viaEnglandPath, viaSouthWestEnglandPath)
+
+    val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
+    Mockito.when(tagServiceMock.nameForOsmId(unitedKingdom)).thenReturn(Some("United Kingdom"))
+    Mockito.when(tagServiceMock.nameForOsmId(england)).thenReturn(Some("England"))
+    Mockito.when(tagServiceMock.nameForOsmId(southWestEngland)).thenReturn(Some("South West England"))
+    Mockito.when(tagServiceMock.nameForOsmId(dorset)).thenReturn(Some("Dorset"))
+    Mockito.when(tagServiceMock.nameForOsmId(bournemouth)).thenReturn(Some("Bournemouth"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+
+    val namingService = new NaiveNamingService(tagServiceMock)
+
+    val name = namingService.nameFor(paths)
+
+    name must equalTo("Bournemouth, Dorset. South West England, England, United Kingdom")
   }
 
+  /*
   "should excluded entities which have tags which do not contribute to place names" in {
     failure
   }
