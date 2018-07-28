@@ -49,7 +49,17 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     }
 
     val combined = adjacentPairs.foldLeft(Seq[OsmId]()) { (i, a) =>
-      i ++ Seq(a._1, a._2).filter(n => !i.contains(n))
+      if (!i.contains(a._2)) {
+        val insertAfter = i.indexOf(a._2) + 1
+        if (insertAfter > 0) {
+          val (before, after) = i.splitAt(insertAfter)
+          before ++ Seq(a._2) ++ after
+        } else {
+          i ++ Seq(a._1, a._2)
+        }
+      } else {
+        i
+      }
     }
 
     val names = combined.map { n =>

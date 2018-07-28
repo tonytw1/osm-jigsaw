@@ -52,7 +52,7 @@ class NaiveNamingServiceSpec extends Specification {
     name must equalTo("Douglas, Middle, Isle of Man")
   }
 
-  "need to consider overlappingareas" in {
+  "need to consider overlapping areas" in {
     val unitedStates = OsmId(148838, R)
     val california = OsmId(165475, R)
     val mariposaCounty = OsmId(396465, R)
@@ -78,6 +78,9 @@ class NaiveNamingServiceSpec extends Specification {
   }
 
   /*
+  "merging overlapping areas should preserve the ordering of nested areas" in {
+  }
+
   "should excluded entities which have tags which do not contribute to place names" in {
     failure
   }
