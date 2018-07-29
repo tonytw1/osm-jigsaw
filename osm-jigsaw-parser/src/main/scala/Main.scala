@@ -38,6 +38,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val inputFilepath = cmd.getArgList.get(0) // TODO validation required
 
     step match {
+      case "stats" => stats(inputFilepath)
       case "split" => split(inputFilepath)
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
@@ -49,6 +50,28 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
       case _ => logger.info("Unknown step") // TODO exit code
     }
+  }
+
+  def stats(inputFilepath: String) = {
+    var nodes = 0L
+    var ways = 0L
+    var relations = 0L
+
+    def countTypes(entity: Entity) = {
+      entity match {
+        case n: Node => nodes = nodes + 1
+        case w: Way => ways = ways + 1
+        case r: Relation => relations = relations + 1
+        case _ =>
+      }
+    }
+
+    def all(entity: Entity): Boolean = true
+    new SinkRunner(inputFilepath, all, countTypes).run
+
+    logger.info("Nodes: " + nodes)
+    logger.info("Ways: " + ways)
+    logger.info("Relations: " + relations)
   }
 
   def split(inputFilepath: String) {
