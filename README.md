@@ -3,7 +3,7 @@
 An area based approach to geocoding with OpenStreetMap extracts.
 This system attempts to arrange the contents of an OpenStreetMap extract into a graph of nested areas.
 
-This graph is then exported as a [JSON API](osm-jigsaw-api).
+This graph is then exported as a [set of Protocol buffer files](#Output files) which can be exported as a [JSON API](osm-jigsaw-api).
 
 Place names can be inferred from the hierarchy of areas enclosing a given point.
 
@@ -14,7 +14,7 @@ Gecoding is the art turning a location point into a human readable name (and vic
 (ie. 51.0, -0.3 <--> London, United Kingdom).
 
 [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim) is the default OpenStreetMap geocoding solution.
-It does are really great job of interpreting an implied structure and using it to construct sensible geocodings.
+It does are really great job of inferring structure and using it to construct sensible place names.
 
 Nominatim uses a Postgres database populated with the entire OpenStreetMap dataset.
 This can be operationally challenging for a number of reasons including:
@@ -57,10 +57,10 @@ human intervention.
 
 ### Proposed approach
 
-Starting with a raw OSM extract file, preform a number of independent steps to transform the extract into the desired output format.
+Starting with a raw OSM extract file, preform a number of independent transformations to reach the desired output format.
 
 
-#### 1) Extract interesting entities from the input file
+#### 1) Extract interesting entities
 
 To get the dataset down to manageable size, extract any OSM entities which might represent areas into a working file.
 
@@ -77,11 +77,11 @@ This step might take the 1Gb Great Britain extract down to something more like 5
 
 Attempt to build closed shapes from the filtered entities.
 
-Relations may be composed multiple ways and sub relations which will need to be resolved.
-A single relation might represent multiple areas (ie. a group of islands).
+Relations may be composed of multiple ways and sub relations which will need to be resolved.
+A single relation could represent multiple areas (ie. a group of islands).
 
 Ways within a relation might not always be in sequential order. 
-Ways within an area's outline may be pointing in different directions. A certain amount of trail and error might be needed.
+Ways within an relation outline may be pointing in different directions. A certain amount of trail and error might be needed.
 
 Output the resolved areas in an unsorted file.
 
@@ -96,6 +96,13 @@ England should be a child of United Kingdom after sorting.
 Bournemouth should be a descendant of England.
 
 Output the graph in a format which can be sensibly parsed by a consumer.
+
+
+### OSM Jigsaw parser
+
+The [OSM Jigsaw parser](osm-jigsaw-parser) takes an OSM extract protocol buffer extract file and produces the output file described below.
+
+
 
 
 ### Usage
@@ -114,9 +121,8 @@ Obtain a planet.osm extract (using the protocol buffer .pbf format).
 
 ##### 1) Split the extract file
 
-An OSM extract seems to list nodes, ways and then relations. This is not the optimal ordering for our workflow.
-There are gains to be had by spliting the extract file by entity type to save time spent scanning past entites
-we are not interested in.
+An OSM extract seems to be ordered by nodes, ways and then relations. This is not the optimal ordering for our workflow.
+There are gains to be had by splitting the extract file by entity type to save time spent scanning past entities we are not interested in.
 
 ```
 input="ireland-and-northern-ireland-180717"
@@ -139,7 +145,7 @@ ireland-and-northern-ireland-180717.osm.pbf.ways
 java -Xmx16G -jar $jarfile -s extract $input.osm.pbf $input.rels.pbf
 ```
 
-The heap sizes have been choosen for a full planet extract on a machine with 32Gb of RAM.
+The heap sizes have been chosen for a full planet extract on a machine with 32Gb of RAM.
 
 This step should produce 3 more files:
 
@@ -181,13 +187,13 @@ ireland-and-northern-ireland-180717.tags.pbf
 ```
 
 
-### Output formats
+### Output files
 
-The 3 files are in protocol buffer format and contain [OutputArea](osm-jigsaw-parser/src/main/protobuf/outputarea.proto), [OutputGraphNode](osm-jigsaw-parser/src/main/protobuf/outputgraphnode.proto) and [OutputTagging](osm-jigsaw-parser/src/main/protobuf/outputtagging.proto) objects.
+The 3 output files are in protocol buffer format and contain [OutputArea](osm-jigsaw-parser/src/main/protobuf/outputarea.proto), [OutputGraphNode](osm-jigsaw-parser/src/main/protobuf/outputgraphnode.proto) and [OutputTagging](osm-jigsaw-parser/src/main/protobuf/outputtagging.proto) objects.
 These formats are described below.
 These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](osm-jigsaw-api).
 
-Protocol buffer was chosen for it's relatively small file size and fast import; it's also consistant with the OSM extract files.
+Protocol buffer was chosen for it's relatively small file size and fast import; it's also consistent with the OSM extract files.
 
 
 #### OutputArea
@@ -197,10 +203,10 @@ Describes and areas extracted from an OSM relation or way.
 | Field | Type | Description|
 | ------------- | ------------- | ------------- |
 | id  |  Long  | A disposable id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time.|
-| osm_ids     | List of String | A list of OSM ids for the OSM entities which have this area. ie. 123W, 456W|
+| osm_ids     | List of String | A list of the OSM ids for entities which match this area. ie. 123W, 456W|
 | latitudes   | List of Double | A list of the latitudes of the points which form the outline for this area.|
 | longitudes  | List of Double  | A list of the longitudes of the points which form the outline for this area.|
-| area | Double | The size of the the area.|
+| area | Double | The size of the area.|
 
 #### OutputGraphNode
 
@@ -226,8 +232,8 @@ Represents the OSM tags for an OSM id.
 
 
 Why aren't the areas and tags inlined into the graph file?
-Keeping the areas and tags separate from the grapg allows for deduplication of the areas which appear in overlaps.
-This provides a worth having memory saving when reloading the graph.
+Keeping the areas and tags separate from the graph allows for deduplication of the areas which appear in overlaps.
+This provides a memory saving when reloading the graph.
 
 
 ### Execution
@@ -242,17 +248,20 @@ The [API](osm-jigsaw-api) can resolve a reverse query in around 30ms.
 
 ### Deriving a location name from the area hierarchy
 
-Given a point location it is a cheap operation (vaguly like descending a b-tree) to step down the hirarcy of nested areas in the graph,
+Given a point. it is a fairly fast operation (vaguely like descending a b-tree) to step down the hierarchy of nested areas,
 extracting all of the possible paths down to the smallest area enclosing the point of interest.
 
-The geocoding step then becomes inferrering a human readable name from this collection of paths.
+We can infer a human readable name from this collection of paths.
+
+The feels like a problem which could be suited to a supervised machine learning approach, but we can get close with a rules based approach.
+
 
 - As each area in the graph was derived from an OSM entity (a relation of a closed way), we can inspect the OSM tags for each area.
-This should give a name for each step in the path down to the point.
+This should give a label for each step on the path.
 
-- There will be classes of entity in the path which are not relivant, such as time zones, electoral boundaries and historal data; these can be ignored at runtime.
+- There will be classes of entity in the path which are not relevant such as time zones, electoral boundaries and historical data; these can be ignored.
 
-- Useful components of the name may come from more than one of the paths down to the point.
+- Useful components of the name may come from more than one of the paths.
 
 - We can ignore overlapping entities with the same name as these probably aren't adding value.
  ie. New Zealand, Wellington, Wellington
@@ -267,9 +276,6 @@ ie. Bournemouth, England, United Kingdom.
 
 
 A [naive implementation is provided](osm-jigsaw-api/app/naming/NaiveNamingService.scala) in the API.
-
-The feels like a problem which could be suited to a supervised machine learning approach.
-
 
 
 ### Results
