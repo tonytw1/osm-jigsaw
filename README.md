@@ -3,7 +3,7 @@
 An area based approach to geocoding with OpenStreetMap extracts.
 This system attempts to arrange the contents of an OpenStreetMap extract into a graph of nested areas.
 
-This graph is then exported as a JSON API.
+This graph is then exported as a [JSON API](osm-jigsaw-api).
 
 Place names can be inferred from the hierarchy of areas enclosing a given point.
 
