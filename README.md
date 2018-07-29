@@ -32,7 +32,7 @@ Can we transform a raw OSM data extract into a structured graph in application c
 ### Considerations
 
 The OpenStreetMap data model is a fairly unstructured, flat format. The implied structure comes from a loosely applied hierarchy of tags.
-The full dataset contains around 5 billion entities is in the region of 60Gb compressed.
+The full dataset contains around 5 billion entities is in the region of 40Gb compressed.
 
 These considerations come to mind:
 
@@ -112,7 +112,7 @@ These 3 files should be placed in a location where they are accessible to the [O
 
 Protocol buffer was chosen for it's relatively small file size and fast import; it's also consistent with the OSM extract files.
 
-A collection of [prebuilt files]() is available.
+A collection of [prebuilt files](https://s3-eu-west-1.amazonaws.com/osm-jigsaw) is available.
 
 
 #### OutputArea
