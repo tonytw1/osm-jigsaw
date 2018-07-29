@@ -100,7 +100,7 @@ Output the graph in a format which can be sensibly parsed by a consumer.
 
 ### OSM Jigsaw parser
 
-The [OSM Jigsaw parser](osm-jigsaw-parser) takes an OSM extract protocol buffer extract file and produces the output file described below.
+The [OSM Jigsaw parser](osm-jigsaw-parser) takes an OSM protocol buffer extract and produces the output files described below.
 
 
 
