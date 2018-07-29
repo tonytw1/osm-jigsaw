@@ -1,3 +1,8 @@
+## OpenStreetMap Jigsaw
+
+Parses an OSM protocol buffer extract and produces a sorted graph of areas.
+
+
 ### Usage
 
 #### Compiling
