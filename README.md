@@ -57,7 +57,7 @@ human intervention.
 
 ### Proposed approach
 
-Starting with a raw OSM extract file, preform a number of independent transformations to reach the desired output format.
+Starting with a raw OSM extract file, preform a number of independent transformations until we have a sorted collection of areas.
 
 
 #### 1) Extract interesting entities
@@ -70,7 +70,7 @@ Collect the sub relations, ways and nodes which make up these entities.
 
 Some relations have sub relations which form circular references; we should ignore these.
 
-This step might take the 1Gb Great Britain extract down to something more like 50Mb.
+This step takes the ~40Gb planet extract down to ~8Gb.
 
 
 #### 2) Resolve relations and closed ways into areas
