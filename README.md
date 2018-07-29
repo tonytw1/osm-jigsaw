@@ -167,7 +167,7 @@ The [API](osm-jigsaw-api) can resolve a reverse query in around 30ms.
 
 ### Deriving a location name from the area hierarchy
 
-Given a point. it is a fairly fast operation (vaguely like descending a b-tree) to step down the hierarchy of nested areas,
+Given a point it is a fairly fast operation (vaguely like descending a b-tree) to step down the hierarchy of nested areas,
 extracting all of the possible paths down to the smallest area enclosing the point of interest.
 
 We can infer a human readable name from this collection of paths.
