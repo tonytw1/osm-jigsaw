@@ -5,7 +5,7 @@ This system attempts to extract every area from an OpenStreetMap extract and sor
 
 This graph is then exported as a [set of Protocol buffer files](#output-files) which can be exported as a [JSON API](osm-jigsaw-api).
 
-This hierarchy can be used infer a place name from the areas enclosing a given point.
+This hierarchy can be used to infer a place name from the areas enclosing a given point.
 
 
 ### Background
