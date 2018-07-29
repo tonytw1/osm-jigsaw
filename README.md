@@ -5,7 +5,7 @@ This system attempts to arrange the contents of an OpenStreetMap extract into a 
 
 This graph is then exported as a JSON API.
 
-Place names can be quickly inferred from the hierarchy of areas enclosing a given point.
+Place names can be inferred from the hierarchy of areas enclosing a given point.
 
 
 ### Background
@@ -13,7 +13,7 @@ Place names can be quickly inferred from the hierarchy of areas enclosing a give
 Gecoding is the art turning a location point into a human readable name (and vice versa).
 (ie. 51.0, -0.3 <--> London, United Kingdom).
 
-Nominatim is the default OpenStreetMap geocoding solution.
+[Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim) is the default OpenStreetMap geocoding solution.
 It does are really great job of interpreting an implied structure and using it to construct sensible geocodings.
 
 Nominatim uses a Postgres database populated with the entire OpenStreetMap dataset.
@@ -57,12 +57,12 @@ human intervention.
 
 ### Proposed approach
 
-Starting with a raw OSM extract file, preform a number of independant steps to transform the extract into the desired output format.
+Starting with a raw OSM extract file, preform a number of independent steps to transform the extract into the desired output format.
 
 
 #### 1) Extract interesting entities from the input file
 
-To get the dataset down to managable size, extract any OSM entities which might represent areas into a working file.
+To get the dataset down to manageable size, extract any OSM entities which might represent areas into a working file.
 
 Take all of the relations and the ways which are marked as closed.
 Discard any entities which do not have name tags.
@@ -187,7 +187,7 @@ The 3 files are in protocol buffer format and contain [OutputArea](osm-jigsaw-pa
 These formats are described below.
 These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](osm-jigsaw-api).
 
-Protocol buffer was choosen for it's relatively small file size and fast import; it's also consistant with the OSM extract files.
+Protocol buffer was chosen for it's relatively small file size and fast import; it's also consistant with the OSM extract files.
 
 
 #### OutputArea
@@ -237,7 +237,7 @@ A full extract runs to completion on a machine with 32Gb of RAM (no swap) in app
 The graph can be loaded into a JVM with 30Gb of heap.
 This includes all of the point data for every area and every OSM tag for the area entities.
 
-The [API](osm-jigsaw-api can resolve a reverse query in around 30ms.
+The [API](osm-jigsaw-api) can resolve a reverse query in around 30ms.
 
 
 ### Deriving a location name from the area hierarchy
