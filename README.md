@@ -1,11 +1,11 @@
 ## OpenStreetMap Jigsaw
 
 An area based approach to geocoding with OpenStreetMap extracts.
-This system attempts to arrange the contents of an OpenStreetMap extract into a graph of nested areas.
+This system attempts to extract every area from an OpenStreetMap extract and sort them into a graph.
 
 This graph is then exported as a [set of Protocol buffer files](#output-files) which can be exported as a [JSON API](osm-jigsaw-api).
 
-Place names can be inferred from the hierarchy of areas enclosing a given point.
+This hierarchy can be used infer place names from the areas enclosing a given point.
 
 
 ### Background
