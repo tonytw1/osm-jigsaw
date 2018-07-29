@@ -3,7 +3,7 @@
 An area based approach to geocoding with OpenStreetMap extracts.
 This system attempts to extract every area from an OpenStreetMap extract and sort them into a graph.
 
-This graph is then exported as a [set of Protocol buffer files](#output-files) which can be exported as a [JSON API](osm-jigsaw-api).
+This graph is then exported as a [set of Protocol buffer files](#output-files) which can be exposed as a [JSON API](osm-jigsaw-api).
 
 This hierarchy can be used to infer a place name from the areas enclosing a given point.
 
@@ -100,9 +100,7 @@ Output the graph in a format which can be sensibly parsed by a consumer.
 
 ### OSM Jigsaw parser
 
-The [OSM Jigsaw parser](osm-jigsaw-parser) takes an OSM protocol buffer extract and produces the output files described below.
-
-
+The [OSM Jigsaw parser](osm-jigsaw-parser) takes an OSM protocol buffer extract, preforms the steps described above and outputs the files described below.
 
 ### Output files
 
