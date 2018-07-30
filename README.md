@@ -7,6 +7,8 @@ This graph is then exported as a [set of Protocol buffer files](#output-files) w
 
 This hierarchy can be used to infer a place name from the areas enclosing a given point.
 
+An full [planet example is viewable here](https://osm-jigsaw.eelpieconsulting.co.uk).
+
 
 ### Background
 
