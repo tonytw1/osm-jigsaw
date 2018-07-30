@@ -21,7 +21,10 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   def index(qo: Option[String]) = Action.async { request =>
     val q = qo.getOrElse("")
 
-    ws.url((apiUrl + "/show").addParam("q", q)).get.flatMap { r =>
+    val showEndpoint = apiUrl + "/show"
+    Logger.info("Calling API: " + showEndpoint)
+
+    ws.url(showEndpoint.addParam("q", q)).get.flatMap { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
       val graphNodes = Json.parse(r.body).as[Seq[GraphNode]]
