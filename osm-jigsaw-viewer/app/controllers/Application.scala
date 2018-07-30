@@ -83,7 +83,8 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       }
     }
 
-    val eventualName = ws.url((apiUrl + "/name").addParam("lat", lat).addParam("lon", lon)).get.map { r =>
+    val nameApiCallUrl = (apiUrl + "/name").addParam("lat", lat).addParam("lon", lon)
+    val eventualName = ws.url(nameApiCallUrl).get.map { r =>
       Json.parse(r.body).as[String]
     }
 
@@ -92,7 +93,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       name <- eventualName
 
     } yield {
-      Ok(views.html.click(crumbs, name, reverseApiCallUrl))
+      Ok(views.html.click((lat, lon), crumbs, name, nameApiCallUrl, reverseApiCallUrl))
     }
   }
 

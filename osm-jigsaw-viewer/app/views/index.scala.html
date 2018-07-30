@@ -8,6 +8,11 @@
         crossorigin=""></script>
 <script   src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
+<h2><a href="/">OpenStreetMap Jigsaw</a></h2>
+<a href="https://github.com/tonytw1/osm-jigsaw" target="_blank">Github</a>
+<hr/>
+
+
 <div id="mapid"></div>
 
 <style>
@@ -39,6 +44,7 @@
             url: "/click?lat=" + latlng.lat + "&lon=" + latlng.lng
         }).done(function(data) {
             $('#reverse').html(data);
+            $('#node').html("");
         });
     });
 
@@ -46,18 +52,32 @@
 
 <div id="reverse"></div>
 
-@crumb.map { cs =>
-<h2>@crumbs(cs)</h2>
+<div id="node">
+@if(node.isEmpty) {
+    <p>Click a point on the map to reverse geocode</p>
 }
 
 @node.map { area =>
+    @crumb.map { cs =>
+        <h2>@crumbs(cs)</h2>
+    }
     <p>
+        <h6>Area id</h6>
         @area.id
+
+        <h6>OSM ids</h6>
         @osmUrls.map { ous =>
             @ous.map { ou =>
                 <a href="@ou._2" target="_blank">@ou._1</a>
             }
         }
+        <h6>Tags</h6>
         <p>@tags</p>
     </p>
 }
+</div>
+
+<p>Map data © OpenStreetMap contributors</p>
+<hr/>
+</body>
+</html>
