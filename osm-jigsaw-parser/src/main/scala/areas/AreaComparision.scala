@@ -1,6 +1,6 @@
 package areas
 
-import com.esri.core.geometry.{OperatorContains, OperatorEquals, SpatialReference, Polygon}
+import com.esri.core.geometry.{OperatorContains, OperatorEquals, Polygon, SpatialReference}
 import model.Area
 
 trait AreaComparison {
@@ -15,22 +15,11 @@ trait AreaComparison {
     }
   }
 
-  /*
-  def areasOverlap(a: Area, b: Area) = {
-    if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
-      false
-    } else {
-      OperatorOverlaps.local().execute(a.polygon, b.polygon, sr, null)
-    }
-  }
-  */
-
   def areaSame(a: Area, b: Area): Boolean = {
     if (a.boundingBox._3 < b.boundingBox._1 || a.boundingBox._1 > b.boundingBox._3 || a.boundingBox._2 < b.boundingBox._4 || a.boundingBox._4 > b.boundingBox._2) {
       false
     } else {
-      // TODO bounding box optimisation?
-      OperatorEquals.local().execute(a.polygon, b.polygon, sr, null)
+      OperatorEquals.local().execute(a.polygon, b.polygon, sr, null)        // TODO Profile bounding boxes equal optimisation?
     }
   }
 
