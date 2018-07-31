@@ -18,6 +18,8 @@ class TagService @Inject()(configuration: Configuration) extends OsmIdParsing wi
 
   val tagsMap: (Map[OsmId, Seq[(Int, String)]], immutable.IndexedSeq[String]) = loadTags(tagsFile)
 
+  val English = "en"
+
   def tagsFor(osmId: OsmId): Option[Map[String, String]] = {
     val keysIndex = tagsMap._2    // TODO push up
 
@@ -26,9 +28,9 @@ class TagService @Inject()(configuration: Configuration) extends OsmIdParsing wi
     }
   }
 
-  def nameForOsmId(osmId: OsmId): Option[String] = {
+  def nameForOsmId(osmId: OsmId, encoding: Option[String] = None): Option[String] = {
     tagsFor(osmId).flatMap { tags =>
-      getNameFromTags(tags)
+      getNameFromTags(tags, encoding.getOrElse(English))
     }
   }
 

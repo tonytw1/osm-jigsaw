@@ -1,15 +1,15 @@
 package controllers
 
+import javax.inject.Inject
+
 import areas.BoundingBox
 import com.esri.core.geometry.Point
 import graph.GraphService
-import javax.inject.Inject
-
 import model._
 import naming.NaiveNamingService
-import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
+import play.api.{Configuration, Logger}
 import tags.{EntityNameTags, TagService}
 
 import scala.collection.mutable
@@ -41,14 +41,20 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   }
 
   def reverse(lat: Double, lon: Double) = Action.async { request =>
+    val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
+    Logger.info("Accept language: " + requestedLanguage)
+
     val pt = new Point(lat, lon)
 
-    val jsons = graphService.pathsDownTo(pt).map(_.map(i => renderNode(i)))
+    val jsons = graphService.pathsDownTo(pt).map(_.map(i => renderNode(i, requestedLanguage)))
 
     Future.successful(Ok(Json.toJson(jsons)))
   }
 
   def name(lat: Double, lon: Double) = Action.async { request =>
+    val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
+    Logger.info("Accept language: " + requestedLanguage)
+
     val pt = new Point(lat, lon)
 
     val paths = graphService.pathsDownTo(pt)
@@ -59,7 +65,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       }
     }
 
-    val name = naiveNamingService.nameFor(pathInformationNeededToInferPlaceName)
+    val name = naiveNamingService.nameFor(pathInformationNeededToInferPlaceName, requestedLanguage)
 
     Future.successful(Ok(Json.toJson(name)))
   }
@@ -95,10 +101,10 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     nodes
   }
 
-  private def renderNode(node: GraphNode): JsValue = {
+  private def renderNode(node: GraphNode, requestedLanguage: Option[String]  = None): JsValue = {
     val entities = node.area.osmIds.map { osmId =>
       val osmIdString = osmId.id.toString + osmId.`type`.toString
-      val name = tagService.nameForOsmId(osmId).getOrElse(node.area.id.toString)
+      val name = tagService.nameForOsmId(osmId, requestedLanguage).getOrElse(node.area.id.toString)
       OutputEntity(osmIdString, name)
     }
 

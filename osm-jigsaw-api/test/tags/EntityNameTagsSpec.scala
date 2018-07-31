@@ -9,7 +9,7 @@ class EntityNameTagsSpec extends Specification with EntityNameTags {
       "name" -> "Deutschland",
       "name:en" -> "Federal Republic of Germany")
 
-    val name = getNameFromTags(tags).get
+    val name = getNameFromTags(tags, "en").get
 
     name must equalTo("Federal Republic of Germany")
   }
@@ -20,7 +20,7 @@ class EntityNameTagsSpec extends Specification with EntityNameTags {
       "name" -> "Deutschland",
       "name:gb" -> "Alemaña")
 
-    val name = getNameFromTags(tags).get
+    val name = getNameFromTags(tags, "en").get
 
     name must equalTo("Deutschland")
   }
@@ -31,7 +31,7 @@ class EntityNameTagsSpec extends Specification with EntityNameTags {
       "name:en" -> "Federal Republic of Germany",
       "name:en" -> "Germany")
 
-    val name = getNameFromTags(tags).get
+    val name = getNameFromTags(tags, "en").get
 
     name must equalTo("Germany")
   }

@@ -17,7 +17,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "historic" -> "yes"
   )
 
-  def nameFor(paths: Seq[Seq[Seq[OsmId]]]): String = {
+  def nameFor(paths: Seq[Seq[Seq[OsmId]]], requestedLanguage: Option[String] = None): String = {
 
     def hasExcludedTags(osmId: OsmId): Boolean = {
       val osmIdTags = tagService.tagsFor(osmId).getOrElse(Map.empty).toSet
@@ -63,7 +63,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     }
 
     val names = combined.map { n =>
-      tagService.nameForOsmId(n)
+      tagService.nameForOsmId(n, requestedLanguage)
     }.flatten
 
 

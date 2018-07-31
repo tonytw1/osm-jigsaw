@@ -2,10 +2,8 @@ package tags
 
 trait EntityNameTags {
 
-  private val English = "en"  // TODO Push to Accepts header
-
-  def getNameFromTags(tags: Map[String, String]): Option[String] = {
-    val preferredName = "name:" + English
+  def getNameFromTags(tags: Map[String, String], encoding: String): Option[String] = {
+    val preferredName = "name:" + encoding
     val otherUsableNames = Seq(preferredName, "name")
 
     val allAvailableNames = tags.filter(t => otherUsableNames.contains(t._1)).toSet
