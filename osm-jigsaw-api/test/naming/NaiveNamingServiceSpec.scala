@@ -18,9 +18,9 @@ class NaiveNamingServiceSpec extends Specification {
     val paths = Seq(Seq(Seq(australia), Seq(westernAustralia), Seq(ngaanyatjarra)))
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
-    Mockito.when(tagServiceMock.nameForOsmId(australia)).thenReturn(Some("Australia"))
-    Mockito.when(tagServiceMock.nameForOsmId(westernAustralia)).thenReturn(Some("Western Australia"))
-    Mockito.when(tagServiceMock.nameForOsmId(ngaanyatjarra)).thenReturn(Some("Ngaanyatjarra Indigenous Protected Area"))
+    Mockito.when(tagServiceMock.nameForOsmId(australia, None)).thenReturn(Some("Australia"))
+    Mockito.when(tagServiceMock.nameForOsmId(westernAustralia, None)).thenReturn(Some("Western Australia"))
+    Mockito.when(tagServiceMock.nameForOsmId(ngaanyatjarra, None)).thenReturn(Some("Ngaanyatjarra Indigenous Protected Area"))
     Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
@@ -39,10 +39,10 @@ class NaiveNamingServiceSpec extends Specification {
     val paths = Seq(Seq(Seq(isleOfManAdminBoundary), Seq(isleOfManIsland), Seq(middle), Seq(douglas)))
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
-    Mockito.when(tagServiceMock.nameForOsmId(isleOfManAdminBoundary)).thenReturn(Some("Isle of Man"))
-    Mockito.when(tagServiceMock.nameForOsmId(isleOfManIsland)).thenReturn(Some("Isle of Man"))
-    Mockito.when(tagServiceMock.nameForOsmId(middle)).thenReturn(Some("Middle"))
-    Mockito.when(tagServiceMock.nameForOsmId(douglas)).thenReturn(Some("Douglas"))
+    Mockito.when(tagServiceMock.nameForOsmId(isleOfManAdminBoundary, None)).thenReturn(Some("Isle of Man"))
+    Mockito.when(tagServiceMock.nameForOsmId(isleOfManIsland, None)).thenReturn(Some("Isle of Man"))
+    Mockito.when(tagServiceMock.nameForOsmId(middle, None)).thenReturn(Some("Middle"))
+    Mockito.when(tagServiceMock.nameForOsmId(douglas, None)).thenReturn(Some("Douglas"))
     Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
@@ -65,10 +65,10 @@ class NaiveNamingServiceSpec extends Specification {
 
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
-    Mockito.when(tagServiceMock.nameForOsmId(unitedStates)).thenReturn(Some("United States of America"))
-    Mockito.when(tagServiceMock.nameForOsmId(california)).thenReturn(Some("California"))
-    Mockito.when(tagServiceMock.nameForOsmId(mariposaCounty)).thenReturn(Some("Mariposa County"))
-    Mockito.when(tagServiceMock.nameForOsmId(yosemite)).thenReturn(Some("Yosemite National Park"))
+    Mockito.when(tagServiceMock.nameForOsmId(unitedStates, None)).thenReturn(Some("United States of America"))
+    Mockito.when(tagServiceMock.nameForOsmId(california, None)).thenReturn(Some("California"))
+    Mockito.when(tagServiceMock.nameForOsmId(mariposaCounty, None)).thenReturn(Some("Mariposa County"))
+    Mockito.when(tagServiceMock.nameForOsmId(yosemite, None)).thenReturn(Some("Yosemite National Park"))
     Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
@@ -91,11 +91,11 @@ class NaiveNamingServiceSpec extends Specification {
     val paths = Seq(viaEnglandPath, viaSouthWestEnglandPath)
 
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
-    Mockito.when(tagServiceMock.nameForOsmId(unitedKingdom)).thenReturn(Some("United Kingdom"))
-    Mockito.when(tagServiceMock.nameForOsmId(england)).thenReturn(Some("England"))
-    Mockito.when(tagServiceMock.nameForOsmId(southWestEngland)).thenReturn(Some("South West England"))
-    Mockito.when(tagServiceMock.nameForOsmId(dorset)).thenReturn(Some("Dorset"))
-    Mockito.when(tagServiceMock.nameForOsmId(bournemouth)).thenReturn(Some("Bournemouth"))
+    Mockito.when(tagServiceMock.nameForOsmId(unitedKingdom, None)).thenReturn(Some("United Kingdom"))
+    Mockito.when(tagServiceMock.nameForOsmId(england, None)).thenReturn(Some("England"))
+    Mockito.when(tagServiceMock.nameForOsmId(southWestEngland, None)).thenReturn(Some("South West England"))
+    Mockito.when(tagServiceMock.nameForOsmId(dorset, None)).thenReturn(Some("Dorset"))
+    Mockito.when(tagServiceMock.nameForOsmId(bournemouth, None)).thenReturn(Some("Bournemouth"))
     Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
