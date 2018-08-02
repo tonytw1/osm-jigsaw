@@ -13,8 +13,10 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "boundary" -> "historic",
     "boundary" -> "maritime",
     "boundary" -> "police",
+    "boundary" -> "proposed",
     "boundary" -> "timezone",
-    "historic" -> "yes"
+    "historic" -> "yes",
+    "type" -> "toll"
   )
 
   def nameFor(paths: Seq[Seq[Seq[OsmId]]], requestedLanguage: Option[String] = None): String = {
