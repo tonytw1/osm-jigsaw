@@ -18,9 +18,11 @@ class GraphReader extends OsmIdParsing {
     def loadAreas(areasFile: URL): Map[Long, Area] = {
 
       def outputAreaToArea(oa: OutputArea): Option[Area] = {
-        oa.id.map { id =>
-          val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
-          Area(id = id, points = points, osmIds = oa.osmIds.map(toOsmId))
+        oa.id.flatMap { id =>
+          oa.area.map { a =>
+            val points = (oa.latitudes zip oa.longitudes).map(ll => Point(ll._1, ll._2)).toArray
+            Area(id = id, points = points, osmIds = oa.osmIds.map(toOsmId), area = a)
+          }
         }
       }
 

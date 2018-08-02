@@ -108,7 +108,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
       OutputEntity(osmIdString, name)
     }
 
-    val outputNode = OutputNode(node.area.id, entities, entities.size)
+    val outputNode = OutputNode(node.area.id, entities, entities.size, node.area.area)
 
     implicit val ew = Json.writes[OutputEntity]
     implicit val nw = Json.writes[OutputNode]
