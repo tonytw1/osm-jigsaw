@@ -26,7 +26,8 @@ class NaiveNamingService @Inject()(tagService: TagService) {
 
     def hasExcludedTags(osmId: OsmId): Boolean = {
       val osmIdTags = tagService.tagsFor(osmId).getOrElse(Map.empty).toSet
-      osmIdTags.intersect(TagsWhichDoNotContributeToLocationNames).nonEmpty
+      val excludedTags = osmIdTags.intersect(TagsWhichDoNotContributeToLocationNames)
+      excludedTags.nonEmpty
     }
 
     val pathsWithoutExcludedTags: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
