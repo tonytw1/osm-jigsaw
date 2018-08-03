@@ -133,6 +133,10 @@ class NaiveNamingServiceSpec extends Specification {
     name must equalTo("Dublin, Ireland")
   }
 
+  "path merges should preserve parent child ordering" in {
+    failure // see almeria
+  }
+
  /*
  "When naming an area with overlapping relations prefer localised name tags" in {
    //https://www.openstreetmap.org/relation/51477
