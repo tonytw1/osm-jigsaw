@@ -9,6 +9,7 @@ import tags.TagService
 class NaiveNamingServiceSpec extends Specification {
 
   private val R = "R".charAt(0)
+  private val W = "W".charAt(0)
 
   "place name is a concatenation of the the enclosing area names" in {
     val australia = OsmId(80500L, R)
@@ -133,8 +134,29 @@ class NaiveNamingServiceSpec extends Specification {
     name must equalTo("Dublin, Ireland")
   }
 
-  "path merges should preserve parent child ordering" in {
-    failure // see almeria
+  "sorting by areas size is a way to bring outlying paths into line" in {
+    val spain = OsmId(1311341, R)
+    val andalusia = OsmId(349044, R)
+    val almeria = OsmId(348997, R)
+    val yahooAlmeria = OsmId(77344161, W)
+
+    val normalPath = Seq(Seq(spain), Seq(andalusia), Seq(almeria))
+    val outlinerPath = Seq(Seq(spain), Seq(yahooAlmeria))
+
+    val paths = Seq(normalPath, outlinerPath)
+
+    val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
+    Mockito.when(tagServiceMock.nameForOsmId(spain, None)).thenReturn(Some("Spain"))
+    Mockito.when(tagServiceMock.nameForOsmId(andalusia, None)).thenReturn(Some("Andalusia"))
+    Mockito.when(tagServiceMock.nameForOsmId(almeria, None)).thenReturn(Some("Almeria"))
+    Mockito.when(tagServiceMock.nameForOsmId(yahooAlmeria, None)).thenReturn(Some("Almeria"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+
+    val namingService = new NaiveNamingService(tagServiceMock)
+
+    val name = namingService.nameFor(paths)
+
+    name must equalTo("Almeria, Andalusia, Spain")
   }
 
  /*
