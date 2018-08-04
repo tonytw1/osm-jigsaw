@@ -1,1 +1,80 @@
-[[{"id":189310,"entities":[{"osmId":"1311341R","name":"Spain"},{"osmId":"6491134R","name":"Europe/Madrid Timezone"}],"children":2,"area":59.080443847178266},{"id":102039,"entities":[{"osmId":"349044R","name":"Andalusia"}],"children":1,"area":8.92241984358786},{"id":101315,"entities":[{"osmId":"348997R","name":"Almeria"}],"children":1,"area":0.8905600316125202},{"id":100341,"entities":[{"osmId":"347796R","name":"Almeria"}],"children":1,"area":0.029915336745489712}],[{"id":189310,"entities":[{"osmId":"1311341R","name":"Spain"},{"osmId":"6491134R","name":"Europe/Madrid Timezone"}],"children":2,"area":59.080443847178266},{"id":2936791,"entities":[{"osmId":"77344161W","name":"Almeria"}],"children":1,"area":0.18624327963594123}]]
+[
+  [
+    {
+      "id": 189310,
+      "entities": [
+        {
+          "osmId": "1311341R",
+          "name": "Spain"
+        },
+        {
+          "osmId": "6491134R",
+          "name": "Europe/Madrid Timezone"
+        }
+      ],
+      "children": 2,
+      "area": 59.080443847178266
+    },
+    {
+      "id": 102039,
+      "entities": [
+        {
+          "osmId": "349044R",
+          "name": "Andalusia"
+        }
+      ],
+      "children": 1,
+      "area": 8.92241984358786
+    },
+    {
+      "id": 101315,
+      "entities": [
+        {
+          "osmId": "348997R",
+          "name": "Almeria"
+        }
+      ],
+      "children": 1,
+      "area": 0.8905600316125202
+    },
+    {
+      "id": 100341,
+      "entities": [
+        {
+          "osmId": "347796R",
+          "name": "Almeria"
+        }
+      ],
+      "children": 1,
+      "area": 0.029915336745489712
+    }
+  ],
+  [
+    {
+      "id": 189310,
+      "entities": [
+        {
+          "osmId": "1311341R",
+          "name": "Spain"
+        },
+        {
+          "osmId": "6491134R",
+          "name": "Europe/Madrid Timezone"
+        }
+      ],
+      "children": 2,
+      "area": 59.080443847178266
+    },
+    {
+      "id": 2936791,
+      "entities": [
+        {
+          "osmId": "77344161W",
+          "name": "Almeria"
+        }
+      ],
+      "children": 1,
+      "area": 0.18624327963594123
+    }
+  ]
+]

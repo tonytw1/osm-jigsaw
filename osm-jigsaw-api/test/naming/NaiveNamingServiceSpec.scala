@@ -16,7 +16,12 @@ class NaiveNamingServiceSpec extends Specification {
     val westernAustralia = OsmId(2316598, R)
     val ngaanyatjarra = OsmId(8165171, R)
 
-    val paths = Seq(Seq(Seq(australia), Seq(westernAustralia), Seq(ngaanyatjarra)))
+    val paths = Seq(Seq(
+      (Seq(australia), 0D),
+      (Seq(westernAustralia), 0D),
+      (Seq(ngaanyatjarra), 0D)
+    ))
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
     Mockito.when(tagServiceMock.nameForOsmId(australia, None)).thenReturn(Some("Australia"))
@@ -37,7 +42,13 @@ class NaiveNamingServiceSpec extends Specification {
     val middle = OsmId(1061146, R)
     val douglas = OsmId(1061138, R)
 
-    val paths = Seq(Seq(Seq(isleOfManAdminBoundary), Seq(isleOfManIsland), Seq(middle), Seq(douglas)))
+    val paths = Seq(Seq(
+      (Seq(isleOfManAdminBoundary), 0D),
+      (Seq(isleOfManIsland), 0D),
+      (Seq(middle), 0D),
+      (Seq(douglas), 0D)
+    ))
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
     Mockito.when(tagServiceMock.nameForOsmId(isleOfManAdminBoundary, None)).thenReturn(Some("Isle of Man"))
@@ -59,8 +70,16 @@ class NaiveNamingServiceSpec extends Specification {
     val mariposaCounty = OsmId(396465, R)
     val yosemite = OsmId(1643367, R)
 
-    val mariposaPath = Seq(Seq(unitedStates), Seq(california), Seq(mariposaCounty))
-    val yosemitePath = Seq(Seq(unitedStates), Seq(california), Seq(yosemite))
+    val mariposaPath = Seq(
+      (Seq(unitedStates), 0D),
+      (Seq(california), 0D),
+      (Seq(mariposaCounty), 0D)
+    )
+    val yosemitePath = Seq(
+      (Seq(unitedStates), 0D),
+      (Seq(california), 0D),
+      (Seq(yosemite), 0D)
+    )
 
     val paths = Seq(mariposaPath, yosemitePath)
 
@@ -86,8 +105,17 @@ class NaiveNamingServiceSpec extends Specification {
     val dorset =OsmId(375535, R)
     val bournemouth =OsmId(42134, R)
 
-    val viaEnglandPath = Seq(Seq(unitedKingdom), Seq(england), Seq(dorset), Seq(bournemouth))
-    val viaSouthWestEnglandPath = Seq(Seq(unitedKingdom), Seq(southWestEngland), Seq(dorset), Seq(bournemouth))
+    val viaEnglandPath = Seq(
+      (Seq(unitedKingdom), 0D),
+      (Seq(england), 0D),
+      (Seq(dorset), 0D),
+      (Seq(bournemouth), 0D)
+    )
+    val viaSouthWestEnglandPath = Seq(
+      (Seq(unitedKingdom), 0D),
+      (Seq(southWestEngland), 0D),
+      (Seq(dorset), 0D),
+      (Seq(bournemouth), 0D))
 
     val paths = Seq(viaEnglandPath, viaSouthWestEnglandPath)
 
@@ -111,7 +139,11 @@ class NaiveNamingServiceSpec extends Specification {
     val dublinCity1954 = OsmId(6741826, R)
     val dublin = OsmId(5576531, R)
 
-    val path = (Seq(Seq(ireland), Seq(dublinCity1954), Seq(dublin)))
+    val path = Seq(
+      (Seq(ireland), 0D),
+      (Seq(dublinCity1954), 0D),
+      (Seq(dublin), 0D)
+    )
 
     val paths = Seq(path)
 
@@ -140,8 +172,15 @@ class NaiveNamingServiceSpec extends Specification {
     val almeria = OsmId(348997, R)
     val yahooAlmeria = OsmId(77344161, W)
 
-    val normalPath = Seq(Seq(spain), Seq(andalusia), Seq(almeria))
-    val outlinerPath = Seq(Seq(spain), Seq(yahooAlmeria))
+    val normalPath = Seq(
+      (Seq(spain), 59.080443847178266),
+      (Seq(andalusia), 8.92241984358786),
+      (Seq(almeria), 0.029915336745489712)
+    )
+    val outlinerPath = Seq(
+      (Seq(spain), 59.080443847178266),
+      (Seq(yahooAlmeria), 0.18624327963594123)
+    )
 
     val paths = Seq(normalPath, outlinerPath)
 

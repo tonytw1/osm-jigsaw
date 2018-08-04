@@ -23,7 +23,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "type" -> "toll"
   )
 
-  def nameFor(paths: Seq[Seq[Seq[OsmId]]], requestedLanguage: Option[String] = None): String = {
+  def nameFor(paths: Seq[Seq[(Seq[OsmId], Double)]], requestedLanguage: Option[String] = None): String = {
 
     def hasExcludedTags(osmId: OsmId): Boolean = {
       val osmIdTags = tagService.tagsFor(osmId).getOrElse(Map.empty).toSet
@@ -33,7 +33,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
 
     val pathsWithoutExcludedTags: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
       path.map { p =>
-        p.filter(e => !hasExcludedTags(e))
+        p._1.filter(e => !hasExcludedTags(e))
       }.filter(_.nonEmpty)
     }
 
@@ -69,7 +69,18 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       }
     }
 
-    val names = combined.map { n =>
+    val areas: Map[OsmId, Double] = paths.flatten.map { i =>
+      val a: (Seq[OsmId], Double) = i
+      i._1.map { j =>
+        (j, i._2)
+      }
+    }.flatten.toMap
+
+    val sortedByArea = combined.sortBy{ o =>
+      -areas.get(o).getOrElse(0)
+    }
+
+    val names = sortedByArea.map { n =>
       tagService.nameForOsmId(n, requestedLanguage)
     }.flatten
 

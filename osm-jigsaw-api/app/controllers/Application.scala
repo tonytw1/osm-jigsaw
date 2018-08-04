@@ -59,9 +59,9 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
 
     val paths = graphService.pathsDownTo(pt)
 
-    val pathInformationNeededToInferPlaceName: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
+    val pathInformationNeededToInferPlaceName = paths.map { path =>
       path.map { node =>
-        node.area.osmIds
+        (node.area.osmIds, node.area.area)
       }
     }
 
