@@ -19,6 +19,8 @@
     #mapid { height: 400px; }
 </style>
 
+<p><div id="locate">Locate</div></p>
+
 <script>
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
@@ -48,6 +50,37 @@
         });
     });
 
+    // HTML5 location detection
+    var locate = $('#locate');
+    locate.on('click', function(e) {
+      e.preventDefault();
+      var geoOptions = {
+        enableHighAccuracy : true,
+        timeout : 10000,
+        maximumAge : 3000
+      };
+
+      function showPosition(position) {
+          console.log(position);  // TODO
+          var lat = position.coords.latitude;
+          var lng = position.coords.longitude;
+
+        $.ajax({    // TODO duplication
+            url: "/click?lat=" + lat + "&lon=" + lng
+        }).done(function(data) {
+            $('#reverse').html(data);
+            $('#node').html("");
+        });
+
+      }
+
+      function showError() {
+        // TODO Show field error message
+      }
+
+      navigator.geolocation.getCurrentPosition(showPosition, showError, geoOptions);
+    })
+
 </script>
 
 <div id="reverse"></div>
@@ -64,6 +97,9 @@
     <p>
         <h6>Area id</h6>
         @area.id
+
+    <h6>Size</h6>
+
 
         <h6>OSM ids</h6>
         @osmUrls.map { ous =>
