@@ -23,7 +23,7 @@
 
 <div id="node">
 @if(node.isEmpty) {
-    <p>Click map to examine a point.</p>
+    <p>Click on map to examine a point.</p>
 }
 
 @node.map { area =>
@@ -53,6 +53,14 @@
 <hr/>
 
 <script src="@routes.Assets.versioned("scripts/app.js")"></script>
+
+@areaBoundingBox.map { boundingBox =>
+    mymap.fitBounds([
+            [@boundingBox._1, @boundingBox._2],
+            [@boundingBox._3, @boundingBox._4]
+        ]
+    );
+}
 
 </body>
 </html>

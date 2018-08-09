@@ -1,6 +1,6 @@
-function resolvePoint(lat, lon) = {
+function resolvePoint(lat, lon) {
     $.ajax({
-        url: "/click?lat=" + lat + "&lon=" + lng
+        url: "/click?lat=" + lat + "&lon=" + lon
     }).done(function(data) {
         $('#reverse').html(data);
         $('#node').html("");
@@ -8,14 +8,6 @@ function resolvePoint(lat, lon) = {
 }
 
 var mymap = L.map('mapid').setView([51.505, -0.09], 13);
-
-@areaBoundingBox.map { boundingBox =>
-    mymap.fitBounds([
-            [@boundingBox._1, @boundingBox._2],
-            [@boundingBox._3, @boundingBox._4]
-        ]
-    );
-}
 
 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
