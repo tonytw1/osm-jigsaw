@@ -54,19 +54,19 @@
         resolvePoint(latlng.lat, latlng.lng);
     });
 
-    // HTML5 location detection
-    var locate = $('#locate');
     var geoOptions = {
         enableHighAccuracy : true,
         timeout : 10000,
         maximumAge : 3000
     };
 
+    var locate = $('#locate');
     locate.on('click', function(e) {
       e.preventDefault();
 
       function showPosition(position) {
           resolvePoint(position.coords.latitude,  position.coords.longitude);
+          // TODO zoom to enclose the smallest component of the resolved name; API will need to make this available
       }
 
       function showError() {
