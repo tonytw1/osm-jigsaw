@@ -22,6 +22,16 @@
 <p><div id="locate">Locate</div></p>
 
 <script>
+
+    function resolvePoint(lat, lon) = {
+        $.ajax({
+            url: "/click?lat=" + lat + "&lon=" + lng
+        }).done(function(data) {
+            $('#reverse').html(data);
+            $('#node').html("");
+        });
+    }
+
     var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
     @areaBoundingBox.map { boundingBox =>
@@ -41,37 +51,22 @@
 
     mymap.on('click', function(e) {
         var latlng = e.latlng.wrap();
-
-        $.ajax({
-            url: "/click?lat=" + latlng.lat + "&lon=" + latlng.lng
-        }).done(function(data) {
-            $('#reverse').html(data);
-            $('#node').html("");
-        });
+        resolvePoint(latlng.lat, latlng.lng);
     });
 
     // HTML5 location detection
     var locate = $('#locate');
-    locate.on('click', function(e) {
-      e.preventDefault();
-      var geoOptions = {
+    var geoOptions = {
         enableHighAccuracy : true,
         timeout : 10000,
         maximumAge : 3000
-      };
+    };
+
+    locate.on('click', function(e) {
+      e.preventDefault();
 
       function showPosition(position) {
-          console.log(position);  // TODO
-          var lat = position.coords.latitude;
-          var lng = position.coords.longitude;
-
-        $.ajax({    // TODO duplication
-            url: "/click?lat=" + lat + "&lon=" + lng
-        }).done(function(data) {
-            $('#reverse').html(data);
-            $('#node').html("");
-        });
-
+          resolvePoint(position.coords.latitude,  position.coords.longitude);
       }
 
       function showError() {
