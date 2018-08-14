@@ -40,6 +40,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     step match {
       case "stats" => stats(inputFilepath)
       case "split" => split(inputFilepath)
+      case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
       case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
@@ -109,6 +110,29 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     nodesWriter.close()
     waysWriter.close()
     relationsWriter.close()
+    logger.info("Done")
+  }
+
+
+  def extractNamedNodes(inputFilepath: String, outputFilepath: String): Unit = {
+    logger.info("Extracting named nodes")
+
+    val nodesWriter = new OsmWriter(inputFilepath + ".named-nodes")
+
+    def writeToSplitFiles(entity: Entity) = {
+      entity match {
+        case n: Node => nodesWriter.write(n)
+        case _ =>
+      }
+    }
+
+    def named(entity: Entity): Boolean = {
+      nameFor(entity).nonEmpty
+    }
+
+    new SinkRunner(inputFilepath, named, writeToSplitFiles).run
+
+    nodesWriter.close()
     logger.info("Done")
   }
 
