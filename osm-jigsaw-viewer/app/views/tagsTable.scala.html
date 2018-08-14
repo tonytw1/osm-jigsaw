@@ -1,2 +1,15 @@
-@(tags: String)
-<p>@tags</p>
+@(tags: Map[String, String])
+@if(tags.nonEmpty) {
+    <table>
+        @tags.keys.map { k =>
+            <tr>
+                <td>
+                    @k
+                </td>
+                <td>
+                    @tags(k)
+                </td>
+            </tr>
+        }
+    </table>
+}

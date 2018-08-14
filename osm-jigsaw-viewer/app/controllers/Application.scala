@@ -1,12 +1,11 @@
 package controllers
 
-import javax.inject.Inject
-
 import areas.BoundingBox
 import com.netaporter.uri.dsl._
 import graph._
-import play.api.{Configuration, Logger}
-import play.api.libs.json.Json
+import javax.inject.Inject
+import play.api.Configuration
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
 import play.api.mvc.{Action, Controller}
 
@@ -52,14 +51,16 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         }
       }
 
-      val eventualTags = lastNode.flatMap { ln =>
+      val eventualTags: Future[Map[String, String]] = lastNode.flatMap { ln =>
         ln.entities.headOption.map { e =>
           val osmId = e.osmId
           ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
-            r.body
+            Json.parse(r.body).as[Map[String, JsValue]].map { i =>
+              (i._1, i._2.as[String])
+            }
           }
         }
-      }.getOrElse(Future.successful(""))
+      }.getOrElse(Future.successful(Map.empty))
 
       for {
         areaBoundingBox <- eventualAreaBoundingBox
