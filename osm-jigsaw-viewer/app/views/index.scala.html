@@ -55,7 +55,7 @@
             }
         }
         <h6>Tags</h6>
-        <p>@tags</p>
+        @tagsTable(tags)
     </p>
 }
 </div>
@@ -64,7 +64,6 @@
 <hr/>
 
 <script src="@routes.Assets.versioned("scripts/app.js")"></script>
-
 
 @areaBoundingBox.map { boundingBox =>
     <script>
