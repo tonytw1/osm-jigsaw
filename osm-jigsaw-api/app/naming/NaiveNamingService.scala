@@ -76,8 +76,8 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       }
     }.flatten.toMap
 
-    val sortedByArea = combined.sortBy{ o =>
-      -areas.get(o).getOrElse(0)
+    val sortedByArea = combined.sortBy { o =>
+      -areas.get(o).getOrElse(0D)
     }
 
     val names = sortedByArea.map { n =>
