@@ -57,6 +57,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var ways = 0L
     var relations = 0L
 
+    var namedNodes = 0L
+    var namedWays = 0L
+    var namedRelations = 0L
+
     def countTypes(entity: Entity) = {
       entity match {
         case n: Node => nodes = nodes + 1
@@ -64,14 +68,23 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         case r: Relation => relations = relations + 1
         case _ =>
       }
+
+      nameFor(entity).map { _ =>
+        entity match {
+          case n: Node => namedNodes = namedNodes + 1
+          case w: Way => namedWays = namedWays + 1
+          case r: Relation => namedRelations = namedRelations + 1
+          case _ =>
+        }
+      }
     }
 
     def all(entity: Entity): Boolean = true
     new SinkRunner(inputFilepath, all, countTypes).run
 
-    logger.info("Nodes: " + nodes)
-    logger.info("Ways: " + ways)
-    logger.info("Relations: " + relations)
+    logger.info("Nodes: " + namedNodes + " / " + nodes)
+    logger.info("Ways: " + namedWays + " / " + ways)
+    logger.info("Relations: " + namedRelations + " / " + relations)
   }
 
   def split(inputFilepath: String) {
