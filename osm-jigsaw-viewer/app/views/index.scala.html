@@ -65,12 +65,15 @@
 
 <script src="@routes.Assets.versioned("scripts/app.js")"></script>
 
+
 @areaBoundingBox.map { boundingBox =>
-    mymap.fitBounds([
-            [@boundingBox._1, @boundingBox._2],
-            [@boundingBox._3, @boundingBox._4]
-        ]
-    );
+    <script>
+        mymap.fitBounds([
+                [@boundingBox._1, @boundingBox._2],
+                [@boundingBox._3, @boundingBox._4]
+            ]
+        );
+    </script>
 }
 
 </body>
