@@ -1,5 +1,6 @@
 package input
 
+import model.EntityRendering
 import org.apache.logging.log4j.scala.Logging
 import org.mapdb.volume.MappedFileVol
 import org.mapdb.{Serializer, SortedTableMap}
@@ -11,7 +12,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 import scala.collection.mutable
 
-class RelationExtractor extends Logging {
+class RelationExtractor extends Logging with EntityRendering {
 
   private val relationExpander = new RelationExpander()
   private val outerWayResolver = new OuterWayResolver()
@@ -75,7 +76,6 @@ class RelationExtractor extends Logging {
         }
     }
     new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
-    entityWriter.close()
     waySink.create()
     wayVolume.close()
 
@@ -99,6 +99,9 @@ class RelationExtractor extends Logging {
         case n: Node =>
           nodeSink.put(n.getId, Array(n.getLatitude, n.getLongitude))
           foundNodes = foundNodes + 1
+          if (nameFor(n).nonEmpty) {
+            entityWriter.write(n)
+          }
       }
     }
     new SinkRunner(inputFilePath + ".nodes", requiredNodes, addToFoundNodes).run
@@ -106,6 +109,7 @@ class RelationExtractor extends Logging {
     nodeVolume.close()
 
     logger.info("Found " + foundNodes + " nodes")
+    entityWriter.close()
 
     logger.info("relations: " + foundRelations.size + ", ways: " + relationWayIds.size + ", nodes: " + extractedNodesCount)
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")

@@ -350,7 +350,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def readAreaOsmIdsFromPbfFile(inputFilename: String): Set[String] = {
     val seenOsmIds = mutable.Set[String]()
 
-    def captureOsmId(outputArea: OutputArea) = seenOsmIds ++ outputArea.osmIds
+    def captureOsmId(outputArea: OutputArea) = seenOsmIds ++= outputArea.osmIds
 
     processPbfFile(inputFilename, readArea, captureOsmId)
 
