@@ -19,7 +19,7 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison {
+object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading {
 
   private val STEP = "s"
 
@@ -327,14 +327,18 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var areas = ListBuffer[Area]()
     var withOsm = 0
 
-    def loadArea(area: Area) = {
-      if (area.osmIds.nonEmpty) {
-        withOsm = withOsm + 1
+    def loadArea(outputArea: OutputArea) = {
+      outputAreaToArea(outputArea).fold {
+        logger.warn("Could not build areas from: " + outputArea)
+      } { a =>
+        if (a.osmIds.nonEmpty) {
+          withOsm = withOsm + 1
+        }
+        areas = areas += a
       }
-      areas = areas += area
     }
 
-    processAreasFile(inputFilename, loadArea)
+    processPbfFile(inputFilename, readArea, loadArea)
 
     logger.info("Read " + areas.size + " areas")
     logger.info("Of which " + withOsm + " had OSM ids")
@@ -344,13 +348,17 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def readAreaOsmIdsFromPbfFile(inputFilename: String): Set[String] = {
     val seenOsmIds = mutable.Set[String]()
 
-    def captureOsmId(area: Area) = {
-      area.osmIds.map { osmIds =>
-        seenOsmIds += osmIds
+    def captureOsmId(outputArea: OutputArea) = {
+      outputAreaToArea(outputArea).fold {
+        logger.warn("Could not build areas from: " + outputArea)
+      } { a =>
+        a.osmIds.map { osmIds =>
+          seenOsmIds += osmIds
+        }
       }
     }
 
-    processAreasFile(inputFilename, captureOsmId)
+    processPbfFile(inputFilename, readArea, captureOsmId)
 
     seenOsmIds.toSet
   }
@@ -364,48 +372,15 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
     }
 
-    processNodesFile(inputFilename, captureOsmId)
+    def readNode(inputStream: InputStream): scala.Option[OutputNode] = OutputNode.parseDelimitedFrom(inputStream)
+
+    processPbfFile(inputFilename, readNode, captureOsmId)
 
     seenOsmIds.toSet
   }
 
-  private def processAreasFile(inputFilename: String, callback: Area => Unit): Unit = {
-    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
-    val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
-    var ok = true
-
-    while (ok) {
-      counter.withProgress {
-        val outputArea = OutputArea.parseDelimitedFrom(fileInputStream)
-        outputArea.map { oa =>
-          outputAreaToArea(oa).fold {
-            logger.warn("Could not build areas from: " + oa)
-          } { a =>
-            callback(a)
-          }
-        }
-        ok = outputArea.nonEmpty
-      }
-    }
-
-    fileInputStream.close()
-  }
-
-  private def processNodesFile(inputFilename: String, callback: OutputNode => Unit): Unit = {
-    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
-    val counter = new ProgressCounter(step = 100000, label = Some("Reading nodes"))
-    var ok = true
-
-    while (ok) {
-      counter.withProgress {
-        val outputNode = OutputNode.parseDelimitedFrom(fileInputStream)
-        outputNode.map { on =>
-            callback(on)
-        }
-        ok = outputNode.nonEmpty
-      }
-    }
-    fileInputStream.close()
+  def readArea(inputStream: InputStream): scala.Option[OutputArea] = {
+    OutputArea.parseDelimitedFrom(inputStream)
   }
 
 
