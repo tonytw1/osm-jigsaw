@@ -6,13 +6,14 @@ import org.mapdb.volume.MappedFileVol
 import org.mapdb.{Serializer, SortedTableMap}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
+import progress.CommaFormattedNumbers
 import resolving.{OuterWayResolver, RelationExpander}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 import scala.collection.mutable
 
-class RelationExtractor extends Logging with EntityRendering {
+class RelationExtractor extends Logging with EntityRendering with CommaFormattedNumbers {
 
   private val relationExpander = new RelationExpander()
   private val outerWayResolver = new OuterWayResolver()
@@ -114,9 +115,9 @@ class RelationExtractor extends Logging with EntityRendering {
     logger.info("Found " + foundNodes + " nodes")
     entityWriter.close()
 
-    logger.info("relations: " + foundRelations.size + ", ways: " + relationWayIds.size + ", nodes: " + requiredNodesCount)
+    logger.info("Extracted: " + commaFormatted(foundRelations.size) + ", ways: " + commaFormatted(relationWayIds.size) + ", nodes: " + commaFormatted(requiredNodesCount))
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")
-    logger.info("Finished outputing selected relations and resolved components to: " + outputFileprefix)
+    logger.info("Finished outputting selected relations and resolved components to: " + outputFileprefix)
   }
 
 }
