@@ -44,7 +44,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
-      case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
+      case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2), cmd.getArgList.get(3))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -156,13 +156,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def tags(relationsInputFilepath: String, areasInputPath: String, outputFilepath: String): Unit = {
+  def tags(relationsInputFilepath: String, areasInputPath: String, nodesInputFile: String, outputFilepath: String): Unit = {
     logger.info("Extracting tags for OSM entities used by areas")
 
-    val osmIdsInUse = readAreaOsmIdsFromPbfFile(areasInputPath)
+    val osmIdsInUse = readAreaOsmIdsFromPbfFile(areasInputPath) ++ readNodesOsmIdsFromPbfFile(nodesInputFile)
     logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for")
 
-    def usedByAnArea(entity: Entity): Boolean  = {
+    def isUse(entity: Entity): Boolean  = {
       osmIdsInUse.contains(osmIdFor(entity))
     }
 
@@ -177,7 +177,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         count = count + 1
       }
     }
-    new SinkRunner(relationsInputFilepath, usedByAnArea, extractTags).run
+    new SinkRunner(relationsInputFilepath, isUse, extractTags).run
     logger.info("Finished extracting tags")
     output.flush()
     output.close
@@ -355,6 +355,20 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     seenOsmIds.toSet
   }
 
+  private def readNodesOsmIdsFromPbfFile(inputFilename: String): Set[String] = {
+    val seenOsmIds = mutable.Set[String]()
+
+    def captureOsmId(node: OutputNode) = {
+      node.osmId.map { osmId =>
+        seenOsmIds += osmId
+      }
+    }
+
+    processNodesFile(inputFilename, captureOsmId)
+
+    seenOsmIds.toSet
+  }
+
   private def processAreasFile(inputFilename: String, callback: Area => Unit): Unit = {
     val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
     val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
@@ -376,6 +390,24 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     fileInputStream.close()
   }
+
+  private def processNodesFile(inputFilename: String, callback: OutputNode => Unit): Unit = {
+    val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
+    val counter = new ProgressCounter(step = 100000, label = Some("Reading nodes"))
+    var ok = true
+
+    while (ok) {
+      counter.withProgress {
+        val outputNode = OutputNode.parseDelimitedFrom(fileInputStream)
+        outputNode.map { on =>
+            callback(on)
+        }
+        ok = outputNode.nonEmpty
+      }
+    }
+    fileInputStream.close()
+  }
+
 
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
