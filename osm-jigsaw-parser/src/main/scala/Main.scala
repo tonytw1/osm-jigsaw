@@ -159,8 +159,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def tags(relationsInputFilepath: String, areasInputPath: String, nodesInputFile: String, outputFilepath: String): Unit = {
     logger.info("Extracting tags for OSM entities used by areas")
 
-    val osmIdsInUse = readAreaOsmIdsFromPbfFile(areasInputPath) ++ readNodesOsmIdsFromPbfFile(nodesInputFile)
-    logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for")
+    val areaOsmIds = readAreaOsmIdsFromPbfFile(areasInputPath)
+    val nodeOsmIds = readNodesOsmIdsFromPbfFile(nodesInputFile)
+    val osmIdsInUse = areaOsmIds ++ nodeOsmIds
+    logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for (" + areaOsmIds.size + " for areas; " + nodeOsmIds.size + " for nodes")
 
     def isUse(entity: Entity): Boolean  = {
       osmIdsInUse.contains(osmIdFor(entity))
