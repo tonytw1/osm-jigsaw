@@ -28,7 +28,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   options.addOption(STEP, true, "Which step to apply to the input file")
 
   def entitiesToGraph(entity: Entity): Boolean = {
-    (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)) && hasName(entity)
+    entity match {
+        case r: Relation =>  hasName(entity)
+        case w: Way => w.isClosed &&  hasName(entity)
+        case _ => false
+      }
   }
 
   def main(args: Array[String]): Unit = {
