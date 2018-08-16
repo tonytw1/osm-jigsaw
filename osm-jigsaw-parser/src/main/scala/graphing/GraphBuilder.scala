@@ -5,7 +5,6 @@ import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
 import com.esri.core.geometry.{Operator, OperatorContains}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
-import org.joda.time.{DateTime, Duration}
 import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
@@ -29,7 +28,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
     a.children = Set()
 
-    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
+    val counter = new ProgressCounter(10000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
     inOrder.foreach { b =>
       //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       counter.withProgress {
@@ -48,15 +47,15 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
-    var start = DateTime.now()
+    //var start = DateTime.now()
     var siblings = a.children.filter(c => c != b)
 
-    var startFilter = DateTime.now()
+    //var startFilter = DateTime.now()
     val existingSiblingsWhichNewValueWouldFitIn = siblings.par.filter { s =>
       areaContains(s.area, b.area)
     }
-    val filterDuration = new Duration(startFilter, DateTime.now)
-    var secondFilterDuration: Option[Duration] = None
+    //val filterDuration = new Duration(startFilter, DateTime.now)
+    //var secondFilterDuration: Option[Duration] = None
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
@@ -69,11 +68,11 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       a.children = a.children ++ Seq(b)
 
-      val startSecondFilter = DateTime.now()
+      //val startSecondFilter = DateTime.now()
       val siblingsWhichFitInsideNewNode = siblings.par.filter { s =>
         areaContains(b.area, s.area)
       }
-      secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
+      //secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
 
       if (siblingsWhichFitInsideNewNode.nonEmpty) {
         // logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.osmIds)
@@ -81,7 +80,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
-    val duration = new Duration(start, DateTime.now)
+    // val duration = new Duration(start, DateTime.now)
     // logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
     Unit
   }
