@@ -9,6 +9,7 @@ import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import outputarea.OutputArea
+import outputnode.OutputNode
 import outputtagging.OutputTagging
 import progress.ProgressCounter
 import resolving._
@@ -113,15 +114,14 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-
   def extractNamedNodes(inputFilepath: String, outputFilepath: String): Unit = {
     logger.info("Extracting named nodes")
 
-    val nodesWriter = new OsmWriter(inputFilepath + ".named-nodes")
+    val namedNodesOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath: String))
 
-    def writeToSplitFiles(entity: Entity) = {
+    def writeToNamedNodesFile(entity: Entity) = {
       entity match {
-        case n: Node => nodesWriter.write(n)
+        case n: Node => OutputNode(osmId = Some(osmIdFor(n)), latitude = Some(n.getLatitude), longitude = Some(n.getLongitude)).writeDelimitedTo(namedNodesOutput)
         case _ =>
       }
     }
@@ -130,9 +130,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       nameFor(entity).nonEmpty
     }
 
-    new SinkRunner(inputFilepath, named, writeToSplitFiles).run
+    new SinkRunner(inputFilepath, named, writeToNamedNodesFile).run
 
-    nodesWriter.close()
+    namedNodesOutput.flush()
+    namedNodesOutput.close()
     logger.info("Done")
   }
 
