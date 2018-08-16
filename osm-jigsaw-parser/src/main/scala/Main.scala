@@ -28,8 +28,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   options.addOption(STEP, true, "Which step to apply to the input file")
 
   def entitiesToGraph(entity: Entity): Boolean = {
-    (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)) &&
-      nameFor(entity).nonEmpty
+    (entity.getType == EntityType.Relation || (entity.getType == EntityType.Way && entity.asInstanceOf[Way].isClosed)) && hasName(entity)
   }
 
   def main(args: Array[String]): Unit = {
@@ -71,7 +70,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         case _ =>
       }
 
-      nameFor(entity).map { _ =>
+      if (hasName(entity)) {
         entity match {
           case n: Node => namedNodes = namedNodes + 1
           case w: Way => namedWays = namedWays + 1
@@ -127,7 +126,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def named(entity: Entity): Boolean = {
-      nameFor(entity).nonEmpty
+      hasName(entity)
     }
 
     new SinkRunner(inputFilepath, named, writeToNamedNodesFile).run

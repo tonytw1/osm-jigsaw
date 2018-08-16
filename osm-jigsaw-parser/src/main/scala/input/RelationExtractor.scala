@@ -54,7 +54,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
       }
     }
 
-    logger.info("Need " + relationWayIds.size + " ways to resolve relations")
+    logger.info("Need " + commaFormatted(relationWayIds.size) + " ways to resolve relations")
     logger.info("Reading required ways to determine required nodes")
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && (relationWayIds.contains(entity.getId) || predicate(entity))
 
@@ -72,8 +72,9 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
             if (predicate(w)) {
               entityWriter.write(w)
             }
-            waySink.put(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId).toArray)
-            nodesRequiredToBuildRequiredWays.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
+            val wayNodeIds = w.getWayNodes.asScala.map(wn => wn.getNodeId)
+            waySink.put(w.getId, wayNodeIds.toArray)
+            nodesRequiredToBuildRequiredWays ++= wayNodeIds
         }
     }
     new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
@@ -81,9 +82,9 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     wayVolume.close()
 
     val requiredNodesCount = nodesRequiredToBuildRequiredWays.size
-    logger.info("Found ways containing " + requiredNodesCount + " nodes")
+    logger.info("Found ways containing " + commaFormatted(requiredNodesCount) + " nodes")
 
-    logger.info("Need " + requiredNodesCount + " nodes to resolve relation ways")
+    logger.info("Need " + commaFormatted(requiredNodesCount) + " nodes to resolve relation ways")
     logger.info("Loading required nodes")
 
     val nodeVolume = MappedFileVol.FACTORY.makeVolume(outputFileprefix + ".nodes.vol", false)
@@ -103,7 +104,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
             nodeSink.put(n.getId, Array(n.getLatitude, n.getLongitude))
             foundNodes = foundNodes + 1
           }
-          if (nameFor(n).nonEmpty) {
+          if (hasName(n)) {
             entityWriter.write(n)
           }
       }
