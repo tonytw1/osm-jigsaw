@@ -64,7 +64,7 @@ class RelationExtractor extends Logging with EntityRendering {
       Serializer.LONG_ARRAY
     ).createFromSink()
 
-    val nodeIds = mutable.Set[Long]()
+    val nodesRequiredToBuildRequiredWays = mutable.Set[Long]()
     def persistWayAndExpandNodeIds(entity: Entity) = {
         entity match {
           case w: Way =>
@@ -72,17 +72,17 @@ class RelationExtractor extends Logging with EntityRendering {
               entityWriter.write(w)
             }
             waySink.put(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId).toArray)
-            nodeIds.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
+            nodesRequiredToBuildRequiredWays.++=(w.getWayNodes.asScala.map(wn => wn.getNodeId))
         }
     }
     new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
     waySink.create()
     wayVolume.close()
 
-    val extractedNodesCount = nodeIds.size
-    logger.info("Found ways containing " + extractedNodesCount + " nodes")
+    val requiredNodesCount = nodesRequiredToBuildRequiredWays.size
+    logger.info("Found ways containing " + requiredNodesCount + " nodes")
 
-    logger.info("Need " + extractedNodesCount + " nodes to resolve relation ways")
+    logger.info("Need " + requiredNodesCount + " nodes to resolve relation ways")
     logger.info("Loading required nodes")
 
     val nodeVolume = MappedFileVol.FACTORY.makeVolume(outputFileprefix + ".nodes.vol", false)
@@ -92,26 +92,29 @@ class RelationExtractor extends Logging with EntityRendering {
       Serializer.DOUBLE_ARRAY
     ).createFromSink()
 
-    def requiredNodes(entity: Entity): Boolean = entity.getType == EntityType.Node && nodeIds.contains(entity.getId)
+    def allNodes(entity: Entity): Boolean = entity.getType == EntityType.Node
+
     var foundNodes = 0L
     def addToFoundNodes(entity: Entity) = {
       entity match {
         case n: Node =>
-          nodeSink.put(n.getId, Array(n.getLatitude, n.getLongitude))
-          foundNodes = foundNodes + 1
+          if (nodesRequiredToBuildRequiredWays.contains(entity.getId)) {
+            nodeSink.put(n.getId, Array(n.getLatitude, n.getLongitude))
+            foundNodes = foundNodes + 1
+          }
           if (nameFor(n).nonEmpty) {
             entityWriter.write(n)
           }
       }
     }
-    new SinkRunner(inputFilePath + ".nodes", requiredNodes, addToFoundNodes).run
+    new SinkRunner(inputFilePath + ".nodes", allNodes, addToFoundNodes).run
     nodeSink.create()
     nodeVolume.close()
 
     logger.info("Found " + foundNodes + " nodes")
     entityWriter.close()
 
-    logger.info("relations: " + foundRelations.size + ", ways: " + relationWayIds.size + ", nodes: " + extractedNodesCount)
+    logger.info("relations: " + foundRelations.size + ", ways: " + relationWayIds.size + ", nodes: " + requiredNodesCount)
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")
     logger.info("Finished outputing selected relations and resolved components to: " + outputFileprefix)
   }
