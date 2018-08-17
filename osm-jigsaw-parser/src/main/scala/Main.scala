@@ -160,7 +160,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   }
 
   def tags(relationsInputFilepath: String, areasInputPath: String, nodesInputFile: String, outputFilepath: String): Unit = {
-    logger.info("Extracting tags for OSM entities used by areas")
+    logger.info("Extracting tags for OSM entities used by areas and named nodes")
 
     val areaOsmIds = readAreaOsmIdsFromPbfFile(areasInputPath)
     val nodeOsmIds = readNodesOsmIdsFromPbfFile(nodesInputFile)
@@ -175,13 +175,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
 
     def extractTags(entity: Entity) = {
-      if (entitiesToGraph(entity)) {
-        val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
-        val values = entity.getTags.asScala.map(t => t.getValue).toSeq
-        OutputTagging(osmId = Some(osmIdFor(entity)), keys = keys, values = values).writeDelimitedTo(output)
-        count = count + 1
-      }
+      val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
+      val values = entity.getTags.asScala.map(t => t.getValue).toSeq
+      OutputTagging(osmId = Some(osmIdFor(entity)), keys = keys, values = values).writeDelimitedTo(output)
+      count = count + 1
     }
+
     new SinkRunner(relationsInputFilepath, isUse, extractTags).run
     logger.info("Finished extracting tags")
     output.flush()
