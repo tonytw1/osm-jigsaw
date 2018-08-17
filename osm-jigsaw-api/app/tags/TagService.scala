@@ -1,30 +1,49 @@
 package tags
 
 import java.io.BufferedInputStream
+import java.lang
 import java.net.URL
-import javax.inject.{Inject, Singleton}
 
+import javax.inject.{Inject, Singleton}
 import model.{OsmId, OsmIdParsing}
+import org.mapdb.volume.MappedFileVol
+import org.mapdb.{Serializer, SortedTableMap}
 import outputtagging.OutputTagging
 import play.api.{Configuration, Logger}
 import progress.ProgressCounter
 
-import scala.collection.{immutable, mutable}
-
 @Singleton
 class TagService @Inject()(configuration: Configuration) extends OsmIdParsing with EntityNameTags {
 
-  val tagsFile = new URL(configuration.getString("tags.url").get)
+  val tagsUrl = new URL(configuration.getString("tags.url").get)
+  val tagsVolumeFile = configuration.getString("tags.file").get
 
-  val tagsMap: (Map[OsmId, Seq[(Int, String)]], immutable.IndexedSeq[String]) = loadTags(tagsFile)
+  val tagsMap = {
+    loadTags(tagsUrl)
+
+    Logger.info("Init'ing tag resolver")
+
+    val volume = MappedFileVol.FACTORY.makeVolume(tagsVolumeFile, true)
+
+    val map: SortedTableMap[lang.Long, Any] = SortedTableMap.open(
+      volume,
+      Serializer.LONG,
+      Serializer.JAVA
+    )
+
+    map
+  }
 
   val English = "en"
 
   def tagsFor(osmId: OsmId): Option[Map[String, String]] = {
-    val keysIndex = tagsMap._2    // TODO push up
-
-    tagsMap._1.get(osmId).map { i =>
-      i.map( j => (keysIndex(j._1), j._2)).toMap
+    val key = osmId.id.toString + osmId.`type`
+    Option(tagsMap.get(key)).map { i =>
+      val x: Array[(String, String)] = i.asInstanceOf[Array[(String, String)]]
+      x.map { a =>
+        val b: (String, String) = a
+        b
+      }.toMap
     }
   }
 
@@ -34,60 +53,37 @@ class TagService @Inject()(configuration: Configuration) extends OsmIdParsing wi
     }
   }
 
-  private def loadTags(tagsFile: URL): (Map[OsmId, Seq[(Int, String)]], immutable.IndexedSeq[String]) = {
+  private def loadTags(tagsFile: URL) = {
     try {
-      val uniqueKeys = mutable.Set[String]()
 
-      var totalKeys = 0
+      val tagVolume = MappedFileVol.FACTORY.makeVolume(tagsVolumeFile, false)
+      val tagSink = SortedTableMap.create(
+        tagVolume,
+        Serializer.STRING,
+        Serializer.JAVA
+      ).createFromSink()
 
+      Logger.info("Reeding tags to tags volume")
       val input = new BufferedInputStream(tagsFile.openStream())
-      val counter = new ProgressCounter(step = 10000, label = Some("Indexing tags"))
+      val counter = new ProgressCounter(step = 10000, label = Some("Reading tags"))
       var ok = true
       while (ok) {
         counter.withProgress {
           val outputTagging = OutputTagging.parseDelimitedFrom(input)
-          outputTagging.foreach { ot =>
-            val osmId = ot.osmId.get
+          outputTagging.map { ot =>
+            val osmId: String = ot.osmId.get
             val keys = ot.keys
-
-            keys.map( k => uniqueKeys.add(k))
-            totalKeys = totalKeys + keys.size
+            val values = ot.values
+            val tuples: Array[(String, String)] = keys.zip(values).toArray
+            tagSink.put(osmId, tuples)
           }
           ok = outputTagging.nonEmpty
         }
       }
       input.close()
-
-      Logger.info("Found " + totalKeys + " keys of which " + uniqueKeys.size + " were unique")
-
-      Logger.info("Building key and value index maps")
-      val keysSeq = uniqueKeys.toIndexedSeq
-
-      val keysIndex: Map[String, Int] = keysSeq.zipWithIndex.toMap
-
-      Logger.info("Rereading tags after indexing")
-      val tagsMap = mutable.Map[OsmId, Seq[(Int, String)]]()
-
-      val input2 = new BufferedInputStream(tagsFile.openStream())
-      val counter2 = new ProgressCounter(step = 10000, label = Some("Reading tags"))
-      ok = true
-      while (ok) {
-        counter2.withProgress {
-          val outputTagging = OutputTagging.parseDelimitedFrom(input2)
-          outputTagging.map { ot =>
-            val osmId = ot.osmId.get
-            val keys = ot.keys.map(k => keysIndex.get(k).get)
-            val values = ot.values
-            val tuples = keys.zip(values).toArray
-            tagsMap.put(toOsmId(osmId), tuples)
-        }
-          ok = outputTagging.nonEmpty
-        }
-      }
-      input2.close()
-
-      Logger.info("Read " + tagsMap.size + " taggings")
-      (tagsMap.toMap, keysSeq)
+      Logger.info("Read taggings")
+      tagSink.create()
+      tagVolume.close()
 
     } catch {
       case e: Exception =>
