@@ -9,15 +9,11 @@ import progress.ProgressCounter
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
-class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding with WayJoining with Logging with AreaComparison {
+class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding with WayJoining with Logging with AreaComparison with EntityOsmId {
 
   val outerNodeMapper = new OutlineBuilder()
 
   def resolveAreas(entities: Iterable[Entity], allRelations: Map[Long, Relation], wayResolver: WayResolver, nodeResolver: NodeResolver, callback: Seq[Area] => Unit): Unit = {
-
-    def osmIdFor(e: Entity): String = {
-      e.getId.toString + e.getType.toString.take(1)
-    }
 
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], wayResolver: WayResolver): Seq[Area] = {
       e match {
