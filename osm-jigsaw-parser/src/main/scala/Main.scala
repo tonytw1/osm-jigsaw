@@ -3,7 +3,7 @@ import java.io._
 import areas.AreaComparison
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
-import model.{Area, EntityRendering}
+import model.{Area, AreaIdSequence, EntityRendering}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
@@ -19,7 +19,7 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading {
+object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading with WayJoining {
 
   private val STEP = "s"
 
@@ -226,25 +226,32 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       logger.info("Resolving areas")
       val areasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
 
-      def outputAreasToFile(newAreas: Seq[Area]): Unit = {
-        newAreas.foreach(a => exportArea(a, areasOutput))
-      }
-
       val areaResolver = new AreaResolver()
       val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
       val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
+      def outputAreasToFile(resolvedAreas: Seq[ResolvedArea]): Unit = {
+        val newAreas = resolvedAreas.map { ra =>
+          val outerPoints: Seq[(Double, Double)] = nodesFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
+          polygonForPoints(outerPoints).map { p =>
+            Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId), areaOf(p))
+          }
+        }.flatten
+
+        newAreas.foreach(a => exportArea(a, areasOutput))
+      }
+
       val planetPolygon = makePolygon((-180, 90), (180, -90))
-      val planet = Area(0, Seq.empty, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))  // TODO
+      val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))  // TODO
       exportArea(planet, areasOutput)
 
       logger.info("Filtering relations to resolve")
       val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
       logger.info("Resolving areas for " + relationsToResolve.size + " relations")
-      areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, nodeResolver, outputAreasToFile)
+      areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, outputAreasToFile)
 
       logger.info("Resolving areas for " + waysToResolve.size + " ways")
-      areaResolver.resolveAreas(waysToResolve, relations, wayResolver, nodeResolver, outputAreasToFile) // TODO why are two sets of ways in scope?
+      areaResolver.resolveAreas(waysToResolve, relations, wayResolver, outputAreasToFile) // TODO why are two sets of ways in scope?
       wayResolver.close()
       nodeResolver.close()
       areasOutput.flush()
@@ -382,7 +389,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
     polygonForPoints(points).map { p =>
-      Area(id = oa.id.get, Seq.empty, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets outline
+      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets outline
     }
   }
 
