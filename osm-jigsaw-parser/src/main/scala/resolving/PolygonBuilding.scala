@@ -13,7 +13,7 @@ trait PolygonBuilding {
     polygon
   }
 
-  def areaForPoints(outerPoints: Seq[(Double, Double)]): Option[Polygon] = {
+  def polygonForPoints(outerPoints: Seq[(Double, Double)]): Option[Polygon] = {
     val polygon = outerPoints.headOption.map { n =>
       val area = new Polygon()
       area.startPath(n._1, n._2)

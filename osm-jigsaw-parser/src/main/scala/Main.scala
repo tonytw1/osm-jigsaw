@@ -235,7 +235,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
       val planetPolygon = makePolygon((-180, 90), (180, -90))
-      val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))
+      val planet = Area(0, Seq.empty, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))  // TODO
       exportArea(planet, areasOutput)
 
       logger.info("Filtering relations to resolve")
@@ -379,11 +379,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     OutputArea.parseDelimitedFrom(inputStream)
   }
 
-
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
-    areaForPoints(points).map { p =>
-      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets
+    polygonForPoints(points).map { p =>
+      Area(id = oa.id.get, Seq.empty, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets outline
     }
   }
 

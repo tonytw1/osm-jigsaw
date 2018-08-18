@@ -1,7 +1,7 @@
 package resolving
 
 import areas.AreaComparison
-import model.{Area, AreaIdSequence, EntityRendering}
+import model.{Area, AreaIdSequence, EntityRendering, JoinedWay}
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, Relation, Way}
 import progress.ProgressCounter
@@ -18,12 +18,12 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
     def resolveAreasForEntity(e: Entity, allRelations: Map[Long, Relation], wayResolver: WayResolver): Seq[Area] = {
       e match {
         case r: Relation =>
-          val outerRings = outerNodeMapper.outlineRings(r, allRelations, wayResolver)
+          val outlines = outerNodeMapper.outlineRings(r, allRelations, wayResolver)
 
-          outerRings.flatMap { outerRingWays =>
-            val outerPoints = nodesFor(outerRingWays).flatMap(nid => nodeResolver.resolvePointForNode(nid))
-            areaForPoints(outerPoints).map { p =>
-              Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(osmIdFor(r)), areaOf(p))
+          outlines.flatMap { outline =>
+            val outerPoints = nodesFor(outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
+            polygonForPoints(outerPoints).map { p =>
+              Area(AreaIdSequence.nextId, outline, p, boundingBoxFor(p), ListBuffer(osmIdFor(r)), areaOf(p))
             }
           }
 
@@ -32,10 +32,17 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
 
           val isClosed = w.isClosed
           val resolvedArea = if (isClosed) {
+
             val outerPoints = w.getWayNodes.asScala.flatMap(nid => nodeResolver.resolvePointForNode(nid.getNodeId))
-            areaForPoints(outerPoints).map { p =>
-              Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(osmId), areaOf(p))
+            polygonForPoints(outerPoints).map { p =>
+
+              val nodeIds = w.getWayNodes.asScala.map(n => n.getNodeId())
+              val mw = model.Way(w.getId, nodeIds)
+              val jw = JoinedWay(mw, false)
+              val outline = Seq(jw)
+              Area(AreaIdSequence.nextId, outline, p, boundingBoxFor(p), ListBuffer(osmId), areaOf(p))
             }
+
           } else {
             logger.info("Ignoring non closed way: " + w)
             None

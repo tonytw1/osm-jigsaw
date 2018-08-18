@@ -99,7 +99,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
 
   def makeArea(name: String, topLeft: (Int, Int), bottomRight: (Int, Int)): Area = {
     val polygon = makePolygon(topLeft, bottomRight)
-    Area(AreaIdSequence.nextId, osmIds = ListBuffer(name), polygon = polygon, boundingBox = boundingBoxFor(polygon), area = 0)
+    Area(AreaIdSequence.nextId, Seq.empty, osmIds = ListBuffer(name), polygon = polygon, boundingBox = boundingBoxFor(polygon), area = 0) // TODO
   }
 
 }
