@@ -15,7 +15,7 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
   def outlineRings(r: Relation, allRelations: Map[Long, Relation], wayResolver: WayResolver): Seq[Seq[JoinedWay]] = { // TODO handle missing Ways and nodes
 
     // Attempt to join up the ways (which may be out of order and facing in different directions) into a list consecutive nodes
-    def joinWays(ways: Seq[model.Way]) = {
+    def joinWays(ways: Seq[model.Way]): Seq[Seq[JoinedWay]] = {
       val nonEmptyWays: Seq[model.Way] = ways.filter(w => w.nodes.nonEmpty)
 
       if (nonEmptyWays.nonEmpty) {
