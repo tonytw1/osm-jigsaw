@@ -12,6 +12,12 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
   val areaResolver = new AreaResolver()
 
+  var collection: mutable.ListBuffer[ResolvedArea] = mutable.ListBuffer()
+
+  def collectResolvedAreas(resolvedAreas: Seq[ResolvedArea]): Unit = {
+    collection ++= resolvedAreas
+  }
+
   "area resolver" should "make areas from relations" in {
     val entities = loadEntities("gb-test-data.pbf")
 
@@ -33,14 +39,16 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val richmond = relations.find(r => r.getId == LONDON_BOROUGH_OF_RICHMOND_UPON_THAMES_RELATION._1).head
 
-    val nodeResolver = new InMemoryNodeResolver(nodes)
-    val areas = areaResolver.resolveAreas(Set(richmond), relationsMap, ways, nodeResolver)
+    collection = mutable.ListBuffer[ResolvedArea]()
+    val wayResolver = new InMemoryWayResolver(ways)
 
-    assert(areas.size == 1)
+    areaResolver.resolveAreas(Set(richmond), relationsMap, wayResolver, collectResolvedAreas)
+
+    assert(collection.size == 1)
   }
 
-  // TODO assert ignores unclosed ways
 
+  // TODO assert ignores unclosed ways
   "area resolver"should "include closed loop outer ways which are part of the relation" in {
     val entities = loadEntities("new-york-city.pbf")
 
@@ -62,10 +70,12 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val newYorkCity = relations.find(r => r.getId == NEW_YORK_CITY._1).head
 
-    val nodeResolver = new InMemoryNodeResolver(nodes)
-    val areas = areaResolver.resolveAreas(Set(newYorkCity), relationsMap, ways, nodeResolver)
+    collection = mutable.ListBuffer[ResolvedArea]()
+    val wayResolver = new InMemoryWayResolver(ways)
 
-    assert(areas.size == 3)
+    val areas = areaResolver.resolveAreas(Set(newYorkCity), relationsMap, wayResolver, collectResolvedAreas)
+
+    assert(collection.size == 3)
   }
 
   "area resolver" should "resolve new zealand" in { // TODO remind us again why this is special?s
@@ -89,10 +99,12 @@ class AreaResolverSpec extends FlatSpec with TestValues with LoadTestEntities wi
 
     val newZealand = relations.find(r => r.getId == NEW_ZEALAND._1).head
 
-    val nodeResolver = new InMemoryNodeResolver(nodes)
-    val areas = areaResolver.resolveAreas(Set(newZealand), relationsMap, ways, nodeResolver)
+    collection = mutable.ListBuffer[ResolvedArea]()
+    val wayResolver = new InMemoryWayResolver(ways)
 
-    assert(areas.size == 4)
+    val areas = areaResolver.resolveAreas(Set(newZealand), relationsMap, wayResolver, collectResolvedAreas)
+
+    assert(collection.size == 4)
   }
 
 }
