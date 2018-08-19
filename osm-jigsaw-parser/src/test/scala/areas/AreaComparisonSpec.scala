@@ -1,15 +1,16 @@
 package areas
 
 import input.TestValues
-import model.EntityRendering
+import model.{Area, AreaIdSequence, EntityRendering}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
-import resolving.{AreaResolver, InMemoryNodeResolver, LoadTestEntities, NodeResolver}
+import resolving._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
-class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering with AreaComparison {
+class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering with AreaComparison with WayJoining with PolygonBuilding with BoundingBox {
 
   val areaResolver = new AreaResolver()
 
@@ -28,21 +29,42 @@ class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities 
     }
 
     val relations = rs.toSet
-    val ways = ws.map(w => w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
-    val nodes = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
-    val relationsMap = relations.map(r => r.getId -> r).toMap
+    val ways: Map[Long, model.Way] = ws.map(w => w.getId -> model.Way(w.getId, w.getWayNodes.asScala.map(wn => wn.getNodeId))).toMap
+    val nodes: Map[Long, (Double, Double)] = ns.map { i => (i.getId, (i.getLatitude, i.getLongitude)) }.toMap
+    val relationsMap: Map[Long, Relation] = relations.map(r => r.getId -> r).toMap
 
     val bournemouth = relations.find(r => r.getId == BOURNEMOUTH._1).head
     val holdenhurst = relations.find(r => r.getId == HOLDENHURST_VILLAGE._1).head
 
-    val nodeResolver = new InMemoryNodeResolver(nodes)
-    val bournemouthAreas = areaResolver.resolveAreas(Set(bournemouth), relationsMap, ways, nodeResolver)
-    val holdenhurstAreas = areaResolver.resolveAreas(Set(holdenhurst), relationsMap, ways, nodeResolver)
-    val bournemouthArea = bournemouthAreas.head
-    val holdenhurstArea = holdenhurstAreas.head
+    val bournemouthArea = buildAreaForEntity(bournemouth, relationsMap, ways, nodes)
+    val holdenhurstArea =  buildAreaForEntity(holdenhurst, relationsMap, ways, nodes)
 
     assert(areaContains(bournemouthArea, holdenhurstArea) == true)
     assert(areaContains(holdenhurstArea, bournemouthArea) == false)
+  }
+
+  def buildAreaForEntity(entity: Entity, relationsMap: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Area = {
+    // TODO build this test fixture
+    var collection: mutable.ListBuffer[ResolvedArea] = mutable.ListBuffer()
+
+    def collectResolvedAreas(resolvedAreas: Seq[ResolvedArea]): Unit = {
+      collection ++= resolvedAreas
+    }
+
+    val wayResolver = new InMemoryWayResolver(ways)
+
+    areaResolver.resolveAreas(Set(entity), relationsMap, wayResolver, collectResolvedAreas)
+
+    val nodeResolver = new InMemoryNodeResolver(nodes)
+
+    val areas = collection.flatMap { ra =>
+      val outerPoints: Seq[(Double, Double)] = nodesFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
+      polygonForPoints(outerPoints).map { p =>
+        Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId), areaOf(p))
+      }
+    }
+
+    areas.head
   }
 
 }
