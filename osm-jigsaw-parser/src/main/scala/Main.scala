@@ -231,12 +231,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
       def outputAreasToFile(resolvedAreas: Seq[ResolvedArea]): Unit = {
-        val newAreas = resolvedAreas.map { ra =>
+        val newAreas = resolvedAreas.flatMap { ra =>
           val outerPoints: Seq[(Double, Double)] = nodesFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
           polygonForPoints(outerPoints).map { p =>
             Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId), areaOf(p))
           }
-        }.flatten
+        } // TODO isolate for reuse in test fixtures
 
         newAreas.foreach(a => exportArea(a, areasOutput))
       }
