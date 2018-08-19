@@ -10,6 +10,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import outputarea.OutputArea
 import outputnode.OutputNode
+import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
 import progress.ProgressCounter
 import resolving._
@@ -43,6 +44,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     step match {
       case "stats" => stats(inputFilepath)
+      case "areastats" => areaStats(inputFilepath)
       case "split" => split(inputFilepath)
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
@@ -90,6 +92,19 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Nodes: " + namedNodes + " / " + nodes)
     logger.info("Ways: " + namedWays + " / " + ways)
     logger.info("Relations: " + namedRelations + " / " + relations)
+  }
+
+  def areaStats(inputFilepath: String) = {
+
+    def print(ra: OutputResolvedArea) = {
+      ra.ways.foreach { l =>
+        println(ra.id.get + "," + l)
+      }
+    }
+
+    def read(inputStream: InputStream) = OutputResolvedArea.parseDelimitedFrom(inputStream)
+
+    processPbfFile(inputFilepath, read, print)
   }
 
   def split(inputFilepath: String) {
@@ -225,12 +240,18 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
       logger.info("Resolving areas")
       val areasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+      val resolvedAreasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath + ".resolved"))
 
       val areaResolver = new AreaResolver()
       val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
       val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
       def outputAreasToFile(resolvedAreas: Seq[ResolvedArea]): Unit = {
+
+        resolvedAreas.foreach{ ra =>
+          OutputResolvedArea(id = Some(ra.id), osmId = Some(ra.osmId), ways = ra.outline.map(w => w.way.id)).writeDelimitedTo(resolvedAreasOutput)
+        }
+
         val newAreas = resolvedAreas.flatMap { ra =>
           val outerPoints: Seq[(Double, Double)] = nodesFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
           polygonForPoints(outerPoints).map { p =>
@@ -254,8 +275,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       areaResolver.resolveAreas(waysToResolve, relations, wayResolver, outputAreasToFile) // TODO why are two sets of ways in scope?
       wayResolver.close()
       nodeResolver.close()
+
       areasOutput.flush()
       areasOutput.close()
+      resolvedAreasOutput.flush()
+      resolvedAreasOutput.close()
+
       logger.info("Dumped areas to file: " + outputFilepath)
     }
 

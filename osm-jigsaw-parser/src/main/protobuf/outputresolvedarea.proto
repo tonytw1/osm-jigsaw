@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message OutputResolvedArea {
+   optional int64 id  = 1;
+   optional string osm_id = 2;
+   repeated int64 ways = 3 [packed=true];
+}
