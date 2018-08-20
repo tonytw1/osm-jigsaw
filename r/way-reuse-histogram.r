@@ -1,3 +1,5 @@
+library(dplyr)
+
 way_usages <- read.csv('area-ways.csv')
 
 reuse <- way_usages  %>% group_by(WAY) %>% summarise(count = n())
@@ -8,7 +10,8 @@ h$counts
 h <- hist(reuse$count, ,breaks=c(1,2,50))
 h$counts
 
-png('out.png')
+library(ggplot2)
 qplot(reuse$count, geom='histogram', breaks=seq(1,50,1), xlim=c(0,10), main = "Way reuse", xlab="Usages", ylab="Count")
-dev.off()
+ggplot(data = reuse, aes(reuse$count)) + geom_histogram(breaks=seq(1,50,1))
+ggsave("out.png", width=12, height=8, units="cm", dpi=150)
 
