@@ -178,6 +178,11 @@ With a distibution list:
 
 
 
+![Way reuse](r/way_reusage.png)
+
+
+
+
 
 
 ### Deriving a location name from the area hierarchy
