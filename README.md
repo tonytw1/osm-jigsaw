@@ -178,7 +178,7 @@ With a distibution list:
 
 
 
-![Way reuse](r/way_reuse.png)
+![Way reuse](r/way-reuse.png)
 
 
 
