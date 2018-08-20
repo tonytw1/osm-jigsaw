@@ -165,6 +165,21 @@ This includes all of the point data for every area and every OSM tag for the are
 The [API](osm-jigsaw-api) can resolve a reverse query in around 30ms.
 
 
+### Way reuse
+
+For the full planet 11,251,035 unique ways used.
+
+Of which 688828 are used more than once.
+
+
+With a distibution list:
+
+10562207   112276   285277    48126    93281    25147    38977    15248    19230     9919    10621     7911     5031     2283     2074     1846     2517     2349     1967     1063     1140      612      621      348      341      123       85      174      145       61       17        3        1
+
+
+
+
+
 ### Deriving a location name from the area hierarchy
 
 Given a point it is a fairly fast operation (vaguely like descending a b-tree) to step down the hierarchy of nested areas,
