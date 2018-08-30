@@ -6,16 +6,16 @@ trait ProtocolbufferReading {
 
   def processPbfFile[T](inputFilename: String, nextObject: InputStream => scala.Option[T], callback: T => Unit): Unit = {
     val fileInputStream = new BufferedInputStream(new FileInputStream(inputFilename))
-    val counter = new ProgressCounter(step = 100000, label = Some("Reading"))
+    val counter = new ProgressCounter(step = 10000, label = Some("Reading"))
     var ok = true
 
     while (ok) {
       counter.withProgress {
-        val outputArea = nextObject(fileInputStream)
-        outputArea.map { oa =>
-          callback(oa)
+        val item = nextObject(fileInputStream)
+        item.map { i =>
+          callback(i)
         }
-        ok = outputArea.nonEmpty
+        ok = item.nonEmpty
       }
     }
 

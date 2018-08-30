@@ -58,7 +58,7 @@ class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities 
     val nodeResolver = new InMemoryNodeResolver(nodes)
 
     val areas = collection.flatMap { ra =>
-      val outerPoints: Seq[(Double, Double)] = nodesFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
+      val outerPoints: Seq[(Double, Double)] = nodeIdsFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
       polygonForPoints(outerPoints).map { p =>
         Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId), areaOf(p))
       }

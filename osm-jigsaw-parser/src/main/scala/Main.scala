@@ -12,7 +12,8 @@ import outputarea.OutputArea
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
-import progress.ProgressCounter
+import outputway.OutputWay
+import progress.{CommaFormattedNumbers, ProgressCounter}
 import resolving._
 
 import scala.collection.JavaConverters._
@@ -20,7 +21,7 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading with WayJoining {
+object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading with WayJoining with CommaFormattedNumbers {
 
   private val STEP = "s"
 
@@ -44,11 +45,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     step match {
       case "stats" => stats(inputFilepath)
-      case "areastats" => areaStats(inputFilepath)
       case "split" => split(inputFilepath)
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
-      case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1))
+      case "areaways" => resolveAreaWays(inputFilepath, cmd.getArgList.get(1))
+      case "areastats" => areaStats(inputFilepath)
+      case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
       case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2), cmd.getArgList.get(3))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
@@ -203,7 +205,84 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Dumped " + count + " tags to file: " + outputFilepath)
   }
 
-  def resolveAreas(inputFilepath: String, outputFilepath: String): Unit = {
+
+  def resolveAreaWays(inputFilepath: String, outputFilepath: String): Unit = {
+
+    def all(entity: Entity): Boolean = true
+
+    var relations = LongMap[Relation]()
+    var waysToResolve = Set[Way]()
+
+    val entityLoadProgress = new ProgressCounter(step = 100000)
+    def loadIntoMemory(entity: Entity) = {
+      entityLoadProgress.withProgress {
+        entity match {
+          case r: Relation => relations = relations + (r.getId -> r)
+          case w: Way => waysToResolve = waysToResolve + w
+          case _ =>
+        }
+      }
+    }
+
+    logger.info("Loading entities")
+    new SinkRunner(inputFilepath, all, loadIntoMemory).run
+    logger.info("Finished loading entities")
+
+    logger.info("Resolving relation areas")
+    val resolvedAreasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+
+    var counter = 0
+
+    val waysUsed = mutable.Set[model.Way]()
+
+    def outputAreasToFileAndCacheUsedWays(resolvedAreas: Seq[ResolvedArea]): Unit = {
+      resolvedAreas.foreach { ra =>
+        counter = counter + 1
+        waysUsed ++= ra.outline.map(_.way)
+        OutputResolvedArea(id = Some(ra.id), osmId = Some(ra.osmId), ways = ra.outline.map(w => w.way.id * (if (w.reverse) -1 else 1))).writeDelimitedTo(resolvedAreasOutput)
+      }
+    }
+
+    logger.info("Filtering relations to resolve")
+    val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
+    logger.info("Resolving areas for " + relationsToResolve.size + " relations")
+
+    val areaResolver = new AreaResolver()
+    val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
+
+    areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, outputAreasToFileAndCacheUsedWays)
+
+    logger.info("Resolving areas for " + commaFormatted(waysToResolve.size) + " ways")
+    areaResolver.resolveAreas(waysToResolve, relations, wayResolver, outputAreasToFileAndCacheUsedWays) // TODO why are two sets of ways in scope?
+    wayResolver.close()
+
+    resolvedAreasOutput.flush()
+    resolvedAreasOutput.close()
+
+    logger.info("Dumped " + commaFormatted(counter) + " areas to file: " + outputFilepath)
+    logger.info("Collected " + commaFormatted(waysUsed.size) + " ways in the process")
+
+    logger.info("Resolving points for used ways")
+    val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
+
+    val waysOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath + ".ways.pbf"))
+
+    val wayCounter = new ProgressCounter(10000, total = Some(waysUsed.size))
+    waysUsed.foreach { w =>
+      wayCounter.withProgress {
+        val points = w.nodes.flatMap { nid =>
+          nodeResolver.resolvePointForNode(nid) // TODO handle missing node
+        }
+        val outputWay = OutputWay(id = Some(w.id), latitudes = points.map(i => i._1), longitudes = points.map(i => i._2))
+        outputWay.writeDelimitedTo(waysOutput)
+      }
+    }
+    waysOutput.flush()
+    waysOutput.close()
+    logger.info("Done")
+  }
+
+  def resolveAreas(entitiesFilepath: String, areaInputFile: String, outputFilepath: String): Unit = {
 
     def exportArea(area: Area, output: OutputStream): Unit = {
       val latitudes = mutable.ListBuffer[Double]()
@@ -219,68 +298,53 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def buildAreas: Unit = {
-      def all(entity: Entity): Boolean = true
+      val waysFile: String = areaInputFile + ".ways.pbf"
+      logger.info("Reading area ways from file: " + waysFile)
+      val ways = mutable.Map[Long, OutputWay]() // TODO just the points
 
-      var relations = LongMap[Relation]()
-      var waysToResolve = Set[Way]()
+      def readWay(inputStream: InputStream): scala.Option[OutputWay] = OutputWay.parseDelimitedFrom(inputStream)
 
-      def loadIntoMemory(entity: Entity) = {
-        entity match {
-          case r: Relation => relations = relations + (r.getId -> r)
-          case w: Way => waysToResolve = waysToResolve + w
-          case _ =>
+      def cacheWay(outputWay: OutputWay)= ways.put(outputWay.id.get, outputWay)
+
+      processPbfFile(waysFile, readWay, cacheWay)
+
+      val counter = new ProgressCounter(1000)
+      val areasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+
+      def populateAreaNodesAndOutputToFile(ra: OutputResolvedArea): Unit = {
+        counter.withProgress {
+          val outline: Seq[(Long, Seq[(Double, Double)])] = ra.ways.flatMap { signedWayId =>
+            val l = Math.abs(signedWayId)
+            val joined: scala.Option[(Long, Seq[(Double, Double)])] = ways.get(l).map { way =>
+              val points: Seq[(Double, Double)] = way.latitudes.zip(way.longitudes)
+              val pointed = if (way.id.get < 0) points.reverse else points
+              (way.id.get, pointed)
+            }
+            if(joined.isEmpty) {
+              logger.warn("Failed to resolved way id: " + l)
+            }
+            joined
+          }
+
+          val outerPoints: Seq[(Double, Double)] = outline.map(_._2).flatten
+          polygonForPoints(outerPoints).map { p =>
+            exportArea(Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId.get), areaOf(p)), areasOutput)
+          }
         }
-      }
-
-      logger.info("Loading entities")
-      new SinkRunner(inputFilepath, all, loadIntoMemory).run
-      logger.info("Finished loading entities")
-
-      logger.info("Found " + relations.size + " relations to process")
+      } // TODO isolate for reuse in test fixtures
 
       logger.info("Resolving areas")
-      val areasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
-      val resolvedAreasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath + ".resolved"))
-
-      val areaResolver = new AreaResolver()
-      val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
-      val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
-
-      def outputAreasToFile(resolvedAreas: Seq[ResolvedArea]): Unit = {
-
-        resolvedAreas.foreach{ ra =>
-          OutputResolvedArea(id = Some(ra.id), osmId = Some(ra.osmId), ways = ra.outline.map(w => w.way.id)).writeDelimitedTo(resolvedAreasOutput)
-        }
-
-        val newAreas = resolvedAreas.flatMap { ra =>
-          val outerPoints: Seq[(Double, Double)] = nodesFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
-          polygonForPoints(outerPoints).map { p =>
-            Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId), areaOf(p))
-          }
-        } // TODO isolate for reuse in test fixtures
-
-        newAreas.foreach(a => exportArea(a, areasOutput))
-      }
-
       val planetPolygon = makePolygon((-180, 90), (180, -90))
       val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))  // TODO
       exportArea(planet, areasOutput)
 
-      logger.info("Filtering relations to resolve")
-      val relationsToResolve = relations.values.filter(e => entitiesToGraph(e))
-      logger.info("Resolving areas for " + relationsToResolve.size + " relations")
-      areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, outputAreasToFile)
+      def readResolvedArea(inputStream: InputStream)= OutputResolvedArea.parseDelimitedFrom(inputStream)
 
-      logger.info("Resolving areas for " + waysToResolve.size + " ways")
-      areaResolver.resolveAreas(waysToResolve, relations, wayResolver, outputAreasToFile) // TODO why are two sets of ways in scope?
-      wayResolver.close()
-      nodeResolver.close()
+      logger.info("Expanding way areas")
+      processPbfFile(areaInputFile, readResolvedArea, populateAreaNodesAndOutputToFile)
 
       areasOutput.flush()
       areasOutput.close()
-      resolvedAreasOutput.flush()
-      resolvedAreasOutput.close()
-
       logger.info("Dumped areas to file: " + outputFilepath)
     }
 

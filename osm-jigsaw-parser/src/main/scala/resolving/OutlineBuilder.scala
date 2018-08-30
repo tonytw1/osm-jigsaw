@@ -26,7 +26,7 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
           var joined = Seq(JoinedWay(first, false)) // TODO incorrectly allows non closed areas
           available.remove(first)
 
-          var lastNode = nodesFor(Seq(joined.last)).last
+          var lastNode = nodeIdsFor(Seq(joined.last)).last
 
           def nextAttachment(wg: model.Way): Boolean = wg.nodes.head == lastNode || wg.nodes.last == lastNode
 
@@ -40,7 +40,7 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
             }
 
             available.remove(next)
-            lastNode = nodesFor(Seq(joined.last)).last
+            lastNode = nodeIdsFor(Seq(joined.last)).last
           }
 
           joined
@@ -49,12 +49,12 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
         var foundRings = Seq[Seq[JoinedWay]]()
         while (available.nonEmpty) {
           val found = buildRingFromAvailable
-          val nodes = nodesFor(found)
+          val nodes = nodeIdsFor(found)
           val isClosed = nodes.head == nodes.last // TODO duplication
           if (isClosed) {
             foundRings = foundRings :+ found
           } else {
-            logger.info("Not closed while outing relation: " + found)
+            logger.info("Not closed while outlining relation: " + found)
           }
         }
         foundRings

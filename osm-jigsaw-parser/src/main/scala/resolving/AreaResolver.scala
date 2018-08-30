@@ -39,7 +39,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
       }
     }
 
-    val counter = new ProgressCounter(1000)
+    val counter = new ProgressCounter(10000)
     entities.foreach { e =>
       counter.withProgress(callback(resolveAreasForEntity(e, allRelations, wayResolver)))
     }
