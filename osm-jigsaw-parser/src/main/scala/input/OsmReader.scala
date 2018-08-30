@@ -1,15 +1,14 @@
 package input
 
-import java.io.FileInputStream
+import java.io.InputStream
 
 import crosby.binary.osmosis.OsmosisReader
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.task.v0_6.Sink
 
-class OsmReader(extractFilePath: String, sink: Sink) extends Logging {
+class OsmReader(inputStream: InputStream, sink: Sink) extends Logging {
 
   def read = {
-    val inputStream = new FileInputStream(extractFilePath)
     val reader = new OsmosisReader(inputStream)
     reader.setSink(sink)
     reader.run()
