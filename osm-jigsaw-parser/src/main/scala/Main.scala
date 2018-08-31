@@ -239,7 +239,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       resolvedAreas.foreach { ra =>
         counter = counter + 1
         waysUsed ++= ra.outline.map(_.way)
-        OutputResolvedArea(id = Some(ra.id), osmId = Some(ra.osmId), ways = ra.outline.map(w => w.way.id * (if (w.reverse) -1 else 1))).writeDelimitedTo(resolvedAreasOutput)
+        val signedWays = ra.outline.map(w => w.way.id * (if (w.reverse) -1 else 1))
+        OutputResolvedArea(id = Some(ra.id), osmId = Some(ra.osmId), ways = signedWays).writeDelimitedTo(resolvedAreasOutput)
       }
     }
 
@@ -313,20 +314,19 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
       def populateAreaNodesAndOutputToFile(ra: OutputResolvedArea): Unit = {
         counter.withProgress {
-          val outline: Seq[(Long, Seq[(Double, Double)])] = ra.ways.flatMap { signedWayId =>
+          val outline = ra.ways.flatMap { signedWayId =>
             val l = Math.abs(signedWayId)
-            val joined: scala.Option[(Long, Seq[(Double, Double)])] = ways.get(l).map { way =>
-              val points: Seq[(Double, Double)] = way.latitudes.zip(way.longitudes)
-              val pointed = if (way.id.get < 0) points.reverse else points
-              (way.id.get, pointed)
+            val joined = ways.get(l).map { way =>
+              val points = way.latitudes.zip(way.longitudes)
+              if (signedWayId < 0) points.reverse else points
             }
             if(joined.isEmpty) {
-              logger.warn("Failed to resolved way id: " + l)
+              logger.warn("Failed to resolve way id: " + l)
             }
             joined
           }
 
-          val outerPoints: Seq[(Double, Double)] = outline.map(_._2).flatten
+          val outerPoints: Seq[(Double, Double)] = outline.flatten
           polygonForPoints(outerPoints).map { p =>
             exportArea(Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId.get), areaOf(p)), areasOutput)
           }
@@ -363,7 +363,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
             val i = deduplicatedAreas.iterator
             var found: scala.Option[Area] = None
             while (ok) {
-              var x = i.next()
+              val x = i.next()
               if (x.area == a.area && areaSame(x, a)) {
                 found = Some(x)
               }
