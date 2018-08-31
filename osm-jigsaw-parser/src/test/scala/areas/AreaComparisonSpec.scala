@@ -43,19 +43,6 @@ class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities 
     assert(areaContains(holdenhurstArea, bournemouthArea) == false)
   }
 
-  "area comparison" should "work seamlessly at the normalised longitude boundaries" in {
-
-    def makeArea(name: String, topLeft: (Int, Int), bottomRight: (Int, Int)): Area = {  // TODO duplication
-      val polygon = makePolygon(topLeft, bottomRight)
-      Area(AreaIdSequence.nextId, osmIds = ListBuffer(name), polygon = polygon, boundingBox = boundingBoxFor(polygon), area = polygon.getBoundary.calculateArea2D()) // TODO
-    }
-
-    val container = makeArea("A", (10, 170), (-10, -170))
-    val inside = makeArea("B", (1, 175), (-1, 176))
-
-    assert(areaContains(container, inside) == true)
-  }
-
   def buildAreaForEntity(entity: Entity, relationsMap: Map[Long, Relation], ways: Map[Long, model.Way], nodes: Map[Long, (Double, Double)]): Area = {
     // TODO build this test fixture
     var collection: mutable.ListBuffer[ResolvedArea] = mutable.ListBuffer()
