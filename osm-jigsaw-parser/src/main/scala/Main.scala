@@ -21,7 +21,8 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading with WayJoining with CommaFormattedNumbers {
+object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading with WayJoining
+  with CommaFormattedNumbers with EntityOsmId {
 
   private val STEP = "s"
 
@@ -480,10 +481,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     polygonForPoints(points).map { p =>
       Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets outline
     }
-  }
-
-  def osmIdFor(entity: Entity): String = {  // TODO push to a trait
-    entity.getId.toString + entity.getType.toString.take(1).toUpperCase
   }
 
 }
