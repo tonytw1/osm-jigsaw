@@ -26,6 +26,7 @@ locate.on('click', function(e) {
   function showPosition(position) {
       resolvePoint(position.coords.latitude,  position.coords.longitude);
       // TODO zoom to enclose the smallest component of the resolved name; API will need to make this available
+      mymap.panTo([position.coords.latitude,  position.coords.longitude]);
   }
 
   function showError(positionError) {
