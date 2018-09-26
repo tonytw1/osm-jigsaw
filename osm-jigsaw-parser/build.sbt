@@ -30,3 +30,6 @@ lazy val root = (project in file(".")).
     libraryDependencies += "org.mapdb" % "mapdb" % "3.0.5",
     libraryDependencies += scalaTest % Test
   )
+
+enablePlugins(DockerPlugin)
+dockerBaseImage := "openjdk:10-jre"
