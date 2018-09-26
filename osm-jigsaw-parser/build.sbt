@@ -31,5 +31,7 @@ lazy val root = (project in file(".")).
     libraryDependencies += scalaTest % Test
   )
 
+mainClass in Compile := Some("Main")
+enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
 dockerBaseImage := "openjdk:10-jre"
