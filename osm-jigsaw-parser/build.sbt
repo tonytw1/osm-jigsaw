@@ -1,3 +1,6 @@
+name := "osm-jigsaw-parser"
+version := "1.0"
+
 import Dependencies._
 
 PB.targets in Compile := Seq(
