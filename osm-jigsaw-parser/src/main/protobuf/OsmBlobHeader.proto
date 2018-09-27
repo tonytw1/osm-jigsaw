@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-message OsmBlobHeader {
-  required string type = 1;
-  optional bytes indexdata = 2;
-  required int32 datasize = 3;
-}
