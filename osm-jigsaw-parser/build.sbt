@@ -38,3 +38,6 @@ mainClass in Compile := Some("Main")
 enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
 dockerBaseImage := "openjdk:10-jre"
+
+mappings in Universal += file("process.bash") -> "process.bash"
+
