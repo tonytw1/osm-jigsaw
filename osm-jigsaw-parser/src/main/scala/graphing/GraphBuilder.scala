@@ -39,7 +39,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     a.children = a.children -- a.children.map(a => a.children).flatten
 
-    a.children.filter(i => i.children.size > 1).foreach { c =>
+    a.children.filter(i => i.children.size > 1).map { c =>
       // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
       siftDown(c)
     }
