@@ -47,11 +47,11 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
     //var start = DateTime.now()
-    var siblings = a.children.filter(c => c != b)
+    //var siblings = a.children// .filter(c => c != b)
 
     //var startFilter = DateTime.now()
-    val existingSiblingsWhichNewValueWouldFitIn = siblings.par.filter { s =>
-      areaContains(s.area, b.area)
+    val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
+      s != b && areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
     //var secondFilterDuration: Option[Duration] = None
@@ -68,8 +68,8 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       a.children = a.children ++ Seq(b)
 
       //val startSecondFilter = DateTime.now()
-      val siblingsWhichFitInsideNewNode = siblings.par.filter { s =>
-        areaContains(b.area, s.area)
+      val siblingsWhichFitInsideNewNode = a.children.par.filter { s =>
+        s != b && areaContains(b.area, s.area)
       }
       //secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
 
