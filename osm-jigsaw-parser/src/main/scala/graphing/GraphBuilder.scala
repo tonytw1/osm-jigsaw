@@ -35,11 +35,11 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
-    a.children.par.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
+    a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
     a.children = a.children -- a.children.map(a => a.children).flatten
 
-    a.children.par.filter(i => i.children.size > 1).foreach { c =>
+    a.children.filter(i => i.children.size > 1).foreach { c =>
       // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
       siftDown(c)
     }
@@ -50,7 +50,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //var siblings = a.children// .filter(c => c != b)
 
     //var startFilter = DateTime.now()
-    val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
+    val existingSiblingsWhichNewValueWouldFitIn = a.children.filter { s =>
       s != b && areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
@@ -68,7 +68,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       a.children = a.children + b
 
       //val startSecondFilter = DateTime.now()
-      val siblingsWhichFitInsideNewNode = a.children.par.filter { s =>
+      val siblingsWhichFitInsideNewNode = a.children.filter { s =>
         s != b && areaContains(b.area, s.area)
       }
       //secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
