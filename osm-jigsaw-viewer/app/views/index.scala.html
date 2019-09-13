@@ -8,6 +8,10 @@
         crossorigin=""></script>
 <script   src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@@0.67.0/dist/L.Control.Locate.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@@0.67.0/dist/L.Control.Locate.min.js"></script>
+
 <h2><a href="/">OpenStreetMap Jigsaw</a></h2>
 <a href="https://github.com/tonytw1/osm-jigsaw" target="_blank">Github</a>
 <hr/>
@@ -26,9 +30,10 @@
     id: 'mapbox.streets',
     accessToken: '@mapBoxApiKey'
     }).addTo(mymap);
+
+    L.control.locate().addTo(mymap);
 </script>
 
-<p><div id="locate">Locate</div></p>
 <p><div id="locate-error"></div></p>
 
 <div id="reverse"></div>
@@ -42,22 +47,18 @@
     @crumb.map { cs =>
         <h2>@crumbs(cs)</h2>
     }
-    <p>
-        <h6>Area id</h6>
-        @area.id
 
-    <h6>Size</h6>
+    <h6>Area id</h6>
+    @area.id
 
-
-        <h6>OSM ids</h6>
-        @osmUrls.map { ous =>
-            @ous.map { ou =>
-                <a href="@ou._2" target="_blank">@ou._1</a>
-            }
+    <h6>OSM ids</h6>
+    @osmUrls.map { ous =>
+        @ous.map { ou =>
+            <a href="@ou._2" target="_blank">@ou._1</a>
         }
-        <h6>Tags</h6>
-        @tagsTable(tags)
-    </p>
+    }
+    <h6>Tags</h6>
+    @tagsTable(tags)
 }
 </div>
 

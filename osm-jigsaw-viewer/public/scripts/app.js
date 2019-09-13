@@ -12,26 +12,19 @@ mymap.on('click', function(e) {
     resolvePoint(latlng.lat, latlng.lng);
 });
 
-var geoOptions = {
-    enableHighAccuracy : true,
-    timeout : 10000,
-    maximumAge : 3000
-};
+mymap.on('locationfound', function(e) {
+    var latlng = e.latlng.wrap();
 
-var locate = $('#locate');
-locate.on('click', function(e) {
-  e.preventDefault();
-  $('#locate-error').html("");
-
-  function showPosition(position) {
-      resolvePoint(position.coords.latitude,  position.coords.longitude);
+    function showPosition(latlng) {
+      resolvePoint(latlng.lat, latlng.lng);
       // TODO zoom to enclose the smallest component of the resolved name; API will need to make this available
-      mymap.panTo([position.coords.latitude,  position.coords.longitude]);
-  }
+      mymap.panTo([latlng.lat, latlng.lng]);
+    }
 
-  function showError(positionError) {
+    showPosition(latlng);
+});
+
+// TODO location error
+function showLocationError(positionError) {
     $('#locate-error').html("<p>Failed to get position: " + positionError.message + "</p>");
-  }
-
-  navigator.geolocation.getCurrentPosition(showPosition, showError, geoOptions);
-})
+}
