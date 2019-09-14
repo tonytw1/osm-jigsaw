@@ -117,7 +117,18 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val waysWriter = new OsmWriter(inputFilepath + ".ways")
     val relationsWriter = new OsmWriter(inputFilepath + ".relations")
 
+    var sink: SinkRunner = null
+    var currentType: scala.Option[EntityType] = None
+    var currentPosition = 0L
+
     def writeToSplitFiles(entity: Entity) = {
+      val entityType = scala.Option(entity.getType)
+      if (entityType != currentType) {
+        logger.info("Saw first " + entity.getType + " after reading from " + currentPosition)
+        currentType = entityType
+      }
+      currentPosition = sink.currentPosition
+
       entity match {
         case n: Node => nodesWriter.write(n)
         case w: Way => waysWriter.write(w)
@@ -127,7 +138,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    new SinkRunner(inputFilepath, all, writeToSplitFiles).run
+    sink = new SinkRunner(inputFilepath, all, writeToSplitFiles)
+    sink.run
 
     nodesWriter.close()
     waysWriter.close()
