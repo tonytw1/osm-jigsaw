@@ -37,7 +37,7 @@ class MapDBWayResolver(filepath: String) extends WayResolver with Logging {
     if (got != null) {
       Some(Way(id = wayId, nodes = got.toSeq))
     } else {
-      logger.warn("Could not resolve way: " + wayId)
+      logger.debug("Could not resolve way: " + wayId)
       None
     }
   }

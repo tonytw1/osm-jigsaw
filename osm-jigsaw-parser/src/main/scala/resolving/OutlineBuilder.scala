@@ -54,7 +54,7 @@ class OutlineBuilder extends EntityRendering with WayJoining with Logging {
           if (isClosed) {
             foundRings = foundRings :+ found
           } else {
-            logger.info("Not closed while outlining relation: " + found)
+            logger.info("Not closed while outlining relation: " + found.map(_.way.id))
           }
         }
         foundRings
