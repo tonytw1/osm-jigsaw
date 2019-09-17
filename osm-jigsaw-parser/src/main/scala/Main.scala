@@ -395,6 +395,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
       val areas = readAreasFromPbfFile(outputFilepath)
       val deduplicatedAreas = deduplicateAreas(areas)
+      logger.info("Deduplicated " + areas.size + " areas to " + deduplicatedAreas.size)
 
       logger.info("Writing deduplicated areas to file")
       val finalOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
