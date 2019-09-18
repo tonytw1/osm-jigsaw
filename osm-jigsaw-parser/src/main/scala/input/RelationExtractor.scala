@@ -1,5 +1,7 @@
 package input
 
+import java.io.FileInputStream
+
 import model.EntityRendering
 import org.apache.logging.log4j.scala.Logging
 import org.mapdb.volume.MappedFileVol
@@ -32,7 +34,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
       }
     }
     def all(entity: Entity): Boolean = true
-    new SinkRunner(inputFilePath + ".relations", all, addToAllRelations).run
+    new SinkRunner(new FileInputStream(inputFilePath + ".relations"), all, addToAllRelations).run
     logger.info("Cached " + allRelations.size + " relations")
 
     logger.info("Extracting interesting relations from all relations")
@@ -77,7 +79,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
             nodesRequiredToBuildRequiredWays ++= wayNodeIds
         }
     }
-    new SinkRunner(inputFilePath + ".ways", requiredWays, persistWayAndExpandNodeIds).run
+    new SinkRunner(new FileInputStream(inputFilePath + ".ways"), requiredWays, persistWayAndExpandNodeIds).run
     waySink.create()
     wayVolume.close()
 
@@ -109,7 +111,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
           }
       }
     }
-    new SinkRunner(inputFilePath + ".nodes", allNodes, addToFoundNodes).run
+    new SinkRunner(new FileInputStream(inputFilePath + ".nodes"), allNodes, addToFoundNodes).run
     nodeSink.create()
     nodeVolume.close()
 

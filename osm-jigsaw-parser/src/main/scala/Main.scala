@@ -1,6 +1,7 @@
 import java.io._
 
 import areas.AreaComparison
+import com.google.common.io.Files
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
 import model.{Area, AreaIdSequence, EntityRendering}
@@ -91,7 +92,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    new SinkRunner(inputFilepath, all, countTypes).run
+    new SinkRunner(new FileInputStream(inputFilepath), all, countTypes).run
 
     logger.info("Nodes: " + namedNodes + " / " + nodes)
     logger.info("Ways: " + namedWays + " / " + ways)
@@ -128,7 +129,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    sink = new SinkRunner(inputFilepath, all, scanForBoundaries)
+    sink = new SinkRunner(new FileInputStream(inputFilepath), all, scanForBoundaries)
     sink.run
 
     logger.info("Found boundaries: " + boundaries)
@@ -152,7 +153,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    val sink = new SinkRunner(inputFilepath, all, writeToSplitFiles)
+    val sink = new SinkRunner(new FileInputStream(inputFilepath), all, writeToSplitFiles)
     sink.run
 
     nodesWriter.close()
@@ -177,7 +178,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       hasName(entity)
     }
 
-    new SinkRunner(inputFilepath, named, writeToNamedNodesFile).run
+    new SinkRunner(new FileInputStream(inputFilepath), named, writeToNamedNodesFile).run
 
     namedNodesOutput.flush()
     namedNodesOutput.close()
@@ -225,7 +226,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       count = count + 1
     }
 
-    new SinkRunner(relationsInputFilepath, isUse, extractTags).run
+    new SinkRunner(new FileInputStream(relationsInputFilepath), isUse, extractTags).run
     logger.info("Finished extracting tags")
     output.flush()
     output.close
@@ -252,7 +253,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     logger.info("Loading entities")
-    new SinkRunner(inputFilepath, all, loadIntoMemory).run
+    new SinkRunner(new FileInputStream(inputFilepath), all, loadIntoMemory).run
     logger.info("Finished loading entities")
 
     logger.info("Resolving relation areas")

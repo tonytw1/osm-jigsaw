@@ -1,7 +1,7 @@
-import java.io.File
+import java.io.{File, FileInputStream}
 
 import com.google.common.io.Files
-import input.{InputStreamSinkRunner, SinkRunner}
+import input.SinkRunner
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import org.scalatest.FlatSpec
 
@@ -26,7 +26,7 @@ class SinksSpec extends FlatSpec {
         case _ =>
       }
     }
-    new SinkRunner(sourceFile, all, countTypes).run
+    new SinkRunner(new FileInputStream(sourceFile), all, countTypes).run
 
     // Obtain the entity type offsets
     var sink: SinkRunner = null
@@ -43,7 +43,7 @@ class SinksSpec extends FlatSpec {
       currentPosition = sink.currentPosition
     }
 
-    sink = new SinkRunner(sourceFile, all, scanForBoundaries)
+    sink = new SinkRunner(new FileInputStream(sourceFile), all, scanForBoundaries)
     sink.run
 
     val startOfNodes = boundaries.find(_._1 == EntityType.Node).get._2
@@ -60,9 +60,9 @@ class SinksSpec extends FlatSpec {
     ways = 0
     relations = 0
     // Deliberate out of order reads
-    new InputStreamSinkRunner(Files.asByteSource(new File(sourceFile)).slice(startOfRelations, eof - startOfRelations).openStream(), all, countTypes).run
-    new InputStreamSinkRunner(Files.asByteSource(new File(sourceFile)).slice(startOfWays, startOfRelations - startOfWays).openStream(), all, countTypes).run
-    new InputStreamSinkRunner(Files.asByteSource(new File(sourceFile)).slice(startOfNodes, startOfWays - startOfNodes).openStream(), all, countTypes).run
+    new SinkRunner(Files.asByteSource(new File(sourceFile)).slice(startOfRelations, eof - startOfRelations).openStream(), all, countTypes).run
+    new SinkRunner(Files.asByteSource(new File(sourceFile)).slice(startOfWays, startOfRelations - startOfWays).openStream(), all, countTypes).run
+    new SinkRunner(Files.asByteSource(new File(sourceFile)).slice(startOfNodes, startOfWays - startOfNodes).openStream(), all, countTypes).run
 
     assert(nodes == expectedNodes)
     assert(ways == expectedWays)
