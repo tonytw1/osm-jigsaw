@@ -124,7 +124,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         boundaries = boundaries :+ (entity.getType, currentPosition)
         currentType = entityType
       }
-      // TODO current position call is slow - 133s mins got GB vs 44s
       currentPosition = sink.currentPosition
     }
 
