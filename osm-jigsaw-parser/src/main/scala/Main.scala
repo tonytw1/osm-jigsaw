@@ -1,7 +1,6 @@
 import java.io._
 
 import areas.AreaComparison
-import com.google.common.io.Files
 import graphing.{GraphBuilder, GraphReader}
 import input.{RelationExtractor, SinkRunner}
 import model.{Area, AreaIdSequence, EntityRendering}
@@ -117,12 +116,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var currentType: scala.Option[EntityType] = None
     var currentPosition = 0L
 
-    var boundaries: Seq[(EntityType, Long)] = Seq.empty
+    var boundaries: Map[String, Long] = Map.empty
     def scanForBoundaries(entity: Entity) = {
       val entityType = scala.Option(entity.getType)
       if (entityType != currentType) {
         logger.info("Saw first " + entity.getType + " after reading from " + currentPosition)
-        boundaries = boundaries :+ (entity.getType, currentPosition)
+        boundaries = boundaries + (entity.getType.toString -> currentPosition)
         currentType = entityType
       }
       currentPosition = sink.currentPosition
