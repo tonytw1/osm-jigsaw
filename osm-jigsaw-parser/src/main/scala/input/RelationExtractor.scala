@@ -34,7 +34,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
       }
     }
     def all(entity: Entity): Boolean = true
-    new SinkRunner(new FileInputStream(relationExtract(inputFilePath)), all, addToAllRelations).run
+    new SinkRunner(new FileInputStream(relationExtractFilepath(inputFilePath)), all, addToAllRelations).run
     logger.info("Cached " + allRelations.size + " relations")
 
     logger.info("Extracting interesting relations from all relations")
@@ -79,7 +79,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
             nodesRequiredToBuildRequiredWays ++= wayNodeIds
         }
     }
-    new SinkRunner(new FileInputStream(waysExtract(inputFilePath)), requiredWays, persistWayAndExpandNodeIds).run
+    new SinkRunner(waysFromExtract(inputFilePath), requiredWays, persistWayAndExpandNodeIds).run
     waySink.create()
     wayVolume.close()
 
@@ -111,7 +111,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
           }
       }
     }
-    new SinkRunner(new FileInputStream(nodesExtract(inputFilePath)), allNodes, addToFoundNodes).run
+    new SinkRunner(nodesFromExtract(inputFilePath), allNodes, addToFoundNodes).run
     nodeSink.create()
     nodeVolume.close()
 

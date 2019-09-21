@@ -91,7 +91,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    new SinkRunner(new FileInputStream(inputFilepath), all, countTypes).run
+    new SinkRunner(entireExtract(inputFilepath), all, countTypes).run
 
     logger.info("Nodes: " + namedNodes + " / " + nodes)
     logger.info("Ways: " + namedWays + " / " + ways)
@@ -128,7 +128,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    sink = new SinkRunner(new FileInputStream(inputFilepath), all, scanForBoundaries)
+    sink = new SinkRunner(entireExtract(inputFilepath), all, scanForBoundaries)
     sink.run
 
     logger.info("Found boundaries: " + boundaries)
@@ -138,9 +138,9 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def split(inputFilepath: String) {
     logger.info("Splitting extract file into relation, way and node files: " + inputFilepath)
 
-    val nodesWriter = new OsmWriter(nodesExtract(inputFilepath))
-    val waysWriter = new OsmWriter(waysExtract(inputFilepath))
-    val relationsWriter = new OsmWriter(relationExtract(inputFilepath))
+    val nodesWriter = new OsmWriter(nodesExtractFilepath(inputFilepath))
+    val waysWriter = new OsmWriter(waysExtractFilepath(inputFilepath))
+    val relationsWriter = new OsmWriter(relationExtractFilepath(inputFilepath))
 
     def writeToSplitFiles(entity: Entity) = {
       entity match {
@@ -152,7 +152,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    val sink = new SinkRunner(new FileInputStream(inputFilepath), all, writeToSplitFiles)
+    val sink = new SinkRunner(entireExtract(inputFilepath), all, writeToSplitFiles)
     sink.run
 
     nodesWriter.close()
@@ -177,7 +177,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       hasName(entity)
     }
 
-    new SinkRunner(new FileInputStream(inputFilepath), named, writeToNamedNodesFile).run
+    new SinkRunner(nodesFromExtract(inputFilepath), named, writeToNamedNodesFile).run
 
     namedNodesOutput.flush()
     namedNodesOutput.close()
