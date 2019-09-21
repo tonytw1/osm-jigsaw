@@ -7,7 +7,7 @@ import org.scalatest.FlatSpec
 
 class SinksSpec extends FlatSpec {
 
-  "sinks" should "replicate split entity files using slices into the extract" in {
+  "sinks" should "replicate split entity files using slices of the extract" in {
 
     val sourceFile = getClass.getClassLoader.getResource("andorra-190917.osm.pbf").getFile
 
