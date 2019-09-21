@@ -203,7 +203,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def tags(relationsInputFilepath: String, areasInputPath: String, nodesInputFile: String, outputFilepath: String): Unit = {
+  def tags(inputFilepath: String, areasInputPath: String, nodesInputFile: String, outputFilepath: String): Unit = {
     logger.info("Extracting tags for OSM entities used by areas and named nodes")
 
     val areaOsmIds = readAreaOsmIdsFromPbfFile(areasInputPath)
@@ -225,7 +225,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       count = count + 1
     }
 
-    new SinkRunner(new FileInputStream(relationsInputFilepath), isUse, extractTags).run
+    new SinkRunner(entireExtract(inputFilepath), isUse, extractTags).run
     logger.info("Finished extracting tags")
     output.flush()
     output.close
