@@ -2,7 +2,7 @@ import java.io._
 
 import areas.AreaComparison
 import graphing.{GraphBuilder, GraphReader}
-import input.{RelationExtractor, SinkRunner}
+import input.{Extracts, RelationExtractor, SinkRunner}
 import model.{Area, AreaIdSequence, EntityRendering}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
@@ -21,8 +21,8 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison with ProtocolbufferReading with WayJoining
-  with CommaFormattedNumbers with EntityOsmId {
+object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison
+  with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId with Extracts {
 
   private val STEP = "s"
 
@@ -138,9 +138,9 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def split(inputFilepath: String) {
     logger.info("Splitting extract file into relation, way and node files: " + inputFilepath)
 
-    val nodesWriter = new OsmWriter(inputFilepath + ".nodes")
-    val waysWriter = new OsmWriter(inputFilepath + ".ways")
-    val relationsWriter = new OsmWriter(inputFilepath + ".relations")
+    val nodesWriter = new OsmWriter(nodesExtract(inputFilepath))
+    val waysWriter = new OsmWriter(waysExtract(inputFilepath))
+    val relationsWriter = new OsmWriter(relationExtract(inputFilepath))
 
     def writeToSplitFiles(entity: Entity) = {
       entity match {
@@ -326,7 +326,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def buildAreas: Unit = {
-      val waysFile: String = areaInputFile + ".ways.pbf"
+      val waysFile: String = areaInputFile + "F.ways.pbf"
       logger.info("Reading area ways from file: " + waysFile)
       val ways = mutable.Map[Long, OutputWay]() // TODO just the points
 
