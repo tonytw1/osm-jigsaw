@@ -18,8 +18,12 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "boundary" -> "timezone",
     "boundary" -> "vice_county",
     "historic" -> "yes",
+    "boundary" ->	"historic_administrative",
+    "boundary" ->	"historic_political",
+    "political_division" -> "historical_local_const",
     "political_division" -> "euro_const",
     "political_division" -> "local_const",
+
     "type" -> "toll"
   )
 
