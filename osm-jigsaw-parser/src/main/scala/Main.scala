@@ -50,10 +50,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "boundaries" => findEntityBoundaries(inputFilepath)
       case "split" => split(inputFilepath)
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
-      case "extract" => extract(inputFilepath, cmd.getArgList.get(1))
-      case "areaways" => resolveAreaWays(inputFilepath, cmd.getArgList.get(1))
+      case "extract" => extract(inputFilepath)
+      case "areaways" => resolveAreaWays(inputFilepath)
       case "areastats" => areaStats(inputFilepath)
-      case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
+      case "areas" => resolveAreas(inputFilepath)
       case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
@@ -185,9 +185,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def extract(inputFilepath: String, outputFilepath: String) {
+  def extract(extractName: String) {
+    val inputFilepath = extractName + ".osm.pbf"
+    val outputFilepath = extractedRelsFilepath(extractName)
     logger.info("Extracting entities and their resolved components from " + inputFilepath + " into " + outputFilepath)
-
     new RelationExtractor().extract(inputFilepath, entitiesToGraph, outputFilepath)
     logger.info("Done")
   }
@@ -232,7 +233,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Dumped " + count + " tags to file: " + outputFilepath)
   }
 
-  def resolveAreaWays(inputFilepath: String, outputFilepath: String): Unit = {
+  def resolveAreaWays(extractName: String): Unit = {
 
     def all(entity: Entity): Boolean = true
 
@@ -250,12 +251,14 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
     }
 
-    logger.info("Loading entities")
+    val inputFilepath = extractedRelsFilepath(extractName)
+    logger.info("Loading entities from: " + inputFilepath)
     new SinkRunner(new FileInputStream(inputFilepath), all, loadIntoMemory).run
     logger.info("Finished loading entities")
 
-    logger.info("Resolving relation areas")
-    val resolvedAreasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+    val areawaysFilepath = areaWaysFilepath(extractName)
+    logger.info("Resolving relation areas into: " + areawaysFilepath)
+    val resolvedAreasOutput = new BufferedOutputStream(new FileOutputStream(areawaysFilepath))
 
     var counter = 0
 
@@ -286,13 +289,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     resolvedAreasOutput.flush()
     resolvedAreasOutput.close()
 
-    logger.info("Dumped " + commaFormatted(counter) + " areas to file: " + outputFilepath)
+    logger.info("Dumped " + commaFormatted(counter) + " areas to file: " + areawaysFilepath)
     logger.info("Collected " + commaFormatted(waysUsed.size) + " ways in the process")
 
     logger.info("Resolving points for used ways")
     val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
 
-    val waysOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath + ".ways.pbf"))
+    val areaWaysOutput = new BufferedOutputStream(new FileOutputStream(areaWaysWaysFilePath(extractName)))
 
     val wayCounter = new ProgressCounter(10000, total = Some(waysUsed.size))
     waysUsed.foreach { w =>
@@ -301,15 +304,17 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
           nodeResolver.resolvePointForNode(nid) // TODO handle missing node
         }
         val outputWay = OutputWay(id = Some(w.id), latitudes = points.map(i => i._1), longitudes = points.map(i => i._2))
-        outputWay.writeDelimitedTo(waysOutput)
+        outputWay.writeDelimitedTo(areaWaysOutput)
       }
     }
-    waysOutput.flush()
-    waysOutput.close()
+    areaWaysOutput.flush()
+    areaWaysOutput.close()
     logger.info("Done")
   }
 
-  def resolveAreas(entitiesFilepath: String, areaInputFile: String, outputFilepath: String): Unit = {
+  def resolveAreas(extractName: String): Unit = {
+    val areawaysInputFile = areaWaysFilepath(extractName)
+    val areasFilepath = extractName + ".areas.pbf"  // TODO push down
 
     def exportArea(area: Area, output: OutputStream): Unit = {
       val latitudes = mutable.ListBuffer[Double]()
@@ -325,18 +330,19 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def buildAreas: Unit = {
-      val waysFile: String = areaInputFile + ".ways.pbf"
-      logger.info("Reading area ways from file: " + waysFile)
-      val ways = mutable.Map[Long, OutputWay]() // TODO just the points
+      val areawaysWaysFilepath = areaWaysWaysFilePath(extractName)
+
+      logger.info("Reading area ways from file: " + areawaysWaysFilepath)
+      val ways = mutable.Map[Long, OutputWay]() // TODO just thze points
 
       def readWay(inputStream: InputStream): scala.Option[OutputWay] = OutputWay.parseDelimitedFrom(inputStream)
 
       def cacheWay(outputWay: OutputWay)= ways.put(outputWay.id.get, outputWay)
 
-      processPbfFile(waysFile, readWay, cacheWay)
+      processPbfFile(areawaysWaysFilepath, readWay, cacheWay)
 
       val counter = new ProgressCounter(1000)
-      val areasOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+      val areasOutput = new BufferedOutputStream(new FileOutputStream(areasFilepath))
 
       def populateAreaNodesAndOutputToFile(ra: OutputResolvedArea): Unit = {
         counter.withProgress {
@@ -367,11 +373,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       def readResolvedArea(inputStream: InputStream)= OutputResolvedArea.parseDelimitedFrom(inputStream)
 
       logger.info("Expanding way areas")
-      processPbfFile(areaInputFile, readResolvedArea, populateAreaNodesAndOutputToFile)
+      processPbfFile(areawaysInputFile, readResolvedArea, populateAreaNodesAndOutputToFile)
 
       areasOutput.flush()
       areasOutput.close()
-      logger.info("Dumped areas to file: " + outputFilepath)
+      logger.info("Dumped areas to file: " + areasFilepath)
     }
 
     def deduplicate = {
@@ -406,12 +412,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         deduplicatedAreas
       }
 
-      val areas = readAreasFromPbfFile(outputFilepath)
+      val areas = readAreasFromPbfFile(areasFilepath)
       val deduplicatedAreas = deduplicateAreas(areas)
       logger.info("Deduplicated " + areas.size + " areas to " + deduplicatedAreas.size)
 
       logger.info("Writing deduplicated areas to file")
-      val finalOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+      val finalOutput = new BufferedOutputStream(new FileOutputStream(areasFilepath))
       val outputCounter = new ProgressCounter(100000, Some(deduplicatedAreas.size))
       deduplicatedAreas.foreach { a =>
         outputCounter.withProgress {
@@ -420,7 +426,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
       finalOutput.flush()
       finalOutput.close()
-      logger.info("Wrote deduplicated areas to file: " + outputFilepath)
+      logger.info("Wrote deduplicated areas to file: " + areasFilepath)
     }
 
     buildAreas
