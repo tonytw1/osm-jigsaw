@@ -22,7 +22,8 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison
-  with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId with Extracts {
+  with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
+  with Extracts with WorkingFiles {
 
   private val STEP = "s"
 
@@ -164,7 +165,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def extractNamedNodes(inputFilepath: String, outputFilepath: String): Unit = {
     logger.info("Extracting named nodes")
 
-    val namedNodesOutput = new BufferedOutputStream(new FileOutputStream(outputFilepath: String))
+    val namedNodesOutput = new BufferedOutputStream(namedNodesFile(outputFilepath))
 
     def writeToNamedNodesFile(entity: Entity) = {
       entity match {
@@ -215,7 +216,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     var count = 0
-    val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
+    val output = new BufferedOutputStream(tagsFile(outputFilepath))
 
     def extractTags(entity: Entity) = {
       val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
@@ -230,7 +231,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     output.close
     logger.info("Dumped " + count + " tags to file: " + outputFilepath)
   }
-
 
   def resolveAreaWays(inputFilepath: String, outputFilepath: String): Unit = {
 
