@@ -98,4 +98,9 @@ Returns the OSM tags for an OSM id associated with an area from the graph.
 
 #### Execution
 
-A full planet graph fits within a 30Gb heap.
+A full planet graph fits within a 54Gb heap (was 30 until the new graph format)
+
+```
+sbt -mem 54000 run
+```
+
