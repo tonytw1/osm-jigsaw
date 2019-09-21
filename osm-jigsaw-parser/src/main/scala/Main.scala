@@ -53,7 +53,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "areaways" => resolveAreaWays(inputFilepath, cmd.getArgList.get(1))
       case "areastats" => areaStats(inputFilepath)
       case "areas" => resolveAreas(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
-      case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2), cmd.getArgList.get(3))
+      case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -203,13 +203,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def tags(inputFilepath: String, areasInputPath: String, nodesInputFile: String, outputFilepath: String): Unit = {
-    logger.info("Extracting tags for OSM entities used by areas and named nodes")
+  def tags(inputFilepath: String, areasInputPath: String, outputFilepath: String): Unit = {
+    logger.info("Extracting tags for OSM entities used by areas")
 
     val areaOsmIds = readAreaOsmIdsFromPbfFile(areasInputPath)
-    val nodeOsmIds = Seq.empty // TODO readNodesOsmIdsFromPbfFile(nodesInputFile)
-    val osmIdsInUse = areaOsmIds ++ nodeOsmIds
-    logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for (" + areaOsmIds.size + " for areas; " + nodeOsmIds.size + " for nodes)")
+    val osmIdsInUse = areaOsmIds
+    logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for (" + areaOsmIds.size + " for areas)")
 
     def isUse(entity: Entity): Boolean  = {
       osmIdsInUse.contains(osmIdFor(entity))
@@ -326,7 +325,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def buildAreas: Unit = {
-      val waysFile: String = areaInputFile + "F.ways.pbf"
+      val waysFile: String = areaInputFile + ".ways.pbf"
       logger.info("Reading area ways from file: " + waysFile)
       val ways = mutable.Map[Long, OutputWay]() // TODO just the points
 
