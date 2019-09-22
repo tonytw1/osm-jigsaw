@@ -29,15 +29,15 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private val STEP = "s"
 
   val parser = new DefaultParser()
-  val options  = new Options()
+  val options = new Options()
   options.addOption(STEP, true, "Which step to apply to the input file")
 
   def entitiesToGraph(entity: Entity): Boolean = {
     entity match {
-        case r: Relation =>  hasName(entity)
-        case w: Way => w.isClosed && hasName(entity)
-        case _ => false
-      }
+      case r: Relation => hasName(entity)
+      case w: Way => w.isClosed && hasName(entity)
+      case _ => false
+    }
   }
 
   def main(args: Array[String]): Unit = {
@@ -93,6 +93,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
+
     new SinkRunner(entireExtract(inputFilepath), all, countTypes).run
 
     logger.info("Nodes: " + namedNodes + " / " + nodes)
@@ -119,6 +120,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var currentPosition = 0L
 
     var boundaries: Map[String, Long] = Map.empty
+
     def scanForBoundaries(entity: Entity) = {
       val entityType = scala.Option(entity.getType)
       if (entityType != currentType) {
@@ -130,6 +132,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
+
     sink = new SinkRunner(entireExtract(inputFilepath), all, scanForBoundaries)
     sink.run
 
@@ -159,6 +162,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
+
     val sink = new SinkRunner(entireExtract(extractName), all, writeToSplitFiles)
     sink.run
 
@@ -217,7 +221,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val osmIdsInUse = areaOsmIds
     logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for (" + areaOsmIds.size + " for areas)")
 
-    def isUse(entity: Entity): Boolean  = {
+    def isUse(entity: Entity): Boolean = {
       osmIdsInUse.contains(osmIdFor(entity))
     }
 
@@ -246,6 +250,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     var waysToResolve = Set[Way]()
 
     val entityLoadProgress = new ProgressCounter(step = 100000)
+
     def loadIntoMemory(entity: Entity) = {
       entityLoadProgress.withProgress {
         entity match {
@@ -319,7 +324,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
   def resolveAreas(extractName: String): Unit = {
     val areawaysInputFile = areaWaysFilepath(extractName)
-    val areasFilepath = extractName + ".areas.pbf"  // TODO push down
+    val areasFilepath = extractName + ".areas.pbf" // TODO push down
 
     def exportArea(area: Area, output: OutputStream): Unit = {
       val latitudes = mutable.ListBuffer[Double]()
@@ -342,7 +347,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
       def readWay(inputStream: InputStream): scala.Option[OutputWay] = OutputWay.parseDelimitedFrom(inputStream)
 
-      def cacheWay(outputWay: OutputWay)= ways.put(outputWay.id.get, outputWay)
+      def cacheWay(outputWay: OutputWay) = ways.put(outputWay.id.get, outputWay)
 
       processPbfFile(areawaysWaysFilepath, readWay, cacheWay)
 
@@ -357,7 +362,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
               val points = way.latitudes.zip(way.longitudes)
               if (signedWayId < 0) points.reverse else points
             }
-            if(joined.isEmpty) {
+            if (joined.isEmpty) {
               logger.warn("Failed to resolve way id: " + l)
             }
             joined
@@ -372,10 +377,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
       logger.info("Resolving areas")
       val planetPolygon = makePolygon((-180, 90), (180, -90))
-      val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon))  // TODO
+      val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
       exportArea(planet, areasOutput)
 
-      def readResolvedArea(inputStream: InputStream)= OutputResolvedArea.parseDelimitedFrom(inputStream)
+      def readResolvedArea(inputStream: InputStream) = OutputResolvedArea.parseDelimitedFrom(inputStream)
 
       logger.info("Expanding way areas")
       processPbfFile(areawaysInputFile, readResolvedArea, populateAreaNodesAndOutputToFile)
