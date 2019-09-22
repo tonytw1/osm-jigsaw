@@ -25,7 +25,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
   // those relations.
   // Output the relations and sub relations to a file.
   // Output the way and node information to mapdb volumes
-  def extract(extractName: String, predicate: Entity => Boolean, outputFileprefix: String) = {  // TODO inputstream
+  def extract(extractName: String, predicate: Entity => Boolean, outputFileprefix: String) = {
     var allRelations = LongMap[Relation]()
     def addToAllRelations(entity: Entity) = {
         entity match {
