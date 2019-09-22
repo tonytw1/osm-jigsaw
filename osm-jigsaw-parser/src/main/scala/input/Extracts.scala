@@ -2,30 +2,36 @@ package input
 
 import java.io.FileInputStream
 
-trait Extracts {
+import org.apache.logging.log4j.scala.Logging
 
-  def entireExtract(inputFilepath: String) = {
-    new FileInputStream(inputFilepath)
+trait Extracts extends Logging {
+
+  def entireExtractFilepath(extractName: String) = {
+    extractName + ".osm.pbf"
+  }
+  
+  def entireExtract(extractName: String): FileInputStream = {
+    new FileInputStream(entireExtractFilepath(extractName))
   }
 
-  def nodesFromExtract(inputFilePath: String): FileInputStream = {
-    new FileInputStream(nodesExtractFilepath(inputFilePath))
+  def nodesFromExtract(extractName: String): FileInputStream = {
+    new FileInputStream(nodesExtractFilepath(extractName))
   }
 
-  def waysFromExtract(inputFilePath: String): FileInputStream = {
-    new FileInputStream(waysExtractFilepath(inputFilePath))
+  def waysFromExtract(extractName: String): FileInputStream = {
+    new FileInputStream(waysExtractFilepath(extractName))
   }
 
-  def relationExtractFilepath(inputFilepath: String): String = {
-    inputFilepath + ".relations"
+  def relationExtractFilepath(extractName: String): String = {
+    entireExtractFilepath(extractName) + ".relations"
   }
 
-  def waysExtractFilepath(inputFilepath: String): String = {
-    inputFilepath + ".ways"
+  def waysExtractFilepath(extractName: String): String = {
+    entireExtractFilepath(extractName) + ".ways"
   }
 
-  def nodesExtractFilepath(inputFilepath: String): String = {
-    inputFilepath + ".nodes"
+  def nodesExtractFilepath(extractName: String): String = {
+    entireExtractFilepath(extractName) + ".nodes"
   }
 
 }

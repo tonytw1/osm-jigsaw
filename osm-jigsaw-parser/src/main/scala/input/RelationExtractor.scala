@@ -25,7 +25,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
   // those relations.
   // Output the relations and sub relations to a file.
   // Output the way and node information to mapdb volumes
-  def extract(inputFilePath: String, predicate: Entity => Boolean, outputFileprefix: String) = {
+  def extract(extractName: String, predicate: Entity => Boolean, outputFileprefix: String) = {  // TODO inputstream
     var allRelations = LongMap[Relation]()
     def addToAllRelations(entity: Entity) = {
         entity match {
@@ -34,7 +34,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
       }
     }
     def all(entity: Entity): Boolean = true
-    new SinkRunner(new FileInputStream(relationExtractFilepath(inputFilePath)), all, addToAllRelations).run
+    new SinkRunner(new FileInputStream(relationExtractFilepath(extractName)), all, addToAllRelations).run
     logger.info("Cached " + allRelations.size + " relations")
 
     logger.info("Extracting interesting relations from all relations")
@@ -79,7 +79,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
             nodesRequiredToBuildRequiredWays ++= wayNodeIds
         }
     }
-    new SinkRunner(waysFromExtract(inputFilePath), requiredWays, persistWayAndExpandNodeIds).run
+    new SinkRunner(waysFromExtract(extractName), requiredWays, persistWayAndExpandNodeIds).run
     waySink.create()
     wayVolume.close()
 
@@ -111,7 +111,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
           }
       }
     }
-    new SinkRunner(nodesFromExtract(inputFilePath), allNodes, addToFoundNodes).run
+    new SinkRunner(nodesFromExtract(extractName), allNodes, addToFoundNodes).run
     nodeSink.create()
     nodeVolume.close()
 

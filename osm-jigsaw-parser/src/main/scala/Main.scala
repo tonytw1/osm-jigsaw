@@ -49,8 +49,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "stats" => stats(inputFilepath)
       case "boundaries" => findEntityBoundaries(inputFilepath)
       case "split" => split(inputFilepath)
-      case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "extract" => extract(inputFilepath)
+      case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "areaways" => resolveAreaWays(inputFilepath)
       case "areastats" => areaStats(inputFilepath)
       case "areas" => resolveAreas(inputFilepath)
@@ -136,12 +136,12 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def split(inputFilepath: String) {
-    logger.info("Splitting extract file into relation, way and node files: " + inputFilepath)
+  def split(extractName: String) {
+    logger.info("Splitting extract file into relation, way and node files: " + extractName)
 
-    val nodesWriter = new OsmWriter(nodesExtractFilepath(inputFilepath))
-    val waysWriter = new OsmWriter(waysExtractFilepath(inputFilepath))
-    val relationsWriter = new OsmWriter(relationExtractFilepath(inputFilepath))
+    val nodesWriter = new OsmWriter(nodesExtractFilepath(extractName))
+    val waysWriter = new OsmWriter(waysExtractFilepath(extractName))
+    val relationsWriter = new OsmWriter(relationExtractFilepath(extractName))
 
     def writeToSplitFiles(entity: Entity) = {
       entity match {
@@ -153,7 +153,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
 
     def all(entity: Entity): Boolean = true
-    val sink = new SinkRunner(entireExtract(inputFilepath), all, writeToSplitFiles)
+    val sink = new SinkRunner(entireExtract(extractName), all, writeToSplitFiles)
     sink.run
 
     nodesWriter.close()
@@ -186,21 +186,20 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   }
 
   def extract(extractName: String) {
-    val inputFilepath = extractName + ".osm.pbf"
     val outputFilepath = extractedRelsFilepath(extractName)
-    logger.info("Extracting entities and their resolved components from " + inputFilepath + " into " + outputFilepath)
-    new RelationExtractor().extract(inputFilepath, entitiesToGraph, outputFilepath)
+    logger.info("Extracting entities and their resolved components from " + extractName + " into " + outputFilepath)
+    new RelationExtractor().extract(extractName, entitiesToGraph, outputFilepath)
     logger.info("Done")
   }
 
-  def extractRelations(inputFilepath: String, outputFilepath: String, relationIds: Seq[Long]): Unit = {
+  def extractRelations(extractName: String, outputFilepath: String, relationIds: Seq[Long]): Unit = {
     logger.info("Extracting specific relations: " + relationIds)
 
     def selectedRelations(entity: Entity): Boolean = {
       entity.getType == EntityType.Relation && relationIds.contains(entity.getId)
     }
 
-    new RelationExtractor().extract(inputFilepath, selectedRelations, outputFilepath)
+    new RelationExtractor().extract(extractName, selectedRelations, outputFilepath)
 
     logger.info("Done")
   }
@@ -251,9 +250,9 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
     }
 
-    val inputFilepath = extractedRelsFilepath(extractName)
-    logger.info("Loading entities from: " + inputFilepath)
-    new SinkRunner(new FileInputStream(inputFilepath), all, loadIntoMemory).run
+    val relsInputFilepath = extractedRelsFilepath(extractName)
+    logger.info("Loading entities from: " + relsInputFilepath)
+    new SinkRunner(new FileInputStream(relsInputFilepath), all, loadIntoMemory).run
     logger.info("Finished loading entities")
 
     val areawaysFilepath = areaWaysFilepath(extractName)
@@ -278,7 +277,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Resolving areas for " + relationsToResolve.size + " relations")
 
     val areaResolver = new AreaResolver()
-    val wayResolver = new MapDBWayResolver(inputFilepath + ".ways.vol")
+    val wayResolver = new MapDBWayResolver(relsInputFilepath + ".ways.vol")
 
     areaResolver.resolveAreas(relationsToResolve, relations, wayResolver, outputAreasToFileAndCacheUsedWays)
 
@@ -293,7 +292,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Collected " + commaFormatted(waysUsed.size) + " ways in the process")
 
     logger.info("Resolving points for used ways")
-    val nodeResolver = new MapDBNodeResolver(inputFilepath + ".nodes.vol")
+    val nodeResolver = new MapDBNodeResolver(relsInputFilepath + ".nodes.vol")
 
     val areaWaysOutput = new BufferedOutputStream(new FileOutputStream(areaWaysWaysFilePath(extractName)))
 
