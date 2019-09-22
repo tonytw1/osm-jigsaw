@@ -1,6 +1,6 @@
 package input
 
-import java.io.FileInputStream
+import java.io.{FileInputStream, InputStream}
 
 import model.EntityRendering
 import org.apache.logging.log4j.scala.Logging
@@ -20,34 +20,25 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
   private val relationExpander = new RelationExpander()
   private val outerWayResolver = new OuterWayResolver()
 
-  // Given an OSM pbf extract file and a predicate describing the relations we are interested in,
-  // extract those relations from the input. Resolve the sub relations, ways and nodes required to build
-  // those relations.
-  // Output the relations and sub relations to a file.
-  // Output the way and node information to mapdb volumes
+  // Given an OSM pbf extract file and a predicate describing the entities we are interested in,
+  // extract those entities and their component sub relations, ways and nodes into a new file.
+  // Output the component ways and nodes to mapdb volumes
   def extract(extractName: String, predicate: Entity => Boolean, outputFileprefix: String) = {
     val extractRelations = new FileInputStream(relationExtractFilepath(extractName))
     val extractWays: FileInputStream = waysFromExtract(extractName)
     val extractNodes: FileInputStream = nodesFromExtract(extractName)
 
-    var allRelations = LongMap[Relation]()
-    def addInAllRelationsMap(entity: Entity) = {
-        entity match {
-          case r: Relation => allRelations = allRelations + (r.getId -> r)
-          case _ =>
-      }
-    }
-    def all(entity: Entity): Boolean = true
-
-    new SinkRunner(extractRelations, all, addInAllRelationsMap).run
+    // Build a map of all relations so that it can be used to resolve sub relations
+    val allRelations = cacheAllRelations(extractRelations)
     logger.info("Cached " + allRelations.size + " relations")
 
+    // Extract the relations described by the predicate
     logger.info("Extracting relations which match predicate from all relations")
     val foundRelations = allRelations.values.filter(predicate)
     logger.info("Found " + foundRelations.size + " relations to extract")
 
+    // Expand sub relations and record the ways which make up the expanded relations
     logger.info("Resolving relation ways")
-    logger.info("Creating relation lookup map")
     val entityWriter = new OsmWriter(outputFileprefix)
     val relationWayIds = mutable.Set[Long]()
     foundRelations.foreach { r =>
@@ -127,6 +118,21 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     logger.info("Extracted: " + commaFormatted(foundRelations.size) + ", ways: " + commaFormatted(relationWayIds.size) + ", nodes: " + commaFormatted(requiredNodesCount))
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")
     logger.info("Finished outputting selected relations and resolved components to: " + outputFileprefix)
+  }
+
+  private def cacheAllRelations(relationsInput: InputStream) = {
+    var allRelations = LongMap[Relation]()
+
+    def addInAllRelationsMap(entity: Entity) = {
+      entity match {
+        case r: Relation => allRelations = allRelations + (r.getId -> r)
+        case _ =>
+      }
+    }
+
+    def all(entity: Entity): Boolean = true
+    new SinkRunner(relationsInput, all, addInAllRelationsMap).run
+    allRelations
   }
 
 }

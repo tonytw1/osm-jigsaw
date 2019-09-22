@@ -34,7 +34,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def entitiesToGraph(entity: Entity): Boolean = {
     entity match {
         case r: Relation =>  hasName(entity)
-        case w: Way => w.isClosed &&  hasName(entity)
+        case w: Way => w.isClosed && hasName(entity)
         case _ => false
       }
   }
