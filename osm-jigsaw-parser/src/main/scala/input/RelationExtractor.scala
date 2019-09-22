@@ -26,24 +26,28 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
   // Output the relations and sub relations to a file.
   // Output the way and node information to mapdb volumes
   def extract(extractName: String, predicate: Entity => Boolean, outputFileprefix: String) = {
+    val extractRelations = new FileInputStream(relationExtractFilepath(extractName))
+    val extractWays: FileInputStream = waysFromExtract(extractName)
+    val extractNodes: FileInputStream = nodesFromExtract(extractName)
+
     var allRelations = LongMap[Relation]()
-    def addToAllRelations(entity: Entity) = {
+    def addInAllRelationsMap(entity: Entity) = {
         entity match {
           case r: Relation => allRelations = allRelations + (r.getId -> r)
           case _ =>
       }
     }
     def all(entity: Entity): Boolean = true
-    new SinkRunner(new FileInputStream(relationExtractFilepath(extractName)), all, addToAllRelations).run
+
+    new SinkRunner(extractRelations, all, addInAllRelationsMap).run
     logger.info("Cached " + allRelations.size + " relations")
 
-    logger.info("Extracting interesting relations from all relations")
+    logger.info("Extracting relations which match predicate from all relations")
     val foundRelations = allRelations.values.filter(predicate)
     logger.info("Found " + foundRelations.size + " relations to extract")
 
     logger.info("Resolving relation ways")
     logger.info("Creating relation lookup map")
-
     val entityWriter = new OsmWriter(outputFileprefix)
     val relationWayIds = mutable.Set[Long]()
     foundRelations.foreach { r =>
@@ -79,7 +83,8 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
             nodesRequiredToBuildRequiredWays ++= wayNodeIds
         }
     }
-    new SinkRunner(waysFromExtract(extractName), requiredWays, persistWayAndExpandNodeIds).run
+
+    new SinkRunner(extractWays, requiredWays, persistWayAndExpandNodeIds).run
     waySink.create()
     wayVolume.close()
 
@@ -111,7 +116,8 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
           }
       }
     }
-    new SinkRunner(nodesFromExtract(extractName), allNodes, addToFoundNodes).run
+
+    new SinkRunner(extractNodes, allNodes, addToFoundNodes).run
     nodeSink.create()
     nodeVolume.close()
 
