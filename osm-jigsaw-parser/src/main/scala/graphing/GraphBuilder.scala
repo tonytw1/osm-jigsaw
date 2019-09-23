@@ -37,9 +37,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
-    a.children = a.children -- a.children.map(a => a.children).flatten
-
-    a.children.filter(i => i.children.size > 1).par.foreach { c =>
+    a.children.filter(i => i.children.nonEmpty).par.foreach { c =>
       // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
       siftDown(c)
     }
@@ -66,17 +64,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
       OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       a.children = a.children + b
-
-      //val startSecondFilter = DateTime.now()
-      val siblingsWhichFitInsideNewNode = a.children.filter { s =>
-        s != b && areaContains(b.area, s.area)
-      }
-      //secondFilterDuration = Some(new Duration(startSecondFilter, DateTime.now))
-
-      if (siblingsWhichFitInsideNewNode.nonEmpty) {
-        // logger.debug("Found " + siblingsWhichFitInsideNewNode.size + " siblings to sift down into new value " + b.area.osmIds)
-        b.children = b.children ++ siblingsWhichFitInsideNewNode
-      }
     }
 
     // val duration = new Duration(start, DateTime.now)
