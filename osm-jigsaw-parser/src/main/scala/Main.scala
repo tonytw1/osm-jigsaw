@@ -13,6 +13,7 @@ import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
 import outputway.OutputWay
+import play.api.libs.json.Json
 import progress.{CommaFormattedNumbers, ProgressCounter}
 import resolving._
 
@@ -133,6 +134,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     sink.run
 
     logger.info("Found boundaries: " + boundaries)
+
+    val boundariesFile = new FileOutputStream("boundaries.json")
+    boundariesFile.write(Json.toBytes(Json.toJson(boundaries)))
+    boundariesFile.close()
+
     logger.info("Done")
   }
 
