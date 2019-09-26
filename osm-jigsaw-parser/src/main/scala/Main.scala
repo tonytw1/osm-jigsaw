@@ -2,18 +2,16 @@ import java.io._
 
 import areas.AreaComparison
 import graphing.{GraphBuilder, GraphReader}
-import input.{Extracts, RelationExtractor, SinkRunner}
+import input._
 import model.{Area, AreaIdSequence, EntityRendering}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
-import output.OsmWriter
 import outputarea.OutputArea
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
 import outputway.OutputWay
-import play.api.libs.json.Json
 import progress.{CommaFormattedNumbers, ProgressCounter}
 import resolving._
 
@@ -24,7 +22,7 @@ import scala.collection.mutable.ListBuffer
 
 object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison
   with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
-  with Extracts with WorkingFiles {
+  with Extracts with WorkingFiles with Boundaries {
 
   private val STEP = "s"
 
@@ -49,7 +47,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     step match {
       case "stats" => stats(inputFilepath)
       case "boundaries" => findEntityBoundaries(inputFilepath)
-      case "split" => split(inputFilepath)
       case "extract" => extract(inputFilepath)
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "areaways" => resolveAreaWays(inputFilepath)
@@ -133,42 +130,16 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     def all(entity: Entity): Boolean = true
 
-    sink = new SinkRunner(entireExtract(inputFilepath), all, scanForBoundaries)
+    val stream = entireExtract(inputFilepath)
+    sink = new SinkRunner(stream, all, scanForBoundaries)
     sink.run
+
+    val eof = new File(entireExtractFilepath(inputFilepath)).length
+    logger.info("EOF: " + eof)
+    boundaries = boundaries + ("EOF" -> eof)
 
     logger.info("Found boundaries: " + boundaries)
-
-    val boundariesFile = new FileOutputStream("boundaries.json")
-    boundariesFile.write(Json.toBytes(Json.toJson(boundaries)))
-    boundariesFile.close()
-
-    logger.info("Done")
-  }
-
-  def split(extractName: String) {
-    logger.info("Splitting extract file into relation, way and node files: " + extractName)
-
-    val nodesWriter = new OsmWriter(nodesExtractFilepath(extractName))
-    val waysWriter = new OsmWriter(waysExtractFilepath(extractName))
-    val relationsWriter = new OsmWriter(relationExtractFilepath(extractName))
-
-    def writeToSplitFiles(entity: Entity) = {
-      entity match {
-        case n: Node => nodesWriter.write(n)
-        case w: Way => waysWriter.write(w)
-        case r: Relation => relationsWriter.write(r)
-        case _ =>
-      }
-    }
-
-    def all(entity: Entity): Boolean = true
-
-    val sink = new SinkRunner(entireExtract(extractName), all, writeToSplitFiles)
-    sink.run
-
-    nodesWriter.close()
-    waysWriter.close()
-    relationsWriter.close()
+    recordBoundaries(boundaries)
     logger.info("Done")
   }
 
@@ -494,22 +465,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     def captureOsmId(outputArea: OutputArea) = seenOsmIds ++= outputArea.osmIds
 
     processPbfFile(inputFilename, readArea, captureOsmId)
-
-    seenOsmIds.toSet
-  }
-
-  private def readNodesOsmIdsFromPbfFile(inputFilename: String): Set[String] = {
-    val seenOsmIds = mutable.Set[String]()
-
-    def captureOsmId(node: OutputNode) = {
-      node.osmId.map { osmId =>
-        seenOsmIds += osmId
-      }
-    }
-
-    def readNode(inputStream: InputStream): scala.Option[OutputNode] = OutputNode.parseDelimitedFrom(inputStream)
-
-    processPbfFile(inputFilename, readNode, captureOsmId)
 
     seenOsmIds.toSet
   }

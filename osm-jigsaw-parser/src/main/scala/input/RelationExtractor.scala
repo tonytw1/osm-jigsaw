@@ -24,9 +24,9 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
   // extract those entities and their component sub relations, ways and nodes into a new file.
   // Output the component ways and nodes to mapdb volumes
   def extract(extractName: String, predicate: Entity => Boolean, outputFileprefix: String) = {
-    val extractRelations = new FileInputStream(relationExtractFilepath(extractName))
-    val extractWays: FileInputStream = waysFromExtract(extractName)
-    val extractNodes: FileInputStream = nodesFromExtract(extractName)
+    val extractRelations = relationsFromExtract(extractName)
+    val extractWays = waysFromExtract(extractName)
+    val extractNodes = nodesFromExtract(extractName)
 
     // Build a map of all relations so that it can be used to resolve sub relations
     val allRelations = cacheAllRelations(extractRelations)

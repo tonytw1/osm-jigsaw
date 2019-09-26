@@ -1,6 +1,12 @@
+package input
+
 import java.io.{FileOutputStream, OutputStream}
 
 trait WorkingFiles {
+
+  def boundariesFilepath = {
+    "boundaries.json"
+  }
 
   def namedNodesFile(outputFilepath: String): OutputStream = {
     new FileOutputStream(outputFilepath: String)
