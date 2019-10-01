@@ -1,6 +1,6 @@
 package input
 
-import java.io.{FileInputStream, InputStream}
+import java.io.InputStream
 
 import model.EntityRendering
 import org.apache.logging.log4j.scala.Logging
@@ -115,7 +115,12 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     logger.info("Found " + foundNodes + " nodes")
     entityWriter.close()
 
-    logger.info("Extracted: " + commaFormatted(foundRelations.size) + ", ways: " + commaFormatted(relationWayIds.size) + ", nodes: " + commaFormatted(requiredNodesCount))
+    logger.warn("Found " +  relationExpander.recursingRelations.size + " infinitely recursing relations: "  +
+      relationExpander.recursingRelations.mkString(", "))
+
+    logger.info("Extracted: " + commaFormatted(foundRelations.size) + " relations, "
+      + commaFormatted(relationWayIds.size) + " ways  and "
+      + commaFormatted(requiredNodesCount) + " nodes")
     logger.info(foundRelations.size + " / " + allRelations.size + " of total relations")
     logger.info("Finished outputting selected relations and resolved components to: " + outputFileprefix)
   }
