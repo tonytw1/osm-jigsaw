@@ -415,14 +415,14 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   }
 
   def buildGraph(inputFilename: String, outputFilename: String) = {
-    var areas = readAreasFromPbfFile(inputFilename)
+    val areas = readAreasFromPbfFile(inputFilename)
 
     logger.info("Building graph")
-    var head1 = areas.head
-    var drop = areas.drop(1)
-    logger.info("Head area: " + head1)
+    val headArea = areas.head
+    val drop = areas.drop(1)
+    logger.info("Head area: " + headArea)
     logger.info("Dropped: " + drop.size)
-    val head = new GraphBuilder().buildGraph(head1, drop)
+    val head = new GraphBuilder().buildGraph(headArea, drop)
 
     logger.info("Writing graph to disk")
     val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
