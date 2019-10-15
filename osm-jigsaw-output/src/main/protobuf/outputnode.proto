@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message OutputNode {
+   optional string osm_id = 1;
+   optional double latitude = 2;
+   optional double longitude = 3;
+}

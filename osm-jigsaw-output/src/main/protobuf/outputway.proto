@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+message OutputWay {
+   optional int64 id = 1;
+   repeated double latitudes = 2 [packed=true];
+   repeated double longitudes = 3 [packed=true];
+}
