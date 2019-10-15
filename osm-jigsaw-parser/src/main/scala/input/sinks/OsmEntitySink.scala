@@ -8,7 +8,6 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink
 import progress.ProgressCounter
 import org.apache.logging.log4j.scala.Logging
 
-
 class OsmEntitySink(predicate: Entity => Boolean, callback: Entity => Unit) extends Sink with Logging {
 
   var matched = 0L

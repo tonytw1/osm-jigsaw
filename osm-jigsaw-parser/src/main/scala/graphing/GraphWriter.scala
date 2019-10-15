@@ -6,7 +6,7 @@ import model.GraphNode
 import outputgraphnode.OutputGraphNode
 import progress.ProgressCounter
 
-class GraphReader {
+class GraphWriter {
 
   def export(node: GraphNode, output: OutputStream, parent: Option[Long], count: ProgressCounter): Unit = {
     count.withProgress {

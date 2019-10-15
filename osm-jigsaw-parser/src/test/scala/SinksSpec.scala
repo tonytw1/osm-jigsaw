@@ -45,6 +45,7 @@ class SinksSpec extends FlatSpec {
 
     sink = new SinkRunner(new FileInputStream(sourceFile), all, scanForBoundaries)
     sink.run
+    println(boundaries)
 
     val startOfNodes = boundaries.find(_._1 == EntityType.Node).get._2
     val startOfWays = boundaries.find(_._1 == EntityType.Way).get._2

@@ -1,7 +1,7 @@
 import java.io._
 
 import areas.AreaComparison
-import graphing.{GraphBuilder, GraphReader}
+import graphing.{GraphBuilder, GraphWriter}
 import input._
 import model.{Area, AreaIdSequence, EntityRendering}
 import org.apache.commons.cli._
@@ -429,12 +429,19 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val counter = new ProgressCounter(100000)
 
     logger.info("Export dump")
-    new GraphReader().export(head, output, None, counter)
+    new GraphWriter().export(head, output, None, counter)
 
     output.flush()
     output.close()
     logger.info("Done")
   }
+
+  // Preform a depth first traversal of the graph
+  def output() = {
+
+
+  }
+
 
   private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {
     logger.info("Reading areas")
