@@ -28,4 +28,7 @@ trait WorkingFiles {
     areaWaysFilepath(extractName) + ".ways.pbf"
   }
 
+  def areasFilePath(extractName: String): String = {
+    extractName + ".areas.pbf"
+  }
 }

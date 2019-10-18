@@ -7,4 +7,4 @@ java -Xmx8G -jar $jarfile -s extract $input
 #java -Xmx8G -jar $jarfile -s areas $input
 #time java -Xmx8G -jar $jarfile -s graph $input.areas.pbf $input.graph.pbf
 
-#java -jar $jarfile -s tags $input.rels.pbf $input.areas.pbf $input.tags.pbamf
+java -jar $jarfile -s tags $input $input.tags.pbf

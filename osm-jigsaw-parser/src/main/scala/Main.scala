@@ -52,7 +52,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "areaways" => resolveAreaWays(inputFilepath)
       case "areastats" => areaStats(inputFilepath)
       case "areas" => resolveAreas(inputFilepath)
-      case "tags" => tags(inputFilepath, cmd.getArgList.get(1), cmd.getArgList.get(2))
+      case "tags" => tags(cmd.getArgList.get(0), cmd.getArgList.get(1))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -185,14 +185,14 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Done")
   }
 
-  def tags(inputFilepath: String, areasInputPath: String, outputFilepath: String): Unit = {
+  def tags(extractName: String, outputFilepath: String): Unit = {
     logger.info("Extracting tags for OSM entities used by areas")
 
-    val areaOsmIds = readAreaOsmIdsFromPbfFile(areasInputPath)
+    val areaOsmIds = readAreaOsmIdsFromPbfFile(areasFilePath(extractName))
     val osmIdsInUse = areaOsmIds
     logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for (" + areaOsmIds.size + " for areas)")
 
-    def isUse(entity: Entity): Boolean = {
+    def isUsed(entity: Entity): Boolean = {
       osmIdsInUse.contains(osmIdFor(entity))
     }
 
@@ -206,7 +206,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       count = count + 1
     }
 
-    new SinkRunner(entireExtract(inputFilepath), isUse, extractTags).run
+    new SinkRunner(entireExtract(extractName), isUsed, extractTags).run
     logger.info("Finished extracting tags")
     output.flush()
     output.close
@@ -295,7 +295,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
   def resolveAreas(extractName: String): Unit = {
     val areawaysInputFile = areaWaysFilepath(extractName)
-    val areasFilepath = extractName + ".areas.pbf" // TODO push down
+    val areasFilepath = areasFilePath(extractName)
 
     def exportArea(area: Area, output: OutputStream): Unit = {
       val latitudes = mutable.ListBuffer[Double]()
