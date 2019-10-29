@@ -17,20 +17,23 @@ trait Extracts extends Logging with Boundaries {
   }
 
   def nodesFromExtract(extractName: String): InputStream = {
-    val startOfNodes = readBoundaries.get(EntityType.Node.name()).get
-    val startOfWays = readBoundaries.get(EntityType.Way.name()).get
+    val boundaries = readBoundaries(extractName)
+    val startOfNodes = boundaries(EntityType.Node.name())
+    val startOfWays = boundaries(EntityType.Way.name())
     Files.asByteSource(new File(entireExtractFilepath(extractName))).slice(startOfNodes, startOfWays - startOfNodes).openStream()
   }
 
   def waysFromExtract(extractName: String): InputStream = {
-    val startOfWays = readBoundaries.get(EntityType.Way.name()).get
-    val startOfRelations = readBoundaries.get(EntityType.Relation.name()).get
+    val boundaries = readBoundaries(extractName)
+    val startOfWays = boundaries(EntityType.Way.name())
+    val startOfRelations = boundaries(EntityType.Relation.name())
     Files.asByteSource(new File(entireExtractFilepath(extractName))).slice(startOfWays, startOfRelations - startOfWays).openStream()
   }
 
   def relationsFromExtract(extractName: String): InputStream = {
-    val startOfRelations = readBoundaries.get(EntityType.Relation.name()).get
-    val eof = readBoundaries.get("EOF").get
+    val boundaries = readBoundaries(extractName)
+    val startOfRelations = boundaries(EntityType.Relation.name())
+    val eof = boundaries("EOF")
     Files.asByteSource(new File(entireExtractFilepath(extractName))).slice(startOfRelations, eof - startOfRelations).openStream()
   }
 

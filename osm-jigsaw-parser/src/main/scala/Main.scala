@@ -12,6 +12,7 @@ import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
 import outputway.OutputWay
+import play.api.libs.json.Json
 import progress.{CommaFormattedNumbers, ProgressCounter}
 import resolving._
 
@@ -111,7 +112,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     processPbfFile(inputFilepath, read, print)
   }
 
-  def findEntityBoundaries(inputFilepath: String) {
+  def findEntityBoundaries(extractName: String) {
     var sink: SinkRunner = null
     var currentType: scala.Option[EntityType] = None
     var currentPosition = 0L
@@ -130,16 +131,16 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     def all(entity: Entity): Boolean = true
 
-    val stream = entireExtract(inputFilepath)
+    val stream = entireExtract(extractName)
     sink = new SinkRunner(stream, all, scanForBoundaries)
     sink.run
 
-    val eof = new File(entireExtractFilepath(inputFilepath)).length
+    val eof = new File(entireExtractFilepath(extractName)).length
     logger.info("EOF: " + eof)
     boundaries = boundaries + ("EOF" -> eof)
 
     logger.info("Found boundaries: " + boundaries)
-    recordBoundaries(boundaries)
+    recordBoundaries(extractName, boundaries)
     logger.info("Done")
   }
 
@@ -167,6 +168,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   }
 
   def extract(extractName: String) {
+
+    def recordRecursiveRelations(extractName: String, relationIds: Seq[Long]): Unit = {
+      val recursiveRelationsFile = new FileOutputStream(recursiveRelationsFilepath(extractName))
+      recursiveRelationsFile.write(Json.toBytes(Json.toJson(relationIds)))
+      recursiveRelationsFile.close()
+    }
+
     val outputFilepath = extractedRelsFilepath(extractName)
     logger.info("Extracting entities and their resolved components from " + extractName + " into " + outputFilepath)
 
@@ -174,7 +182,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     extractor.extract(extractName, entitiesToGraph, outputFilepath)
 
     logger.info("Dumping discovered recursive relations")
-    recordRecursiveRelations(extractor.recursiveRelations())
+    recordRecursiveRelations(extractName, extractor.recursiveRelations())
 
     logger.info("Done")
   }

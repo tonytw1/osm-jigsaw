@@ -4,12 +4,12 @@ import java.io.{FileOutputStream, OutputStream}
 
 trait WorkingFiles {
 
-  def boundariesFilepath = {
-    "boundaries.json"
+  def boundariesFilepath(extractName: String): String = {
+    extractName + ".boundaries.json"
   }
 
-  def recursiveRelationsFilepath = {
-    "recursive-relations.json"
+  def recursiveRelationsFilepath(extractName: String): String = {
+    extractName + ".recursive-relations.json"
   }
 
   def namedNodesFile(outputFilepath: String): OutputStream = {

@@ -7,21 +7,15 @@ import play.api.libs.json.Json
 
 trait Boundaries extends WorkingFiles {
 
-  def recordBoundaries(boundaries: Map[String, Long]): Unit = {
-    val boundariesFile = new FileOutputStream(boundariesFilepath)
+  def recordBoundaries(extractName: String, boundaries: Map[String, Long]): Unit = {
+    val boundariesFile = new FileOutputStream(boundariesFilepath(extractName))
     boundariesFile.write(Json.toBytes(Json.toJson(boundaries)))
     boundariesFile.close()
   }
 
-  def readBoundaries(): Map[String, Long] = {
-    val bytes =  Files.toByteArray(new File(boundariesFilepath))
+  def readBoundaries(extractName: String): Map[String, Long] = {
+    val bytes =  Files.toByteArray(new File(boundariesFilepath(extractName)))
     Json.parse(bytes).as[Map[String, Long]]
-  }
-
-  def recordRecursiveRelations(relationIds: Seq[Long]): Unit = {
-    val recursiveRelationsFile = new FileOutputStream(recursiveRelationsFilepath)
-    recursiveRelationsFile.write(Json.toBytes(Json.toJson(relationIds)))
-    recursiveRelationsFile.close()
   }
 
 }
