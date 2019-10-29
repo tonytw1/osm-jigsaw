@@ -169,7 +169,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   def extract(extractName: String) {
     val outputFilepath = extractedRelsFilepath(extractName)
     logger.info("Extracting entities and their resolved components from " + extractName + " into " + outputFilepath)
-    new RelationExtractor().extract(extractName, entitiesToGraph, outputFilepath)
+
+    val extractor = new RelationExtractor()
+    extractor.extract(extractName, entitiesToGraph, outputFilepath)
+
+    logger.info("Dumping discovered recursive relations")
+    recordRecursiveRelations(extractor.recursiveRelations())
+
     logger.info("Done")
   }
 
@@ -180,12 +186,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       entity.getType == EntityType.Relation && relationIds.contains(entity.getId)
     }
 
-    val extractor = new RelationExtractor()
-    extractor.extract(extractName, selectedRelations, outputFilepath)
-
-    logger.info("Dumping discovered recursive relations")
-    val recursiveRelations: Seq[Long] = extractor.recursiveRelations()
-    logger.info(recursiveRelations.mkString(", ")) // TODO persist
+    new RelationExtractor().extract(extractName, selectedRelations, outputFilepath)
 
     logger.info("Done")
   }

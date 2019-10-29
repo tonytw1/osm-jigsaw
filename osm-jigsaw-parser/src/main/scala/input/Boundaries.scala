@@ -18,4 +18,10 @@ trait Boundaries extends WorkingFiles {
     Json.parse(bytes).as[Map[String, Long]]
   }
 
+  def recordRecursiveRelations(relationIds: Seq[Long]): Unit = {
+    val recursiveRelationsFile = new FileOutputStream(recursiveRelationsFilepath)
+    recursiveRelationsFile.write(Json.toBytes(Json.toJson(relationIds)))
+    recursiveRelationsFile.close()
+  }
+
 }

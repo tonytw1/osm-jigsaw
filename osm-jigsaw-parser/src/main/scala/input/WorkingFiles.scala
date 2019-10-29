@@ -8,6 +8,10 @@ trait WorkingFiles {
     "boundaries.json"
   }
 
+  def recursiveRelationsFilepath = {
+    "recursive-relations.json"
+  }
+
   def namedNodesFile(outputFilepath: String): OutputStream = {
     new FileOutputStream(outputFilepath: String)
   }
