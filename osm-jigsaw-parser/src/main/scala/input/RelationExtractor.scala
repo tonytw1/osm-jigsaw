@@ -125,6 +125,10 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     logger.info("Finished outputting selected relations and resolved components to: " + outputFileprefix)
   }
 
+  def recursiveRelations(): Seq[Long] = {
+    relationExpander.recursingRelations
+  }
+
   private def cacheAllRelations(relationsInput: InputStream) = {
     var allRelations = LongMap[Relation]()
 
