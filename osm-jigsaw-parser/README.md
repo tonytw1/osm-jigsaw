@@ -5,13 +5,13 @@ Parses an OSM protocol buffer extract and produces a sorted graph of areas.
 
 ### Usage
 
-#### Compiling
+#### Build
+
 This is a Scala / sbt project. Install sbt and build a jar file.
 
 ```
 sbt clean assembly
 ```
-
 
 #### Processing an extract file
 
