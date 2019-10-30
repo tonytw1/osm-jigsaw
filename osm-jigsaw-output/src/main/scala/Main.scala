@@ -1,3 +1,4 @@
+import java.io.File
 import java.net.URL
 
 import graph.GraphReader
@@ -21,11 +22,11 @@ object Main extends Logging {
   def main(args: Array[String]): Unit = {
     val cmd = parser.parse(options, args)
 
-    val areasFile = new URL(cmd.getArgList.get(0)) // TODO validation required
-    val graphFile = new URL(cmd.getArgList.get(1)) // TODO validation required
-    val tagsFile = new URL(cmd.getArgList.get(2)) // TODO validation required
+    val areasFile = new File(cmd.getArgList.get(0)) // TODO validation required
+    val graphFile = new File(cmd.getArgList.get(1)) // TODO validation required
+    val tagsFile = new File(cmd.getArgList.get(2)) // TODO validation required
 
-    val head = new GraphReader().loadGraph(areasFile, graphFile)
+    val head = new GraphReader().loadGraph(areasFile.toURI.toURL, graphFile.toURI.toURL)
 
     // Traverse the tree to discover all possible paths
     val traces = ListBuffer[Seq[GraphNode]]()
@@ -35,7 +36,7 @@ object Main extends Logging {
     val sorted = traces.sortBy(_.head.area.id)
 
 
-    val tagsService = new TagService(tagsFile)
+    val tagsService = new TagService(tagsFile.toURI.toURL)
     val namingService = new NaiveNamingService(tagsService)
 
     var current: Long = 0
