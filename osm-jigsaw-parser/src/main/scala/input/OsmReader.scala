@@ -8,12 +8,12 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink
 
 class OsmReader(inputStream: InputStream, sink: Sink) extends Logging {
 
-  def read = {
+  def read: Unit = {
     val reader = new OsmosisReader(inputStream)
     reader.setSink(sink)
     reader.run()
     logger.info("Closing read")
-    inputStream.close
+    inputStream.close()
   }
 
 }
