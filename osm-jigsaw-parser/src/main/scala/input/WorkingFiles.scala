@@ -21,11 +21,11 @@ trait WorkingFiles {
   }
 
   def extractedRelsFilepath(extractName: String) = {
-    extractName + ".rels.pdf"
+    extractName + ".rels.pbf"
   }
 
   def areaWaysFilepath(extractName: String) = {
-    extractName + ".areaways.pdf"
+    extractName + ".areaways.pbf"
   }
 
   def areaWaysWaysFilePath(extractName: String) = {
@@ -35,4 +35,9 @@ trait WorkingFiles {
   def areasFilePath(extractName: String): String = {
     extractName + ".areas.pbf"
   }
+
+  def tagsFilePath(extractName: String): String = {
+    extractName + ".tags.pbf"
+  }
+
 }
