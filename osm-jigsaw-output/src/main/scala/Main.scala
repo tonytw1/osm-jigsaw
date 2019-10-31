@@ -37,14 +37,16 @@ object Main extends Logging {
     var current: Long = 0
     var group: ListBuffer[Seq[GraphNode]] = ListBuffer.empty
     sorted.foreach{ i =>
-      if (current > 0 && current != i.head.area.id) {
+      val justFinishedBlock = current > 0 && current != i.head.area.id
+      if (justFinishedBlock) {
         val x: mutable.Seq[Seq[(Seq[OsmId], Double)]] = group.map { i =>
           i.map { j =>
             (j.area.osmIds, j.area.area)
           }.reverse
         }
-        val r = i.head.area.osmIds.map(_.render)
-        println(namingService.nameFor(x) + " (" + r.mkString(",") + ")")
+
+        val osmIds = group.head.head.area.osmIds.map(_.render)
+        println(namingService.nameFor(x) + " (" + osmIds.mkString(",") + ")")
         group = ListBuffer.empty
 
       }
