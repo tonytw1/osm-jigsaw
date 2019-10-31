@@ -12,11 +12,8 @@ import scala.collection.mutable.ListBuffer
 
 object Main extends Logging {
 
-  private val STEP = "s"
-
   val parser = new DefaultParser()
   val options = new Options()
-  options.addOption(STEP, true, "Which step to apply to the input file")
 
   def main(args: Array[String]): Unit = {
     val cmd = parser.parse(options, args)
@@ -34,7 +31,6 @@ object Main extends Logging {
     // Sort by leaf node ids to group for naming.
     val sorted = traces.sortBy(_.head.area.id)
 
-
     val tagsService = new TagService(tagsFile.toURI.toURL)
     val namingService = new NaiveNamingService(tagsService)
 
@@ -47,8 +43,8 @@ object Main extends Logging {
             (j.area.osmIds, j.area.area)
           }.reverse
         }
-
-        println(namingService.nameFor(x))
+        val r = i.head.area.osmIds.map(_.render)
+        println(namingService.nameFor(x) + " (" + r.mkString(",") + ")")
         group = ListBuffer.empty
 
       }

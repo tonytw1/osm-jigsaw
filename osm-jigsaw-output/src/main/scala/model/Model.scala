@@ -7,7 +7,9 @@ case class Area(id: Long, points: Seq[Point], osmIds: Seq[OsmId], area: Double) 
 }
 
 case class Point(lat: Double, lon: Double)
-case class OsmId(id: Long, `type`: Char)
+case class OsmId(id: Long, `type`: Char) {
+  def render: String = id.toString + `type`
+}
 case class GraphNode(area: Area, children: mutable.ListBuffer[GraphNode] = mutable.ListBuffer())
 
 case class OutputEntity(osmId: String, name: String)
