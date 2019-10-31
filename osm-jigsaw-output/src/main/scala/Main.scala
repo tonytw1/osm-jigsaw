@@ -61,6 +61,9 @@ object Main extends Logging {
   }
 
   def descend(node: GraphNode, parents: Seq[GraphNode], traces: ListBuffer[Seq[GraphNode]]): Unit = {
+    val reverse = (parents :+ node).reverse
+    traces += reverse
+
     if (node.children.nonEmpty) {
       node.children.foreach(c => descend(c, parents :+ node, traces))
     }
