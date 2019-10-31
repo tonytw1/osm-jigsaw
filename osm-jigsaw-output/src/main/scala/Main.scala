@@ -1,5 +1,4 @@
 import java.io.File
-import java.net.URL
 
 import graph.GraphReader
 import model.{GraphNode, OsmId}
@@ -49,9 +48,6 @@ object Main extends Logging {
           }.reverse
         }
 
-        //x.foreach { i =>
-        // println (i.map(_._1).mkString(" / "))
-        //}
         println(namingService.nameFor(x))
         group = ListBuffer.empty
 
