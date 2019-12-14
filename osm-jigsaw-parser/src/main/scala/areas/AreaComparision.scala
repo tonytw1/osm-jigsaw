@@ -22,7 +22,7 @@ trait AreaComparison extends Logging {
         val ia = geometry.calculateArea2D()
         val overlap = (ia / b.area) * 100
         if (overlap > 99) { // ie. 151164R and 8796242R
-          //logger.info(a.osmIds + " overlap with " + b.osmIds + ": " + overlap)
+          logger.info(a.osmIds + " overlap with " + b.osmIds + ": " + overlap)
           true
         } else {
           false
