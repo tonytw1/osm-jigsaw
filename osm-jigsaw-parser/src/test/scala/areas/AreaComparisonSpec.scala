@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering with AreaComparison with WayJoining with PolygonBuilding with BoundingBox {
+class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering with AreaComparison with WayJoining with PolygonBuilding {
 
   val areaResolver = new AreaResolver()
 
@@ -60,7 +60,7 @@ class AreaComparisonSpec extends FlatSpec with TestValues with LoadTestEntities 
     val areas = collection.flatMap { ra =>
       val outerPoints: Seq[(Double, Double)] = nodeIdsFor(ra.outline).flatMap(nid => nodeResolver.resolvePointForNode(nid))
       polygonForPoints(outerPoints).map { p =>
-        Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId), areaOf(p))
+        Area(AreaIdSequence.nextId, p, ListBuffer(ra.osmId), areaOf(p))
       }
     }
 

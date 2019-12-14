@@ -8,7 +8,7 @@ import progress.ProgressCounter
 
 import scala.collection.JavaConverters._
 
-class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding with WayJoining with Logging with AreaComparison with EntityOsmId {
+class AreaResolver extends EntityRendering with PolygonBuilding with WayJoining with Logging with AreaComparison with EntityOsmId {
 
   val outerNodeMapper = new OutlineBuilder()
 

@@ -21,7 +21,7 @@ import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison
+object Main extends EntityRendering with Logging with PolygonBuilding with AreaComparison
   with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
   with Extracts with WorkingFiles with Boundaries {
 
@@ -355,14 +355,14 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
           val outerPoints: Seq[(Double, Double)] = outline.flatten
           polygonForPoints(outerPoints).map { p =>
-            exportArea(Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId.get), areaOf(p)), areasOutput)
+            exportArea(Area(AreaIdSequence.nextId, p, ListBuffer(ra.osmId.get), areaOf(p)), areasOutput)
           }
         }
       } // TODO isolate for reuse in test fixtures
 
       logger.info("Resolving areas")
       val planetPolygon = makePolygon((-180, 90), (180, -90))
-      val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
+      val planet = Area(0, planetPolygon, ListBuffer.empty, areaOf(planetPolygon)) // TODO
       exportArea(planet, areasOutput)
 
       def readResolvedArea(inputStream: InputStream) = OutputResolvedArea.parseDelimitedFrom(inputStream)
@@ -497,7 +497,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
   private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
     val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
     polygonForPoints(points).map { p =>
-      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets outline
+      Area(id = oa.id.get, polygon = p, osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets outline
     }
   }
 

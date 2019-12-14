@@ -6,9 +6,9 @@ import com.esri.core.geometry.{Operator, OperatorContains}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
-import resolving.{BoundingBox, PolygonBuilding}
+import resolving.PolygonBuilding
 
-class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
+class GraphBuilder extends PolygonBuilding with Logging with AreaComparison {
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")

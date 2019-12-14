@@ -4,11 +4,11 @@ import areas.AreaComparison
 import input.TestValues
 import model.{Area, AreaIdSequence, EntityRendering}
 import org.scalatest.FlatSpec
-import resolving.{BoundingBox, PolygonBuilding}
+import resolving.PolygonBuilding
 
 import scala.collection.mutable.ListBuffer
 
-class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering with BoundingBox with PolygonBuilding
+class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering with PolygonBuilding
   with AreaComparison {
 
   val graphBuilder = new GraphBuilder()
@@ -102,7 +102,7 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
 
   def makeArea(name: String, topLeft: (Int, Int), bottomRight: (Int, Int)): Area = {
     val polygon = makePolygon(topLeft, bottomRight)
-    Area(AreaIdSequence.nextId, osmIds = ListBuffer(name), polygon = polygon, boundingBox = boundingBoxFor(polygon), area = areaOf(polygon))
+    Area(AreaIdSequence.nextId, osmIds = ListBuffer(name), polygon = polygon, area = areaOf(polygon))
   }
 
 }
