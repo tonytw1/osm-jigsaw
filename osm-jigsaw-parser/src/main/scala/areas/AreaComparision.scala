@@ -1,6 +1,6 @@
 package areas
 
-import com.esri.core.geometry.{OperatorContains, OperatorDisjoint, OperatorEquals, OperatorIntersection, Polygon, SpatialReference}
+import com.esri.core.geometry._
 import model.Area
 import org.apache.logging.log4j.scala.Logging
 
@@ -9,11 +9,8 @@ trait AreaComparison extends Logging {
   val sr = SpatialReference.create(1)
 
   def areaContains(a: Area, b: Area): Boolean = {
-    val areDisjoint = OperatorDisjoint.local().execute(a.polygon, b.polygon, sr, null)
-    if (areDisjoint) {
-      false
-    } else {
-      val contains = OperatorContains.local().execute(a.polygon, b.polygon, sr, null) && !OperatorContains.local().execute(b.polygon, a.polygon, sr, null)
+
+    val contains = OperatorContains.local().execute(a.polygon, b.polygon, sr, null) && !OperatorContains.local().execute(b.polygon, a.polygon, sr, null)
       if (contains) {
         true
       } else {
@@ -31,7 +28,7 @@ trait AreaComparison extends Logging {
           false
         }
         */
-      }
+
     }
   }
 
