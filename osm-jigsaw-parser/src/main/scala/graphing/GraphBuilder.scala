@@ -2,7 +2,7 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{Operator, OperatorContains}
+import com.esri.core.geometry.{Operator, OperatorContains, OperatorConvexHull}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
@@ -35,7 +35,12 @@ class GraphBuilder extends PolygonBuilding with Logging with AreaComparison {
       }
     }
 
-    a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
+    a.children.foreach { c =>
+      Operator.deaccelerateGeometry(c.area.polygon)
+      c.area.hull.map { h =>
+        Operator.deaccelerateGeometry(h)
+      }
+    }
 
     a.children.filter(i => i.children.nonEmpty).par.foreach { c =>
       // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
@@ -62,8 +67,11 @@ class GraphBuilder extends PolygonBuilding with Logging with AreaComparison {
 
     } else {
       logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
+
+      val hull = OperatorConvexHull.local().execute(b.area.polygon, null)
+      OperatorContains.local().accelerateGeometry(hull, sr, GeometryAccelerationDegree.enumMedium)
       OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-      a.children = a.children + b
+      a.children = a.children + b.copy(area = b.area.copy(hull = Some(hull)))
     }
 
     // val duration = new Duration(start, DateTime.now)

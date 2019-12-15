@@ -9,12 +9,15 @@ trait AreaComparison extends Logging {
   val sr = SpatialReference.create(1)
 
   def areaContains(a: Area, b: Area): Boolean = {
-
-    val contains = OperatorContains.local().execute(a.polygon, b.polygon, sr, null) && !OperatorContains.local().execute(b.polygon, a.polygon, sr, null)
-      if (contains) {
-        true
+    a.hull.map { h =>
+      if (OperatorContains.local().execute(h, b.polygon, sr, null)) {
+        OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
       } else {
         false
+      }
+    }.getOrElse {
+      OperatorContains.local().execute(a.polygon, b.polygon, sr, null) //&& !OperatorContains.local().execute(b.polygon, a.polygon, sr, null)
+
 
         /*
         // How much do these overlapping areas overlap?
