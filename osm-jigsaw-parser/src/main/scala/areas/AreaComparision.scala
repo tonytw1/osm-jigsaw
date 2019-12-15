@@ -17,6 +17,9 @@ trait AreaComparison extends Logging {
       if (contains) {
         true
       } else {
+        false
+
+        /*
         // How much do these overlapping areas overlap?
         val geometry = OperatorIntersection.local().execute(a.polygon, b.polygon, sr, null)
         val ia = geometry.calculateArea2D()
@@ -27,6 +30,7 @@ trait AreaComparison extends Logging {
         } else {
           false
         }
+        */
       }
     }
   }
