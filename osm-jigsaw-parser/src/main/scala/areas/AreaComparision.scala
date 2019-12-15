@@ -21,7 +21,7 @@ trait AreaComparison extends Logging {
         val geometry = OperatorIntersection.local().execute(a.polygon, b.polygon, sr, null)
         val ia = geometry.calculateArea2D()
         val overlap = (ia / b.area) * 100
-        logger.info(a.osmIds + " overlap with " + b.osmIds + ": " + overlap)
+        logger.info(a.osmIds + " (" + a.area + ")  overlap with " + b.osmIds + " (" + b.area + ") : " + overlap)
         if (overlap > 99) { // ie. 151164R and 8796242R
           true
         } else {
