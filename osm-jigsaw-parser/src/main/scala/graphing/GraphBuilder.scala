@@ -2,7 +2,7 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{Operator, OperatorContains, OperatorConvexHull}
+import com.esri.core.geometry._
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
@@ -14,7 +14,25 @@ class GraphBuilder extends PolygonBuilding with Logging with AreaComparison {
     logger.info("Building graph from " + areas.size + " areas")
     logger.info("Starting area sort")
     var head = GraphNode(headArea)
-    head.insert(areas)
+
+    val generalised = areas.map { a =>
+      val pathSize = a.polygon.getPathSize(0)
+
+
+      if (pathSize > 10000) {
+        val generalised = OperatorGeneralize.local().execute(a.polygon, .00001, false, null)
+
+        val g = generalised.asInstanceOf[Polygon]
+        val generalisedCount = g.getPathSize(0)
+
+        logger.info(pathSize + " -> " + generalisedCount)
+        a.copy(polygon = g)
+      } else {
+        a
+      }
+    }
+
+    head.insert(generalised)
     siftDown(head)
     head
   }
@@ -27,7 +45,9 @@ class GraphBuilder extends PolygonBuilding with Logging with AreaComparison {
     //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
     a.children = Set()
 
-    val counter = new ProgressCounter(10000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
+
+
+    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
     inOrder.foreach { b =>
       //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       counter.withProgress {
@@ -53,8 +73,9 @@ class GraphBuilder extends PolygonBuilding with Logging with AreaComparison {
     //var siblings = a.children// .filter(c => c != b)
 
     //var startFilter = DateTime.now()
+
     val existingSiblingsWhichNewValueWouldFitIn = a.children.filter { s =>
-      s != b && areaContains(s.area, b.area)
+      areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
     //var secondFilterDuration: Option[Duration] = None

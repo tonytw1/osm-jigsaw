@@ -11,26 +11,33 @@ trait AreaComparison extends Logging {
   def areaContains(a: Area, b: Area): Boolean = {
     a.hull.map { h =>
       if (OperatorContains.local().execute(h, b.polygon, sr, null)) {
-        OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+        containsENough(a, b)
+
       } else {
         false
       }
     }.getOrElse {
-      OperatorContains.local().execute(a.polygon, b.polygon, sr, null) //&& !OperatorContains.local().execute(b.polygon, a.polygon, sr, null)
+      containsENough(a, b)
 
+    }
+  }
 
-        /*
-        // How much do these overlapping areas overlap?
-        val geometry = OperatorIntersection.local().execute(a.polygon, b.polygon, sr, null)
-        val ia = geometry.calculateArea2D()
-        val overlap = (ia / b.area) * 100
-        logger.info(a.osmIds + " (" + a.area + ")  overlap with " + b.osmIds + " (" + b.area + ") : " + overlap)
-        if (overlap > 99) { // ie. 151164R and 8796242R
-          true
-        } else {
-          false
-        }
-        */
+  private def containsENough(a: Area, b: Area) = {
+    val contains = OperatorContains.local().execute(a.polygon, b.polygon, sr, null) //&& !OperatorContains.local().execute(b.polygon, a.polygon, sr, null)
+    if (contains) {
+      true
+    } else {
+
+      // How much do these overlapping areas overlap?
+      val geometry = OperatorIntersection.local().execute(a.polygon, b.polygon, sr, null)
+      val ia = geometry.calculateArea2D()
+      val overlap = (ia / b.area) * 100
+      if (overlap > 95) { // ie. 151164R and 8796242R
+        //logger.info(a.osmIds + " (" + a.area + ")  overlap with " + b.osmIds + " (" + b.area + ") : " + overlap)
+        true
+      } else {
+        false
+      }
 
     }
   }
