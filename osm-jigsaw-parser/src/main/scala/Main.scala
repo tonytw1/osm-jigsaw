@@ -1,6 +1,7 @@
 import java.io._
 
 import areas.AreaComparison
+import com.esri.core.geometry.OperatorDisjoint
 import graphing.{GraphBuilder, GraphWriter}
 import input._
 import model.{Area, AreaIdSequence, EntityRendering}
@@ -339,7 +340,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       val counter = new ProgressCounter(1000)
       val areasOutput = new BufferedOutputStream(new FileOutputStream(areasFilepath))
 
-      def populateAreaNodesAndOutputToFile(ra: OutputResolvedArea): Unit = {
+      def populateAreaNodesAndExportAreasToFile(ra: OutputResolvedArea): Unit = {
         counter.withProgress {
           val outline = ra.ways.flatMap { signedWayId =>
             val l = Math.abs(signedWayId)
@@ -361,14 +362,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       } // TODO isolate for reuse in test fixtures
 
       logger.info("Resolving areas")
-      val planetPolygon = makePolygon((-180, 90), (180, -90))
-      val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
-      exportArea(planet, areasOutput)
-
       def readResolvedArea(inputStream: InputStream) = OutputResolvedArea.parseDelimitedFrom(inputStream)
 
       logger.info("Expanding way areas")
-      processPbfFile(areawaysInputFile, readResolvedArea, populateAreaNodesAndOutputToFile)
+      processPbfFile(areawaysInputFile, readResolvedArea, populateAreaNodesAndExportAreasToFile)
 
       areasOutput.flush()
       areasOutput.close()
@@ -432,15 +429,49 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val areas = readAreasFromPbfFile(inputFilename)
 
     logger.info("Building graph")
+
+    // Partiton
+
     val headArea = areas.head
     val drop = areas.drop(1)
-    logger.info("Head area: " + headArea)
-    logger.info("Dropped: " + drop.size)
-    val head = new GraphBuilder().buildGraph(headArea, drop)
+
+    val bounds = areas.map{ a =>
+      boundingBoxFor(a.polygon)
+    }
+
+    var bound = areas.head.boundingBox
+    bounds.foreach{ b =>
+      println(b)
+      if(b._1 > bound._1) {
+        bound = bound.copy(_1 = b._1)
+      }
+      if(b._2 < bound._2) {
+        bound = bound.copy(_2 = b._2)
+      }
+      if(b._3 < bound._3) {
+        bound = bound.copy(_3 = b._3)
+      }
+      if(b._4 > bound._4) {
+        bound = bound.copy(_4 = b._4)
+      }
+    }
+    println("Bounding box: " + bound)
+
+    val p = makePolygon((52, 0), (51, -1))
+    val tuple = boundingBoxFor(p)
+    val segment = Area(id = 1L, polygon = p, tuple, area = areaOf(p))
+
+    val inSegment = drop.filter { a =>
+      !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
+    }
+
+    logger.info("Head area: " + segment)
+    logger.info("Dropped: " + inSegment.size)
+    val head = new GraphBuilder().buildGraph(segment, inSegment)
 
     logger.info("Writing graph to disk")
     val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
-    val counter = new ProgressCounter(100000)
+    val counter = new ProgressCounter(10)
 
     logger.info("Export dump")
     new GraphWriter().export(head, output, None, counter)
@@ -455,7 +486,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
 
   }
-
 
   private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {
     logger.info("Reading areas")

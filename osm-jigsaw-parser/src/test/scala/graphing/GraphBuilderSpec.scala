@@ -25,13 +25,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   val overlapping = makeArea("Overlapping", (-5, 10), (5, -10))
   val fitsInLeftAndOverlapping = makeArea("Fits", (-1, 1), (0, 0))
 
-  "graph builder" should "provide empty head node" in {
-    val empty = graphBuilder.buildGraph(earth, Seq())
-
-    assert(empty.area.osmIds.head == "Earth")
-    assert(empty.children.size == 0)
-  }
-
   "graph builder" should "insert nodes as children of head" in {
     val graph = graphBuilder.buildGraph(earth, Seq(large))
 
