@@ -486,7 +486,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       )
       val tuple = boundingBoxFor(p)
       val segment = Area(id = 1L, polygon = p, tuple, area = areaOf(p))
-      OperatorContains.local().accelerateGeometry(segment.polygon, sr, GeometryAccelerationDegree.enumMedium)
 
       val inSegment = drop.filter { a =>
         !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
