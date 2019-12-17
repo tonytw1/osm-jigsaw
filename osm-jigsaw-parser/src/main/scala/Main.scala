@@ -1,6 +1,5 @@
 import java.io._
 
-import Main.output
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import ch.hsr.geohash.util.TwoGeoHashBoundingBox
@@ -471,7 +470,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       hashes += hash
     }
 
-    println(hashes.size)
+    logger.info("Need " + hashes.size + " to cover extract bounding box")
+
+    val planetPolygon = makePolygon((-180, 90), (180, -90))
+    val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
+
     hashes.par.foreach { hash =>
       val b = hash.getBoundingBox()
 
@@ -487,7 +490,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
       logger.info("Head area: " + segment)
       logger.info("Dropped: " + inSegment.size)
-      val head = new GraphBuilder().buildGraph(segment, inSegment)
+
+      val head = new GraphBuilder().buildGraph(planet, inSegment)
 
       logger.info("Writing graph to disk")
       val output = new BufferedOutputStream(new FileOutputStream(outputFilename + hash.toBase32))
