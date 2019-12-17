@@ -464,9 +464,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val tt = TwoGeoHashBoundingBox.withCharacterPrecision(bb, 4)
 
     val i = new ch.hsr.geohash.util.BoundingBoxGeoHashIterator(tt)
+    val hashes = ListBuffer[GeoHash]()
     while (i.hasNext) {
       val hash: GeoHash = i.next()
-      println(hash.toBase32)
+      hashes :+ hash
+    }
+
+    hashes.par.foreach { hash =>
       val b = hash.getBoundingBox()
 
       val p = makePolygonD((b.getNorthWestCorner.getLatitude, b.getNorthWestCorner.getLongitude),
