@@ -11,6 +11,7 @@ scalaVersion := "2.12.9"
 libraryDependencies += guice
 libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.1.0"
 libraryDependencies += "com.google.guava" % "guava" % "25.1-jre"
+libraryDependencies += "ch.hsr" % "geohash" % "1.4.0"
 libraryDependencies += specs2 % Test
 libraryDependencies += "org.mockito" % "mockito-core" % "1.9.5" % Test
 
