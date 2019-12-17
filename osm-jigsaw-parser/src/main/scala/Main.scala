@@ -470,7 +470,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       hashes :+ hash
     }
 
-    hashes.par.foreach { hash =>
+    hashes.par.map { hash =>
       val b = hash.getBoundingBox()
 
       val p = makePolygonD((b.getNorthWestCorner.getLatitude, b.getNorthWestCorner.getLongitude),
