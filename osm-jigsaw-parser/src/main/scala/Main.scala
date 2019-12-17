@@ -1,6 +1,9 @@
 import java.io._
 
+import Main.output
 import areas.AreaComparison
+import ch.hsr.geohash.GeoHash
+import ch.hsr.geohash.util.TwoGeoHashBoundingBox
 import com.esri.core.geometry.OperatorDisjoint
 import graphing.{GraphBuilder, GraphWriter}
 import input._
@@ -441,7 +444,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     var bound = areas.head.boundingBox
     bounds.foreach{ b =>
-      println(b)
       if(b._1 > bound._1) {
         bound = bound.copy(_1 = b._1)
       }
@@ -457,27 +459,43 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     }
     println("Bounding box: " + bound)
 
-    val p = makePolygon((52, 0), (51, -1))
-    val tuple = boundingBoxFor(p)
-    val segment = Area(id = 1L, polygon = p, tuple, area = areaOf(p))
+    val bb = new ch.hsr.geohash.BoundingBox(bound._3, bound._1, bound._2, bound._4)
 
-    val inSegment = drop.filter { a =>
-      !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
+    val tt = TwoGeoHashBoundingBox.withCharacterPrecision(bb, 4)
+
+    val i = new ch.hsr.geohash.util.BoundingBoxGeoHashIterator(tt)
+    while (i.hasNext) {
+      val hash: GeoHash = i.next()
+      println(hash.toBase32)
+      val b = hash.getBoundingBox()
+
+      val p = makePolygonD((b.getNorthWestCorner.getLatitude, b.getNorthWestCorner.getLongitude),
+        (b.getSouthEastCorner.getLatitude, b.getSouthEastCorner.getLongitude)
+      )
+      val tuple = boundingBoxFor(p)
+      val segment = Area(id = 1L, polygon = p, tuple, area = areaOf(p))
+
+      val inSegment = drop.filter { a =>
+        !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
+      }
+
+      logger.info("Head area: " + segment)
+      logger.info("Dropped: " + inSegment.size)
+      val head = new GraphBuilder().buildGraph(segment, inSegment)
+
+      logger.info("Writing graph to disk")
+      val output = new BufferedOutputStream(new FileOutputStream(outputFilename + hash.toBase32))
+      val counter = new ProgressCounter(1000)
+
+      logger.info("Export dump")
+      new GraphWriter().export(head, output, None, counter)
+
+
+      output.flush()
+      output.close()
     }
 
-    logger.info("Head area: " + segment)
-    logger.info("Dropped: " + inSegment.size)
-    val head = new GraphBuilder().buildGraph(segment, inSegment)
 
-    logger.info("Writing graph to disk")
-    val output = new BufferedOutputStream(new FileOutputStream(outputFilename))
-    val counter = new ProgressCounter(10)
-
-    logger.info("Export dump")
-    new GraphWriter().export(head, output, None, counter)
-
-    output.flush()
-    output.close()
     logger.info("Done")
   }
 

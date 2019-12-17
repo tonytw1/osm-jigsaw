@@ -13,6 +13,16 @@ trait PolygonBuilding {
     polygon
   }
 
+
+  def makePolygonD(topLeft: (Double, Double), bottomRight: (Double, Double)): Polygon = {
+    val polygon = new Polygon()
+    polygon.startPath(topLeft._1, topLeft._2)
+    polygon.lineTo(topLeft._1, bottomRight._2)
+    polygon.lineTo(bottomRight._1, bottomRight._2)
+    polygon.lineTo(bottomRight._1, topLeft._2)
+    polygon
+  }
+
   def polygonForPoints(outerPoints: Seq[(Double, Double)]): Option[Polygon] = {
     val polygon = outerPoints.headOption.map { n =>
       val area = new Polygon()

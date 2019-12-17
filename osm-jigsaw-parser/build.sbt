@@ -32,6 +32,7 @@ lazy val root = (project in file(".")).
     libraryDependencies += "org.apache.logging.log4j" %% "log4j-api-scala" % "11.0",
     libraryDependencies += "org.mapdb" % "mapdb" % "3.0.5",
     libraryDependencies += "com.typesafe.play" %% "play-json" % "2.7.3",
+    libraryDependencies += "ch.hsr" % "geohash" % "1.4.0",
     libraryDependencies += scalaTest % Test
   )
 
