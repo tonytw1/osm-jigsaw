@@ -3,7 +3,8 @@ import java.io._
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import ch.hsr.geohash.util.TwoGeoHashBoundingBox
-import com.esri.core.geometry.OperatorDisjoint
+import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
+import com.esri.core.geometry.{OperatorContains, OperatorDisjoint}
 import graphing.{GraphBuilder, GraphWriter}
 import input._
 import model.{Area, AreaIdSequence, EntityRendering}
@@ -435,7 +436,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     // Partiton
 
     val headArea = areas.head
-    val drop = areas.drop(1)
+    val drop = areas
 
     val bounds = areas.map{ a =>
       boundingBoxFor(a.polygon)
@@ -475,6 +476,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val planetPolygon = makePolygon((-180, 90), (180, -90))
     val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
 
+    var total = hashes.size
+    var done = 0
     hashes.par.foreach { hash =>
       val b = hash.getBoundingBox()
 
@@ -483,28 +486,31 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       )
       val tuple = boundingBoxFor(p)
       val segment = Area(id = 1L, polygon = p, tuple, area = areaOf(p))
+      OperatorContains.local().accelerateGeometry(segment.polygon, sr, GeometryAccelerationDegree.enumMedium)
 
       val inSegment = drop.filter { a =>
         !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
       }
 
-      logger.info("Head area: " + segment)
       logger.info("Dropped: " + inSegment.size)
 
-      val head = new GraphBuilder().buildGraph(planet, inSegment)
+      if (inSegment.nonEmpty) {
+        val head = new GraphBuilder().buildGraph(planet, inSegment)
 
-      logger.info("Writing graph to disk")
-      val output = new BufferedOutputStream(new FileOutputStream(outputFilename + hash.toBase32))
-      val counter = new ProgressCounter(1000)
+        logger.info("Writing graph to disk")
+        val output = new BufferedOutputStream(new FileOutputStream(outputFilename + hash.toBase32))
+        val counter = new ProgressCounter(1000)
 
-      logger.info("Export dump")
-      new GraphWriter().export(head, output, None, counter)
+        logger.info("Export dump")
+        new GraphWriter().export(head, output, None, counter)
 
+        output.flush()
+        output.close()
+      }
 
-      output.flush()
-      output.close()
+      done = done + 1
+      logger.info("!!!! " + done + " / " + total)
     }
-
 
     logger.info("Done")
   }
