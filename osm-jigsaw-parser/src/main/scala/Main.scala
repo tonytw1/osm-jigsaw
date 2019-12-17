@@ -467,10 +467,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val hashes = ListBuffer[GeoHash]()
     while (i.hasNext) {
       val hash: GeoHash = i.next()
-      hashes :+ hash
+      hashes += hash
     }
 
-    hashes.par.map { hash =>
+    hashes.par.foreach { hash =>
       val b = hash.getBoundingBox()
 
       val p = makePolygonD((b.getNorthWestCorner.getLatitude, b.getNorthWestCorner.getLongitude),
