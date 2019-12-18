@@ -14,7 +14,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas")
-    logger.info("Starting area sort")
+    logger.debug("Starting area sort")
     var head = GraphNode(headArea)
     head.insert(areas.sortBy(-_.area))
     siftDown(head)
@@ -31,7 +31,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
     a.children = ListBuffer()
 
-    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
+    val counter = new ProgressCounter(10000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
     inOrder.foreach { b =>
       //logger.info("B: " + a.area.id + " " + b.area.area)
       //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
@@ -40,7 +40,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
-    a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
+    //a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
 
     a.children.filter(i => i.children.nonEmpty).par.foreach { c =>
       // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
@@ -67,8 +67,17 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     } else {
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
-      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-      a.children = a.children :+ b.copy()
+
+      val forkedChild = if (!b.area.accell) {
+        val forkedPolygon  = b.area.polygon
+        OperatorContains.local().accelerateGeometry(forkedPolygon, sr, GeometryAccelerationDegree.enumMedium)
+        b.copy(area = b.area.copy(polygon = forkedPolygon, accell = true))
+
+      } else {
+        b.copy()
+      }
+
+      a.children = a.children :+ forkedChild
     }
 
     // val duration = new Duration(start, DateTime.now)

@@ -3,8 +3,7 @@ import java.io._
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import ch.hsr.geohash.util.TwoGeoHashBoundingBox
-import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{OperatorContains, OperatorDisjoint}
+import com.esri.core.geometry.OperatorDisjoint
 import graphing.{GraphBuilder, GraphWriter}
 import input._
 import model.{Area, AreaIdSequence, EntityRendering}
@@ -491,16 +490,14 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
       }
 
-      logger.info("Dropped: " + inSegment.size)
-
       if (inSegment.nonEmpty) {
         val head = new GraphBuilder().buildGraph(planet, inSegment)
 
-        logger.info("Writing graph to disk")
+        logger.debug("Writing graph to disk")
         val output = new BufferedOutputStream(new FileOutputStream(outputFilename + hash.toBase32))
         val counter = new ProgressCounter(1000)
 
-        logger.info("Export dump")
+        logger.debug("Export dump")
         new GraphWriter().export(head, output, None, counter)
 
         output.flush()
@@ -508,7 +505,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       }
 
       done = done + 1
-      logger.info("!!!! " + done + " / " + total)
+      logger.info("Progress: " + done + " / " + total)
     }
 
     logger.info("Done")
