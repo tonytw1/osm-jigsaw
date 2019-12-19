@@ -1,4 +1,5 @@
 import java.io._
+import java.util.concurrent.atomic.AtomicInteger
 
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
@@ -476,7 +477,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
 
     var total = hashes.size
-    var done = 0
+    val doneCounter = new AtomicInteger(0)
     hashes.par.foreach { hash =>
       val b = hash.getBoundingBox()
 
@@ -504,7 +505,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         output.close()
       }
 
-      done = done + 1
+      val done = doneCounter.incrementAndGet()
       logger.info("Progress: " + done + " / " + total)
     }
 
