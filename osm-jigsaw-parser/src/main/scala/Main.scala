@@ -472,7 +472,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       hashes += hash
     }
 
-    logger.info("Need " + hashes.size + " to cover extract bounding box")
+    logger.info("Need " + hashes.size + " segments to cover extract bounding box")
 
     val planetPolygon = makePolygon((-180, 90), (180, -90))
     val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO

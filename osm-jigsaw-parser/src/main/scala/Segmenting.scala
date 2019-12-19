@@ -14,9 +14,8 @@ trait Segmenting extends Logging {
       val hash = GeoHash.fromGeohashString(p)
       val hashBase32 = hash.toBase32
 
-      // Find all of th areas which touch this geohash
-      val touchingHash: (GeoHash, Seq[Area]) = areasTouchingGeohash(areas, hash)
-      logger.info("Geohash " + hashBase32 + " contains: " + touchingHash._2.size)
+      // Find all of the areas which touch this geohash
+      val touchingHash = areasTouchingGeohash(areas, hash)
       if (depth == maxDepth) {
         logger.info("Returning " + hashBase32 + ": " + touchingHash._2.size)
         Seq(touchingHash)
