@@ -10,7 +10,7 @@ import play.api.Configuration
 import tags.TagService
 import ch.hsr.geohash.GeoHash
 
-class GraphService @Inject()(configuration: Configuration, tagService: TagService) extends AreaComparison {
+class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader) extends AreaComparison {
 
   val areasFile = new URL(configuration.getString("areas.url").get)
   val graphFile = new URL(configuration.getString("graph.url").get)
@@ -18,9 +18,8 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
 
   def headOfGraphCoveringThisPoint(point: Point) = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashCharacters)
-    val segmentURL = new URL(graphFile.toString + geohash.toBase32)
-    println("Loading graph segment from: " + segmentURL)
-    new GraphReader().loadGraph(areasFile, segmentURL)
+    val segmentURL = new URL(graphFile.toString + "." + geohash.toBase32)
+    new GraphReader(areasReader).loadGraph(areasFile, segmentURL)
   }
 
   def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
