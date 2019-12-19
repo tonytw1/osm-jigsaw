@@ -3,16 +3,25 @@ package graph
 import java.io.BufferedInputStream
 import java.net.URL
 
+import javax.inject.Inject
 import model.{Area, OsmIdParsing, Point}
 import outputarea.OutputArea
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import progress.ProgressCounter
 
 import scala.collection.mutable
 
-class AreasReader extends OsmIdParsing {
+class AreasReader @Inject()(configuration: Configuration) extends OsmIdParsing {
 
-  def loadAreas(areasFile: URL): Map[Long, Area] = {
+  private val areas = {
+    val areasFile = new URL(configuration.getString("areas.url").get)
+    Logger.info("Loading areas from: " + areasFile)
+    loadAreas(areasFile)
+  }
+
+  def getAreas(): Map[Long, Area] = areas
+
+  private def loadAreas(areasFile: URL): Map[Long, Area] = {
 
     def outputAreaToArea(oa: OutputArea): Option[Area] = {
       oa.id.flatMap { id =>
@@ -24,7 +33,7 @@ class AreasReader extends OsmIdParsing {
     }
 
     val areasMap = mutable.Map[Long, Area]()
-    val planet = Area(id = 0L, points = Seq.empty, osmIds = Seq.empty, area = 0.0)  // TODO meh
+    val planet = Area(id = 0L, points = Seq.empty, osmIds = Seq.empty, area = 0.0) // TODO meh
     areasMap += 0L -> planet
     val input = new BufferedInputStream(areasFile.openStream())
     val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))

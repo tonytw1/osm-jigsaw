@@ -13,14 +13,11 @@ import scala.collection.mutable
 
 class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
 
-  def loadGraph(areasFile: URL, graphFile: URL): GraphNode = {
-
+  def loadGraph(graphFile: URL): GraphNode = {
     try {
-      val areas = areasReader.loadAreas(areasFile)
-
       def toGraphNode(ogn: OutputGraphNode): Option[GraphNode] = {
         ogn.area.flatMap { areaId =>
-          areas.get(areaId).map { area =>
+          areasReader.getAreas().get(areaId).map { area =>
             GraphNode(area = area)
           }
         }
