@@ -2,7 +2,7 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{Operator, OperatorContains}
+import com.esri.core.geometry.{Operator, OperatorContains, Polygon}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
@@ -40,7 +40,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
-    //a.children.foreach(c => Operator.deaccelerateGeometry(c.area.polygon))
+    a.children.par.foreach(c => {
+      Operator.deaccelerateGeometry(c.area.polygon)
+    })
 
     a.children.filter(i => i.children.nonEmpty).par.foreach { c =>
       // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
@@ -67,17 +69,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     } else {
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
-
-      val forkedChild = if (!b.area.accell) {
-        val forkedPolygon  = b.area.polygon
-        OperatorContains.local().accelerateGeometry(forkedPolygon, sr, GeometryAccelerationDegree.enumMedium)
-        b.copy(area = b.area.copy(polygon = forkedPolygon, accell = true))
-
-      } else {
-        b.copy()
-      }
-
-      a.children = a.children :+ forkedChild
+      val geometry = b.area.polygon
+      OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
+      a.children = a.children :+ b
     }
 
     // val duration = new Duration(start, DateTime.now)
