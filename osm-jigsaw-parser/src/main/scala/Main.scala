@@ -29,7 +29,7 @@ import scala.collection.mutable.ListBuffer
 
 object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison
   with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
-  with Extracts with WorkingFiles with Boundaries {
+  with Extracts with WorkingFiles with Boundaries with Segmenting {
 
   private val STEP = "s"
 
@@ -476,38 +476,20 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val planetPolygon = makePolygon((-180, 90), (180, -90))
     val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
 
-    var total = hashes.size
     val doneCounter = new AtomicInteger(0)
 
     logger.info("Mapping areas into segments")
-    val segments: Seq[(GeoHash, Seq[Area])] = hashes.par.map { hash =>
-      val b = hash.getBoundingBox()
-
-      val p = makePolygonD((b.getNorthWestCorner.getLatitude, b.getNorthWestCorner.getLongitude),
-        (b.getSouthEastCorner.getLatitude, b.getSouthEastCorner.getLongitude)
-      )
-      val tuple = boundingBoxFor(p)
-      val segment = Area(id = 1L, polygon = p, tuple, area = areaOf(p))
-      val beforeSegment = DateTime.now
-
-      val inSegment = drop.filter { a =>
-        !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
-      }
-      val afterSegment = DateTime.now
-
-      val segmentingDuration = new Duration(beforeSegment, afterSegment)
-      logger.info(hash.toBase32 + " segmenting duration: " + segmentingDuration)
-      (hash, inSegment)
-    }.seq
+    val segments: Seq[(GeoHash, Seq[Area])] = segmentsFor(drop, hashes)
 
     logger.info("Sorting segments")
+    val total = segments.size
     segments.par.foreach { segment =>
 
         val hash = segment._1
         val inSegment = segment._2
 
-      val beforeSort = DateTime.now
       if (inSegment.nonEmpty) {
+        val beforeSort = DateTime.now
         val head = new GraphBuilder().buildGraph(planet, inSegment)
         val afterSort = DateTime.now
 
