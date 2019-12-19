@@ -462,7 +462,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     val bb = new ch.hsr.geohash.BoundingBox(bound._3, bound._1, bound._2, bound._4)
 
-    val tt = TwoGeoHashBoundingBox.withCharacterPrecision(bb, 4)
+    val segmentSize = 4
+    val tt = TwoGeoHashBoundingBox.withCharacterPrecision(bb, segmentSize)
 
     val i = new ch.hsr.geohash.util.BoundingBoxGeoHashIterator(tt)
     val hashes = ListBuffer[GeoHash]()
@@ -479,7 +480,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val doneCounter = new AtomicInteger(0)
 
     logger.info("Mapping areas into segments")
-    val segments: Seq[(GeoHash, Seq[Area])] = segmentsFor(drop, hashes)
+    val segments: Seq[(GeoHash, Seq[Area])] = segmentsFor(drop, hashes, segmentSize)
 
     logger.info("Sorting segments")
     val total = segments.size
@@ -494,7 +495,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         val afterSort = DateTime.now
 
         logger.debug("Writing graph to disk")
-        val output = new BufferedOutputStream(new FileOutputStream(outputFilename + hash.toBase32))
+        val output = new BufferedOutputStream(new FileOutputStream("segments/" + outputFilename + "." + hash.toBase32))
 
         val counter = new ProgressCounter(1000)
         logger.debug("Export dump")
@@ -503,8 +504,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         output.flush()
         output.close()
 
-        val sortingDuration = new Duration(beforeSort, afterSort)
-        logger.info(hash.toBase32 + " sorting duration: " + sortingDuration)
+        //val sortingDuration = new Duration(beforeSort, afterSort)
+        //logger.info(hash.toBase32 + " sorting duration: " + sortingDuration)
       }
 
       val done = doneCounter.incrementAndGet()
