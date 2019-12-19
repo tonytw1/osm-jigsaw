@@ -4,12 +4,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import ch.hsr.geohash.util.TwoGeoHashBoundingBox
-import com.esri.core.geometry.OperatorDisjoint
+import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
+import com.esri.core.geometry.{OperatorContains, OperatorDisjoint}
 import graphing.{GraphBuilder, GraphWriter}
 import input._
 import model.{Area, AreaIdSequence, EntityRendering}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
+import org.joda.time.{DateTime, Duration}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import outputarea.OutputArea
 import outputnode.OutputNode
@@ -433,11 +435,10 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     logger.info("Building graph")
 
-    // Partiton
-
     val headArea = areas.head
     val drop = areas
 
+    // Partiton into segments
     val bounds = areas.map{ a =>
       boundingBoxFor(a.polygon)
     }
@@ -457,7 +458,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
         bound = bound.copy(_4 = b._4)
       }
     }
-    println("Bounding box: " + bound)
+    logger.info("Bounding box for cover extract: " + bound)
 
     val bb = new ch.hsr.geohash.BoundingBox(bound._3, bound._1, bound._2, bound._4)
 
@@ -467,7 +468,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val hashes = ListBuffer[GeoHash]()
     while (i.hasNext) {
       val hash: GeoHash = i.next()
-      println(hash.toBase32)
       hashes += hash
     }
 
@@ -478,7 +478,9 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     var total = hashes.size
     val doneCounter = new AtomicInteger(0)
-    hashes.par.foreach { hash =>
+
+    logger.info("Mapping areas into segments")
+    val segments: Seq[(GeoHash, Seq[Area])] = hashes.par.map { hash =>
       val b = hash.getBoundingBox()
 
       val p = makePolygonD((b.getNorthWestCorner.getLatitude, b.getNorthWestCorner.getLongitude),
@@ -486,23 +488,41 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       )
       val tuple = boundingBoxFor(p)
       val segment = Area(id = 1L, polygon = p, tuple, area = areaOf(p))
+      val beforeSegment = DateTime.now
 
       val inSegment = drop.filter { a =>
         !OperatorDisjoint.local().execute(segment.polygon, a.polygon, sr, null)
       }
+      val afterSegment = DateTime.now
 
+      val segmentingDuration = new Duration(beforeSegment, afterSegment)
+      logger.info(hash.toBase32 + " segmenting duration: " + segmentingDuration)
+      (hash, inSegment)
+    }.seq
+
+    logger.info("Sorting segments")
+    segments.par.foreach { segment =>
+
+        val hash = segment._1
+        val inSegment = segment._2
+
+      val beforeSort = DateTime.now
       if (inSegment.nonEmpty) {
         val head = new GraphBuilder().buildGraph(planet, inSegment)
+        val afterSort = DateTime.now
 
         logger.debug("Writing graph to disk")
         val output = new BufferedOutputStream(new FileOutputStream(outputFilename + hash.toBase32))
-        val counter = new ProgressCounter(1000)
 
+        val counter = new ProgressCounter(1000)
         logger.debug("Export dump")
         new GraphWriter().export(head, output, None, counter)
 
         output.flush()
         output.close()
+
+        val sortingDuration = new Duration(beforeSort, afterSort)
+        logger.info(hash.toBase32 + " sorting duration: " + sortingDuration)
       }
 
       val done = doneCounter.incrementAndGet()
