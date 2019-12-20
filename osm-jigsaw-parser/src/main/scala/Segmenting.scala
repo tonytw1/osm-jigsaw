@@ -17,7 +17,10 @@ trait Segmenting extends Logging {
       // Find all of the areas which touch this geohash
       val touchingHash = areasTouchingGeohash(areas, hash)
       if (depth == maxDepth) {
-        logger.info("Returning " + hashBase32 + ": " + touchingHash._2.size)
+        val size = touchingHash._2.size
+        if (size > 1000 ) {
+          logger.info("Large segment " + hashBase32 + ": " + size)
+        }
         Seq(touchingHash)
       } else {
         val hashesUnderThisOne: Seq[GeoHash] = hashes.filter(h => h.toBase32.startsWith(hashBase32))
