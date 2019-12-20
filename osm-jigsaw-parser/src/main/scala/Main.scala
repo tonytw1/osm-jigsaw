@@ -1,17 +1,15 @@
 import java.io._
+import java.util
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.{Executors, ThreadPoolExecutor, TimeUnit}
 
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import ch.hsr.geohash.util.TwoGeoHashBoundingBox
-import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{OperatorContains, OperatorDisjoint}
-import graphing.{GraphBuilder, GraphWriter}
 import input._
 import model.{Area, AreaIdSequence, EntityRendering}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
-import org.joda.time.{DateTime, Duration}
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import outputarea.OutputArea
 import outputnode.OutputNode
@@ -484,36 +482,25 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     logger.info("Sorting segments")
     val total = segments.size
-    segments.par.foreach { segment =>
 
-        val hash = segment._1
-        val inSegment = segment._2
+    val executor = Executors.newFixedThreadPool(20).asInstanceOf[ThreadPoolExecutor]
 
-      if (inSegment.nonEmpty) {
-        val beforeSort = DateTime.now
-        val head = new GraphBuilder().buildGraph(planet, inSegment)
-        val afterSort = DateTime.now
-
-        logger.debug("Writing graph to disk")
-        val output = new BufferedOutputStream(new FileOutputStream("segments/" + outputFilename + "." + hash.toBase32))
-
-        val counter = new ProgressCounter(1000)
-        logger.debug("Export dump")
-        new GraphWriter().export(head, output, None, counter)
-
-        output.flush()
-        output.close()
-
-        //val sortingDuration = new Duration(beforeSort, afterSort)
-        //logger.info(hash.toBase32 + " sorting duration: " + sortingDuration)
-      }
-
-      val done = doneCounter.incrementAndGet()
-      logger.info("Progress: " + done + " / " + total)
+    val x: Seq[util.concurrent.Future[_]] = segments.map { segment =>
+      val t = new SegmentTask(segment, planet, outputFilename, doneCounter, total)
+      val value = executor.submit(t)
+      value
     }
+
+    logger.info("Requesting shutdown")
+    executor.shutdown()
+
+    logger.info("Awaiting shutdown")
+    executor.awaitTermination(5, TimeUnit.SECONDS)
 
     logger.info("Done")
   }
+
+
 
   // Preform a depth first traversal of the graph
   def output() = {
