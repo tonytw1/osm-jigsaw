@@ -9,7 +9,6 @@ import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
 import scala.collection.mutable.ListBuffer
-import scala.collection.parallel.ParSeq
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
@@ -39,11 +38,11 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
     }
 
-    a.children.par.foreach(c => {
+    a.children.foreach(c => {
       Operator.deaccelerateGeometry(c.area.polygon)
     })
 
-    a.children.filter(i => i.children.nonEmpty).par.foreach { c =>
+    a.children.filter(i => i.children.nonEmpty).foreach { c =>
       // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
       siftDown(c)
     }
@@ -54,7 +53,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //var siblings = a.children// .filter(c => c != b)
 
     //var startFilter = DateTime.now()
-    val existingSiblingsWhichNewValueWouldFitIn: ParSeq[GraphNode] = a.children.par.filter { s =>
+    val existingSiblingsWhichNewValueWouldFitIn = a.children.filter { s =>
         areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
