@@ -9,11 +9,12 @@ import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.parallel.ParSeq
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
-    logger.info("Building graph from " + areas.size + " areas")
+    logger.info("Building graph from " + areas.size + " areas using thread " + Thread.currentThread().getId)
     logger.debug("Starting area sort")
     var head = GraphNode(headArea)
     head.insert(areas.sortBy(-_.area))
@@ -25,8 +26,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //logger.debug("Sifting down: " + a.area.osmIds  + " with " + a.children.size + " children")
     //logger.debug("Presorting by area to assist sift down effectiveness")
     val inOrder = a.children // .sortBy(-_.area.area)
-
-    val areas = a.children.map { a => a.area.area}
 
     //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
     a.children = ListBuffer()
@@ -55,8 +54,8 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //var siblings = a.children// .filter(c => c != b)
 
     //var startFilter = DateTime.now()
-    val existingSiblingsWhichNewValueWouldFitIn = a.children.filter { s =>
-      s != b && areaContains(s.area, b.area)
+    val existingSiblingsWhichNewValueWouldFitIn: ParSeq[GraphNode] = a.children.par.filter { s =>
+        areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
     //var secondFilterDuration: Option[Duration] = None
@@ -69,9 +68,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     } else {
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
-      val geometry = b.area.polygon
+      val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
       OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
-      a.children = a.children :+ b
+      a.children = a.children :+ b.copy(area = b.area.copy(polygon = geometry))
     }
 
     // val duration = new Duration(start, DateTime.now)
