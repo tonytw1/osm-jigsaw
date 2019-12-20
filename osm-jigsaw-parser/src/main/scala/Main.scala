@@ -483,9 +483,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Sorting segments")
     val total = segments.size
 
-    val executor = Executors.newFixedThreadPool(20).asInstanceOf[ThreadPoolExecutor]
+    val availableHardwareThreads = Runtime.getRuntime.availableProcessors()
+    logger.info("Available processors: " + availableHardwareThreads)
+    val executor = Executors.newFixedThreadPool(availableHardwareThreads).asInstanceOf[ThreadPoolExecutor]
 
-    val x: Seq[util.concurrent.Future[_]] = segments.map { segment =>
+    segments.map { segment =>
       val t = new SegmentTask(segment, planet, outputFilename, doneCounter, total)
       val value = executor.submit(t)
       value
@@ -499,8 +501,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     logger.info("Done")
   }
-
-
 
   // Preform a depth first traversal of the graph
   def output() = {
