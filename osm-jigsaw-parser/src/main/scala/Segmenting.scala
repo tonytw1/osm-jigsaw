@@ -1,9 +1,11 @@
-import Main.{areaOf, boundingBoxFor, logger, makePolygonD, sr}
+import Main.{areaOf, boundingBoxFor, makePolygonD, sr}
 import ch.hsr.geohash.GeoHash
 import com.esri.core.geometry.OperatorDisjoint
 import model.Area
 import org.apache.logging.log4j.scala.Logging
-import org.joda.time.{DateTime, Duration}
+
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
 trait Segmenting extends Logging {
 
@@ -28,6 +30,37 @@ trait Segmenting extends Logging {
         segmentsFor(touchingHash._2, hashesUnderThisOne, maxDepth, depth + 1)
       }
     }.seq
+  }
+
+  def deduplicateSegments(segments: Seq[(GeoHash, Seq[Area])]): Seq[(GeoHash, Seq[Area])] = {
+    val sortedSegments = segments.sortBy(s => s._2.map(a => a.id).mkString(","))
+
+    val deduplicatedSegments: mutable.ListBuffer[(GeoHash, Seq[Area])] = ListBuffer.empty
+    var previousSegment: Option[(GeoHash, Seq[Area])] = None
+    sortedSegments.foreach { s =>
+      previousSegment.fold {
+        logger.info("Adding " + s._1.toBase32)
+        deduplicatedSegments += s
+        logger.info("" + deduplicatedSegments.size)
+        previousSegment = Some(s)
+
+      } { ps =>
+        val str = s._2.map(a => a.id).mkString(",")
+
+        val str2 = ps._2.map(a => a.id).mkString(",")
+        if (str == str2) {
+          logger.info("Segment " + s._1.toBase32 + " is a duplicate of " + ps._1.toBase32)
+          logger.info(str + " -> " + str2)
+        } else {
+          logger.info("Adding " + s._1.toBase32)
+          deduplicatedSegments += s
+          logger.info("" + deduplicatedSegments.size)
+          previousSegment = Some(s)
+        }
+      }
+    }
+    logger.info("Deduplicated segments from " + segments.size + " to " + deduplicatedSegments.size)
+    deduplicatedSegments
   }
 
   private def areasTouchingGeohash(areas: Seq[Area], hash: GeoHash) = {
