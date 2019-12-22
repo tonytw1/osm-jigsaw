@@ -480,14 +480,17 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Mapping areas into segments")
     val segments: Seq[(GeoHash, Seq[Area])] = segmentsFor(drop, hashes, segmentSize)
 
-    logger.info("Sorting segments")
-    val total = segments.size
+    logger.info("Deduplicating segments")
+    val deduplicatedSegments = deduplicateSegments(segments)  // TODO backfill the deduplicated segments
+
+    logger.info("Processing segments")
+    val total = deduplicatedSegments.size
 
     val availableHardwareThreads = Runtime.getRuntime.availableProcessors()
     logger.info("Available processors: " + availableHardwareThreads)
     val executor = Executors.newFixedThreadPool(availableHardwareThreads).asInstanceOf[ThreadPoolExecutor]
 
-    segments.map { segment =>
+    deduplicatedSegments.map { segment =>
       val t = new SegmentTask(segment, planet, outputFilename, doneCounter, total)
       val value = executor.submit(t)
       value
