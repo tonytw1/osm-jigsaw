@@ -7,7 +7,7 @@ import org.apache.logging.log4j.scala.Logging
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-case class Segment(geohash: GeoHash, areas: Seq[Area])
+case class Segment(geohash: GeoHash, areas: Seq[Area], duplicates: ListBuffer[Segment] = ListBuffer.empty)
 
 trait Segmenting extends Logging {
 
@@ -51,11 +51,11 @@ trait Segmenting extends Logging {
         val str2 = ps.areas.map(a => a.id).mkString(",")
         if (str == str2) {
           logger.info("Segment " + s.geohash.toBase32 + " is a duplicate of " + ps.geohash.toBase32)
-          logger.info(str + " -> " + str2)
+          ps.duplicates += s
+
         } else {
           logger.info("Adding " + s.geohash.toBase32)
           deduplicatedSegments += s
-          logger.info("" + deduplicatedSegments.size)
           previousSegment = Some(s)
         }
       }
