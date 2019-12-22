@@ -1,20 +1,18 @@
 import java.io.{BufferedOutputStream, FileOutputStream}
 import java.util.concurrent.atomic.AtomicInteger
 
-import Main.logger
-import ch.hsr.geohash.GeoHash
 import graphing.{GraphBuilder, GraphWriter}
 import model.Area
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.{DateTime, Duration}
 import progress.ProgressCounter
 
-class SegmentTask(segment: (GeoHash, Seq[Area]), planet: Area, outputFilename: String, doneCounter: AtomicInteger, total: Int) extends Runnable with Logging {
+class SegmentTask(segment: Segment, planet: Area, outputFilename: String, doneCounter: AtomicInteger, total: Int) extends Runnable with Logging {
 
   override def run(): Unit = {
 
-    val hash = segment._1
-    val inSegment = segment._2
+    val hash = segment.geohash
+    val inSegment = segment.areas
 
     if (inSegment.nonEmpty) {
       val beforeSort = DateTime.now

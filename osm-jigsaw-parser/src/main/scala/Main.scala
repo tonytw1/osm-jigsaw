@@ -478,7 +478,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     val doneCounter = new AtomicInteger(0)
 
     logger.info("Mapping areas into segments")
-    val segments: Seq[(GeoHash, Seq[Area])] = segmentsFor(drop, hashes, segmentSize)
+    val segments = segmentsFor(drop, hashes, segmentSize)
 
     logger.info("Deduplicating segments")
     val deduplicatedSegments = deduplicateSegments(segments)  // TODO backfill the deduplicated segments
