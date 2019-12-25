@@ -10,12 +10,14 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import progress.CommaFormattedNumbers
 import resolving.{OuterWayResolver, RelationExpander}
+import steps.EntitiesToGraph
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap
 import scala.collection.mutable
 
-class RelationExtractor extends Logging with EntityRendering with CommaFormattedNumbers with Extracts {
+class RelationExtractor extends Logging with EntityRendering with CommaFormattedNumbers with Extracts
+  with EntitiesToGraph {
 
   private val relationExpander = new RelationExpander()
   private val outerWayResolver = new OuterWayResolver()
@@ -53,6 +55,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
 
     logger.info("Need " + commaFormatted(relationWayIds.size) + " ways to resolve relations")
     logger.info("Reading required ways to determine required nodes")
+
     def requiredWays(entity: Entity): Boolean = entity.getType == EntityType.Way && (relationWayIds.contains(entity.getId) || predicate(entity))
 
     val wayVolume = MappedFileVol.FACTORY.makeVolume(outputFileprefix + ".ways.vol", false)
@@ -63,16 +66,17 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     ).createFromSink()
 
     val nodesRequiredToBuildRequiredWays = mutable.Set[Long]()
+
     def persistWayAndExpandNodeIds(entity: Entity) = {
-        entity match {
-          case w: Way =>
-            if (predicate(w)) {
-              entityWriter.write(w)
-            }
-            val wayNodeIds = w.getWayNodes.asScala.map(wn => wn.getNodeId)
-            waySink.put(w.getId, wayNodeIds.toArray)
-            nodesRequiredToBuildRequiredWays ++= wayNodeIds
-        }
+      entity match {
+        case w: Way =>
+          if (predicate(w)) {
+            entityWriter.write(w)
+          }
+          val wayNodeIds = w.getWayNodes.asScala.map(wn => wn.getNodeId)
+          waySink.put(w.getId, wayNodeIds.toArray)
+          nodesRequiredToBuildRequiredWays ++= wayNodeIds
+      }
     }
 
     new SinkRunner(extractWays, requiredWays, persistWayAndExpandNodeIds).run
@@ -95,6 +99,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     def allNodes(entity: Entity): Boolean = entity.getType == EntityType.Node
 
     var foundNodes = 0L
+
     def addToFoundNodes(entity: Entity) = {
       entity match {
         case n: Node =>
@@ -115,7 +120,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     logger.info("Found " + foundNodes + " nodes")
     entityWriter.close()
 
-    logger.warn("Found " +  relationExpander.recursingRelations.size + " infinitely recursing relations: "  +
+    logger.warn("Found " + relationExpander.recursingRelations.size + " infinitely recursing relations: " +
       relationExpander.recursingRelations.mkString(", "))
 
     logger.info("Extracted: " + commaFormatted(foundRelations.size) + " relations, "

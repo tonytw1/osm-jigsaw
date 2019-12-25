@@ -22,8 +22,4 @@ trait EntityRendering {
     availableNameTags.headOption.map(_.getValue)
   }
 
-  def hasName(entity: Entity): Boolean = {
-    entity.getTags.asScala.exists(t => t.getKey == "name" || t.getKey.startsWith("name:") || t.getKey == "addr:housename")
-  }
-
 }
