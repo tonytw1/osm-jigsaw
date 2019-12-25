@@ -20,7 +20,7 @@ class ExtractAreas extends WorkingFiles with EntitiesToGraph with CommaFormatted
     def all(entity: Entity): Boolean = true
 
     var allRelations = LongMap[Relation]()
-    var waysToResolve = Set[Way]()
+    var closedWaysToResolve = Set[Way]()
 
     val entityLoadProgress = new ProgressCounter(step = 100000)
 
@@ -28,7 +28,7 @@ class ExtractAreas extends WorkingFiles with EntitiesToGraph with CommaFormatted
       entityLoadProgress.withProgress {
         entity match {
           case r: Relation => allRelations = allRelations + (r.getId -> r)
-          case w: Way => waysToResolve = waysToResolve + w
+          case w: Way => closedWaysToResolve = closedWaysToResolve + w
           case _ =>
         }
       }
@@ -67,8 +67,8 @@ class ExtractAreas extends WorkingFiles with EntitiesToGraph with CommaFormatted
     areaResolver.resolveAreas(relationsToResolve, allRelations, wayResolver, outputAreasToFileAndCacheUsedWays)
 
     // For each closed way resolve it into an Area outline
-    logger.info("Resolving areas for " + commaFormatted(waysToResolve.size) + " ways")
-    areaResolver.resolveAreas(waysToResolve, allRelations, wayResolver, outputAreasToFileAndCacheUsedWays) // TODO why are two sets of ways in scope?
+    logger.info("Resolving areas for " + commaFormatted(closedWaysToResolve.size) + " ways")
+    areaResolver.resolveAreas(closedWaysToResolve, allRelations, wayResolver, outputAreasToFileAndCacheUsedWays) // TODO why are two sets of ways in scope?
     wayResolver.close()
 
     resolvedAreasOutput.flush()
