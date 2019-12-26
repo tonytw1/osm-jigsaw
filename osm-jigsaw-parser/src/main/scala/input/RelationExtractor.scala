@@ -2,6 +2,7 @@ package input
 
 import java.io.InputStream
 
+import graphing.EntitiesToGraph
 import model.EntityRendering
 import org.apache.logging.log4j.scala.Logging
 import org.mapdb.volume.MappedFileVol
@@ -10,7 +11,6 @@ import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OsmWriter
 import progress.CommaFormattedNumbers
 import resolving.{OuterWayResolver, RelationExpander}
-import steps.EntitiesToGraph
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.LongMap

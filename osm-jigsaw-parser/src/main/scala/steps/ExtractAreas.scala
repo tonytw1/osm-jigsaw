@@ -2,6 +2,7 @@ package steps
 
 import java.io.{BufferedOutputStream, FileInputStream, FileOutputStream}
 
+import graphing.EntitiesToGraph
 import input.{SinkRunner, WorkingFiles}
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, Relation, Way}

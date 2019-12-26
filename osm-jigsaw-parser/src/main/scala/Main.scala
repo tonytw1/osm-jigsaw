@@ -5,6 +5,7 @@ import java.util.concurrent.{Executors, ThreadPoolExecutor, TimeUnit}
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import ch.hsr.geohash.util.TwoGeoHashBoundingBox
+import graphing.EntitiesToGraph
 import input._
 import model.{Area, EntityRendering}
 import org.apache.commons.cli._

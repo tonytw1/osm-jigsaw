@@ -1,4 +1,4 @@
-package steps
+package graphing
 
 import org.openstreetmap.osmosis.core.domain.v0_6.{Entity, Relation, Way}
 import scala.collection.JavaConverters._

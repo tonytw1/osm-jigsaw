@@ -1,4 +1,4 @@
-package steps
+package input
 
 import java.io.{BufferedInputStream, FileInputStream, InputStream}
 

@@ -3,7 +3,7 @@ package steps
 import java.io.{BufferedOutputStream, FileOutputStream, InputStream, OutputStream}
 
 import areas.AreaComparison
-import input.Extracts
+import input.{AreaReading, Extracts}
 import model.{Area, AreaIdSequence}
 import org.apache.logging.log4j.scala.Logging
 import outputarea.OutputArea
