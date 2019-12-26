@@ -1,5 +1,4 @@
 import java.io._
-import java.util
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.{Executors, ThreadPoolExecutor, TimeUnit}
 
@@ -19,10 +18,9 @@ import outputway.OutputWay
 import play.api.libs.json.Json
 import progress.{CommaFormattedNumbers, ProgressCounter}
 import resolving._
-import steps.{ExtractAreas, EntitiesToGraph}
+import steps.{EntitiesToGraph, ExtractAreas, FindBoundaries}
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.LongMap
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -44,7 +42,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
 
     step match {
       case "stats" => stats(inputFilepath)
-      case "boundaries" => findEntityBoundaries(inputFilepath)
+      case "boundaries" => new FindBoundaries().findEntityBoundaries(inputFilepath)
       case "extract" => extract(inputFilepath)
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "areaways" => new ExtractAreas().resolveAreaWays(inputFilepath)
@@ -107,38 +105,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     def read(inputStream: InputStream) = OutputResolvedArea.parseDelimitedFrom(inputStream)
 
     processPbfFile(inputFilepath, read, print)
-  }
-
-  def findEntityBoundaries(extractName: String) {
-    var sink: SinkRunner = null
-    var currentType: scala.Option[EntityType] = None
-    var currentPosition = 0L
-
-    var boundaries: Map[String, Long] = Map.empty
-
-    def scanForBoundaries(entity: Entity) = {
-      val entityType = scala.Option(entity.getType)
-      if (entityType != currentType) {
-        logger.info("Saw first " + entity.getType + " after reading from " + currentPosition)
-        boundaries = boundaries + (entity.getType.toString -> currentPosition)
-        currentType = entityType
-      }
-      currentPosition = sink.currentPosition
-    }
-
-    def all(entity: Entity): Boolean = true
-
-    val stream = entireExtract(extractName)
-    sink = new SinkRunner(stream, all, scanForBoundaries)
-    sink.run
-
-    val eof = new File(entireExtractFilepath(extractName)).length
-    logger.info("EOF: " + eof)
-    boundaries = boundaries + ("EOF" -> eof)
-
-    logger.info("Found boundaries: " + boundaries)
-    recordBoundaries(extractName, boundaries)
-    logger.info("Done")
   }
 
   def extractNamedNodes(inputFilepath: String, outputFilepath: String): Unit = {
@@ -246,7 +212,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       val areawaysWaysFilepath = areaWaysWaysFilePath(extractName)
 
       logger.info("Reading area ways from file: " + areawaysWaysFilepath)
-      val ways = mutable.Map[Long, OutputWay]() // TODO just thze points
+      val ways = mutable.Map[Long, OutputWay]() // TODO just the points
 
       def readWay(inputStream: InputStream): scala.Option[OutputWay] = OutputWay.parseDelimitedFrom(inputStream)
 
