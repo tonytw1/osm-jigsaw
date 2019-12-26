@@ -1,13 +1,8 @@
 import java.io._
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.{Executors, ThreadPoolExecutor, TimeUnit}
 
-import areas.AreaComparison
-import ch.hsr.geohash.GeoHash
-import ch.hsr.geohash.util.TwoGeoHashBoundingBox
 import graphing.EntitiesToGraph
 import input._
-import model.{Area, EntityRendering}
+import model.EntityRendering
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
@@ -20,11 +15,10 @@ import resolving._
 import steps._
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable.ListBuffer
 
-object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison
+object Main extends EntityRendering with Logging with PolygonBuilding
   with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
-  with Extracts with WorkingFiles with Boundaries with Segmenting with EntitiesToGraph with AreaReading {
+  with Extracts with WorkingFiles with EntitiesToGraph with AreaReading {
 
   private val STEP = "s"
 
@@ -47,7 +41,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "areastats" => areaStats(inputFilepath)
       case "areas" => new RenderAndDeduplicateAreas().resolveAreas(inputFilepath)
       case "tags" => tags(cmd.getArgList.get(0), cmd.getArgList.get(1))
-      case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
+      case "graph" => new BuildGraph().buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
@@ -186,83 +180,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     output.flush()
     output.close
     logger.info("Dumped " + count + " tags to file: " + outputFilepath)
-  }
-
-  def buildGraph(inputFilename: String, outputFilename: String) = {
-    val areas = readAreasFromPbfFile(inputFilename)
-
-    logger.info("Building graph")
-
-    val headArea = areas.head
-    val drop = areas
-
-    // Partiton into segments
-    val bounds = areas.map{ a =>
-      boundingBoxFor(a.polygon)
-    }
-
-    var bound = areas.head.boundingBox
-    bounds.foreach{ b =>
-      if(b._1 > bound._1) {
-        bound = bound.copy(_1 = b._1)
-      }
-      if(b._2 < bound._2) {
-        bound = bound.copy(_2 = b._2)
-      }
-      if(b._3 < bound._3) {
-        bound = bound.copy(_3 = b._3)
-      }
-      if(b._4 > bound._4) {
-        bound = bound.copy(_4 = b._4)
-      }
-    }
-    logger.info("Bounding box for cover extract: " + bound)
-
-    val bb = new ch.hsr.geohash.BoundingBox(bound._3, bound._1, bound._2, bound._4)
-
-    val segmentSize = 4
-    val tt = TwoGeoHashBoundingBox.withCharacterPrecision(bb, segmentSize)
-
-    val i = new ch.hsr.geohash.util.BoundingBoxGeoHashIterator(tt)
-    val hashes = ListBuffer[GeoHash]()
-    while (i.hasNext) {
-      val hash: GeoHash = i.next()
-      hashes += hash
-    }
-
-    logger.info("Need " + hashes.size + " segments to cover extract bounding box")
-
-    val planetPolygon = makePolygon((-180, 90), (180, -90))
-    val planet = Area(0, planetPolygon, boundingBoxFor(planetPolygon), ListBuffer.empty, areaOf(planetPolygon)) // TODO
-
-    val doneCounter = new AtomicInteger(0)
-
-    logger.info("Mapping areas into segments")
-    val segments = segmentsFor(drop, hashes, segmentSize)
-
-    logger.info("Deduplicating segments")
-    val deduplicatedSegments = deduplicateSegments(segments)  // TODO backfill the deduplicated segments
-
-    logger.info("Processing segments")
-    val total = deduplicatedSegments.size
-
-    val availableHardwareThreads = Runtime.getRuntime.availableProcessors()
-    logger.info("Available processors: " + availableHardwareThreads)
-    val executor = Executors.newFixedThreadPool(availableHardwareThreads).asInstanceOf[ThreadPoolExecutor]
-
-    deduplicatedSegments.map { segment =>
-      val t = new SegmentTask(segment, planet, outputFilename, doneCounter, total)
-      val value = executor.submit(t)
-      value
-    }
-
-    logger.info("Requesting shutdown")
-    executor.shutdown()
-
-    logger.info("Awaiting shutdown")
-    executor.awaitTermination(5, TimeUnit.SECONDS)
-
-    logger.info("Done")
   }
 
 }

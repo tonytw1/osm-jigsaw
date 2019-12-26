@@ -1,18 +1,21 @@
-import Main.{areaOf, boundingBoxFor, makePolygonD, sr}
+package steps
+
+import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import com.esri.core.geometry.OperatorDisjoint
 import model.Area
 import org.apache.logging.log4j.scala.Logging
+import resolving.{BoundingBox, PolygonBuilding}
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 case class Segment(geohash: GeoHash, areas: Seq[Area], duplicates: ListBuffer[Segment] = ListBuffer.empty)
 
-trait Segmenting extends Logging {
+trait Segmenting extends BoundingBox with PolygonBuilding with AreaComparison with Logging {
 
   def segmentsFor(areas: Seq[Area], hashes: Seq[GeoHash], maxDepth: Int, depth: Int = 1): Seq[Segment] = {
-    val prefixed = hashes.map (h => h.toBase32.substring(0, depth)).toSet
+    val prefixed = hashes.map(h => h.toBase32.substring(0, depth)).toSet
 
     prefixed.toSeq.par.flatMap { p =>
       val hash = GeoHash.fromGeohashString(p)
@@ -22,7 +25,7 @@ trait Segmenting extends Logging {
       val touchingHash = areasTouchingGeohash(areas, hash)
       if (depth == maxDepth) {
         val size = touchingHash.areas.size
-        if (size > 1000 ) {
+        if (size > 1000) {
           logger.info("Large segment " + hashBase32 + ": " + size)
         }
         Seq(touchingHash)
@@ -50,7 +53,7 @@ trait Segmenting extends Logging {
 
         val str2 = ps.areas.map(a => a.id).mkString(",")
         if (str == str2) {
-          logger.info("Segment " + s.geohash.toBase32 + " is a duplicate of " + ps.geohash.toBase32)
+          logger.info("steps.Segment " + s.geohash.toBase32 + " is a duplicate of " + ps.geohash.toBase32)
           ps.duplicates += s
 
         } else {
@@ -73,7 +76,7 @@ trait Segmenting extends Logging {
   }
 
   private def boundingBoxForGeohash(hash: GeoHash): Area = {
-    val b = hash.getBoundingBox()
+    val b = hash.getBoundingBox
 
     val p = makePolygonD((b.getNorthWestCorner.getLatitude, b.getNorthWestCorner.getLongitude),
       (b.getSouthEastCorner.getLatitude, b.getSouthEastCorner.getLongitude)

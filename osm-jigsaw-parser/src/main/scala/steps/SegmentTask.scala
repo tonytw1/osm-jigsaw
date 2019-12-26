@@ -1,3 +1,5 @@
+package steps
+
 import java.io.{BufferedOutputStream, FileOutputStream}
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -23,7 +25,7 @@ class SegmentTask(segment: Segment, planet: Area, outputFilename: String, doneCo
       writeSegmentGraph(head, segmentFilename)
 
       if (segment.duplicates.nonEmpty) {
-        logger.info("Segment has duplicates which also need to be written: " + segment.duplicates.size)
+        logger.info("steps.Segment has duplicates which also need to be written: " + segment.duplicates.size)
         segment.duplicates.foreach { d =>
           val segmentFilename = new FileOutputStream("segments/" + outputFilename + "." + d.geohash.toBase32)
           writeSegmentGraph(head, segmentFilename)
