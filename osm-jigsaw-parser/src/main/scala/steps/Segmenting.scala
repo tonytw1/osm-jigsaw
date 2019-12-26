@@ -84,4 +84,5 @@ trait Segmenting extends BoundingBox with PolygonBuilding with AreaComparison wi
     val tuple = boundingBoxFor(p)
     Area(id = 1L, polygon = p, tuple, area = areaOf(p))
   }
+
 }

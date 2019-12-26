@@ -8,13 +8,11 @@ import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
-import outputtagging.OutputTagging
 import play.api.libs.json.Json
 import progress.CommaFormattedNumbers
 import resolving._
 import steps._
 
-import scala.collection.JavaConverters._
 
 object Main extends EntityRendering with Logging with PolygonBuilding
   with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
@@ -40,7 +38,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
       case "areaways" => new ExtractAreas().resolveAreaWays(inputFilepath)
       case "areastats" => areaStats(inputFilepath)
       case "areas" => new RenderAndDeduplicateAreas().resolveAreas(inputFilepath)
-      case "tags" => tags(cmd.getArgList.get(0), cmd.getArgList.get(1))
+      case "tags" => new ExtractAreaTags().tags(cmd.getArgList.get(0), cmd.getArgList.get(1))
       case "graph" => new BuildGraph().buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
@@ -152,34 +150,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     new RelationExtractor().extract(extractName, selectedRelations, outputFilepath)
 
     logger.info("Done")
-  }
-
-  def tags(extractName: String, outputFilepath: String): Unit = {
-    logger.info("Extracting tags for OSM entities used by areas")
-
-    val areaOsmIds = readAreaOsmIdsFromPbfFile(areasFilePath(extractName))
-    val osmIdsInUse = areaOsmIds
-    logger.info("Found " + osmIdsInUse.size + " OSM ids to extract tags for (" + areaOsmIds.size + " for areas)")
-
-    def isUsed(entity: Entity): Boolean = {
-      osmIdsInUse.contains(osmIdFor(entity))
-    }
-
-    var count = 0
-    val output = new BufferedOutputStream(tagsFile(outputFilepath))
-
-    def extractTags(entity: Entity) = {
-      val keys = entity.getTags.asScala.map(t => t.getKey).toSeq
-      val values = entity.getTags.asScala.map(t => t.getValue).toSeq
-      OutputTagging(osmId = Some(osmIdFor(entity)), keys = keys, values = values).writeDelimitedTo(output)
-      count = count + 1
-    }
-
-    new SinkRunner(entireExtract(extractName), isUsed, extractTags).run
-    logger.info("Finished extracting tags")
-    output.flush()
-    output.close
-    logger.info("Dumped " + count + " tags to file: " + outputFilepath)
   }
 
 }
