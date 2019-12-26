@@ -6,27 +6,24 @@ import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import ch.hsr.geohash.util.TwoGeoHashBoundingBox
 import input._
-import model.{Area, AreaIdSequence, EntityRendering}
+import model.{Area, EntityRendering}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
-import outputarea.OutputArea
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
-import outputway.OutputWay
 import play.api.libs.json.Json
-import progress.{CommaFormattedNumbers, ProgressCounter}
+import progress.CommaFormattedNumbers
 import resolving._
-import steps.{EntitiesToGraph, ExtractAreas, FindBoundaries}
+import steps._
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object Main extends EntityRendering with Logging with PolygonBuilding with BoundingBox with AreaComparison
   with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
-  with Extracts with WorkingFiles with Boundaries with Segmenting with EntitiesToGraph {
+  with Extracts with WorkingFiles with Boundaries with Segmenting with EntitiesToGraph with AreaReading {
 
   private val STEP = "s"
 
@@ -47,7 +44,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "areaways" => new ExtractAreas().resolveAreaWays(inputFilepath)
       case "areastats" => areaStats(inputFilepath)
-      case "areas" => resolveAreas(inputFilepath)
+      case "areas" => new RenderAndDeduplicateAreas().resolveAreas(inputFilepath)
       case "tags" => tags(cmd.getArgList.get(0), cmd.getArgList.get(1))
       case "graph" => buildGraph(inputFilepath, cmd.getArgList.get(1))
       case "rels" => {
@@ -190,124 +187,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     logger.info("Dumped " + count + " tags to file: " + outputFilepath)
   }
 
-
-  def resolveAreas(extractName: String): Unit = {
-    val areawaysInputFile = areaWaysFilepath(extractName)
-    val areasFilepath = areasFilePath(extractName)
-
-    def exportArea(area: Area, output: OutputStream): Unit = {
-      val latitudes = mutable.ListBuffer[Double]()
-      val longitudes = mutable.ListBuffer[Double]()
-      val pointCount = area.polygon.getPointCount - 1
-      (0 to pointCount).map { i =>
-        val p = area.polygon.getPoint(i)
-        latitudes.+=(p.getX)
-        longitudes.+=(p.getY)
-      }
-
-      OutputArea(id = Some(area.id), osmIds = area.osmIds, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
-    }
-
-    def buildAreas: Unit = {
-      val areawaysWaysFilepath = areaWaysWaysFilePath(extractName)
-
-      logger.info("Reading area ways from file: " + areawaysWaysFilepath)
-      val ways = mutable.Map[Long, OutputWay]() // TODO just the points
-
-      def readWay(inputStream: InputStream): scala.Option[OutputWay] = OutputWay.parseDelimitedFrom(inputStream)
-
-      def cacheWay(outputWay: OutputWay) = ways.put(outputWay.id.get, outputWay)
-
-      processPbfFile(areawaysWaysFilepath, readWay, cacheWay)
-
-      val counter = new ProgressCounter(1000)
-      val areasOutput = new BufferedOutputStream(new FileOutputStream(areasFilepath))
-
-      def populateAreaNodesAndExportAreasToFile(ra: OutputResolvedArea): Unit = {
-        counter.withProgress {
-          val outline = ra.ways.flatMap { signedWayId =>
-            val l = Math.abs(signedWayId)
-            val joined = ways.get(l).map { way =>
-              val points = way.latitudes.zip(way.longitudes)
-              if (signedWayId < 0) points.reverse else points
-            }
-            if (joined.isEmpty) {
-              logger.warn("Failed to resolve way id: " + l)
-            }
-            joined
-          }
-
-          val outerPoints: Seq[(Double, Double)] = outline.flatten
-          polygonForPoints(outerPoints).map { p =>
-            exportArea(Area(AreaIdSequence.nextId, p, boundingBoxFor(p), ListBuffer(ra.osmId.get), areaOf(p)), areasOutput)
-          }
-        }
-      } // TODO isolate for reuse in test fixtures
-
-      logger.info("Resolving areas")
-      def readResolvedArea(inputStream: InputStream) = OutputResolvedArea.parseDelimitedFrom(inputStream)
-
-      logger.info("Expanding way areas")
-      processPbfFile(areawaysInputFile, readResolvedArea, populateAreaNodesAndExportAreasToFile)
-
-      areasOutput.flush()
-      areasOutput.close()
-      logger.info("Dumped areas to file: " + areasFilepath)
-    }
-
-    def deduplicate = {
-      logger.info("Deduplicating areas")
-      def deduplicateAreas(areas: Seq[Area]): Seq[Area] = {
-        logger.info("Sorting areas by size")
-        val sortedAreas = areas.sortBy(_.area)
-
-        val deduplicatedAreas = mutable.ListBuffer[Area]()
-
-        val deduplicationCounter = new ProgressCounter(1000, Some(areas.size))
-        sortedAreas.foreach { a =>
-          deduplicationCounter.withProgress {
-            var ok = deduplicatedAreas.nonEmpty
-            val i = deduplicatedAreas.iterator
-            var found: scala.Option[Area] = None
-            while (ok) {
-              val x = i.next()
-              if (x.area == a.area && areaSame(x, a)) {
-                found = Some(x)
-              }
-              ok = x.area >= a.area && i.hasNext
-            }
-
-            found.map { e =>
-              e.osmIds ++= a.osmIds
-            }.getOrElse {
-              deduplicatedAreas.+=:(a)
-            }
-          }
-        }
-        deduplicatedAreas
-      }
-
-      val areas = readAreasFromPbfFile(areasFilepath)
-      val deduplicatedAreas = deduplicateAreas(areas)
-      logger.info("Deduplicated " + areas.size + " areas to " + deduplicatedAreas.size)
-
-      logger.info("Writing deduplicated areas to file")
-      val finalOutput = new BufferedOutputStream(new FileOutputStream(areasFilepath))
-      val outputCounter = new ProgressCounter(100000, Some(deduplicatedAreas.size))
-      deduplicatedAreas.foreach { a =>
-        outputCounter.withProgress {
-          exportArea(a, finalOutput)
-        }
-      }
-      finalOutput.flush()
-      finalOutput.close()
-      logger.info("Wrote deduplicated areas to file: " + areasFilepath)
-    }
-
-    buildAreas
-    deduplicate
-  }
-
   def buildGraph(inputFilename: String, outputFilename: String) = {
     val areas = readAreasFromPbfFile(inputFilename)
 
@@ -383,56 +262,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding with Bound
     executor.awaitTermination(5, TimeUnit.SECONDS)
 
     logger.info("Done")
-  }
-
-  // Preform a depth first traversal of the graph
-  def output() = {
-
-
-  }
-
-  private def readAreasFromPbfFile(inputFilename: String): Seq[Area] = {
-    logger.info("Reading areas")
-    var areas = ListBuffer[Area]()
-    var withOsm = 0
-
-    def loadArea(outputArea: OutputArea) = {
-      outputAreaToArea(outputArea).fold {
-        logger.warn("Could not build areas from: " + outputArea)
-      } { a =>
-        if (a.osmIds.nonEmpty) {
-          withOsm = withOsm + 1
-        }
-        areas = areas += a
-      }
-    }
-
-    processPbfFile(inputFilename, readArea, loadArea)
-
-    logger.info("Read " + areas.size + " areas")
-    logger.info("Of which " + withOsm + " had OSM ids")
-    areas.toList
-  }
-
-  private def readAreaOsmIdsFromPbfFile(inputFilename: String): Set[String] = {
-    val seenOsmIds = mutable.Set[String]()
-
-    def captureOsmId(outputArea: OutputArea) = seenOsmIds ++= outputArea.osmIds
-
-    processPbfFile(inputFilename, readArea, captureOsmId)
-
-    seenOsmIds.toSet
-  }
-
-  def readArea(inputStream: InputStream): scala.Option[OutputArea] = {
-    OutputArea.parseDelimitedFrom(inputStream)
-  }
-
-  private def outputAreaToArea(oa: OutputArea): scala.Option[Area] = {
-    val points: Seq[(Double, Double)] = (oa.latitudes zip oa.longitudes).map(ll => (ll._1, ll._2))
-    polygonForPoints(points).map { p =>
-      Area(id = oa.id.get, polygon = p, boundingBox = boundingBoxFor(p), osmIds = ListBuffer() ++ oa.osmIds, oa.area.get) // TODO Naked gets outline
-    }
   }
 
 }
