@@ -5,15 +5,19 @@ import steps.Segment
 trait OutputFiles {
 
   def areasFilePath(extractName: String): String = {
-    extractName + ".areas.pbf"
+    outputFolderFor(extractName) + "/" + extractName + ".areas.pbf"
   }
 
   def segmentGraphFile(extractName: String, segment: Segment) = {
-    "segments/" + extractName + ".graph." + segment.geohash.toBase32 + ".pbf"
+    outputFolderFor(extractName) + "/" + extractName + ".graph." + segment.geohash.toBase32 + ".pbf"
   }
 
   def tagsFilePath(extractName: String): String = {
-    extractName + ".tags.pbf"
+    outputFolderFor(extractName) + "/" + extractName + ".tags.pbf"
+  }
+
+  def outputFolderFor(extractName: String): String = {
+      extractName
   }
 
 }
