@@ -1,18 +1,19 @@
 package steps
 
-import java.io.BufferedOutputStream
+import java.io.{BufferedOutputStream, FileOutputStream}
 
 import input.{AreaReading, Extracts, SinkRunner}
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6.Entity
+import output.OutputFiles
 import outputtagging.OutputTagging
 import resolving.EntityOsmId
 
 import scala.collection.JavaConverters._
 
-class ExtractAreaTags extends Extracts with AreaReading with EntityOsmId with Logging {
+class ExtractAreaTags extends Extracts with OutputFiles with AreaReading with EntityOsmId with Logging {
 
-  def tags(extractName: String, outputFilepath: String): Unit = {
+  def tags(extractName: String): Unit = {
     logger.info("Extracting tags for OSM entities used by areas")
 
     val areaOsmIds = readAreaOsmIdsFromPbfFile(areasFilePath(extractName))
@@ -24,7 +25,8 @@ class ExtractAreaTags extends Extracts with AreaReading with EntityOsmId with Lo
     }
 
     var count = 0
-    val output = new BufferedOutputStream(tagsFile(outputFilepath))
+    val outputFilepath = tagsFilePath(extractName)
+    val output = new BufferedOutputStream(new FileOutputStream(outputFilepath))
 
     def extractTags(entity: Entity) = {
       val keys = entity.getTags.asScala.map(t => t.getKey).toSeq

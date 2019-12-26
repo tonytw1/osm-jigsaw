@@ -7,12 +7,13 @@ import graphing.{GraphBuilder, GraphWriter}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import org.joda.time.{DateTime, Duration}
+import output.OutputFiles
 import progress.ProgressCounter
 
-class SegmentTask(segment: Segment, planet: Area, outputFilename: String, doneCounter: AtomicInteger, total: Int) extends Runnable with Logging {
+class SegmentTask(segment: Segment, extractName: String, planet: Area, doneCounter: AtomicInteger, total: Int) extends Runnable
+  with OutputFiles with Logging {
 
   override def run(): Unit = {
-
     val hash = segment.geohash
     val inSegment = segment.areas
 
@@ -21,14 +22,12 @@ class SegmentTask(segment: Segment, planet: Area, outputFilename: String, doneCo
       val head = new GraphBuilder().buildGraph(planet, inSegment)
       val afterSort = DateTime.now
 
-      val segmentFilename = new FileOutputStream("segments/" + outputFilename + "." + hash.toBase32)
-      writeSegmentGraph(head, segmentFilename)
+      writeSegmentGraph(head, new FileOutputStream(segmentGraphFile(extractName, segment)))
 
       if (segment.duplicates.nonEmpty) {
         logger.info("steps.Segment has duplicates which also need to be written: " + segment.duplicates.size)
         segment.duplicates.foreach { d =>
-          val segmentFilename = new FileOutputStream("segments/" + outputFilename + "." + d.geohash.toBase32)
-          writeSegmentGraph(head, segmentFilename)
+          writeSegmentGraph(head, new FileOutputStream(segmentGraphFile(extractName, d)))
         }
       }
 
@@ -50,4 +49,5 @@ class SegmentTask(segment: Segment, planet: Area, outputFilename: String, doneCo
     output.flush()
     output.close()
   }
+
 }

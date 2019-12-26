@@ -9,13 +9,14 @@ import ch.hsr.geohash.util.TwoGeoHashBoundingBox
 import input.AreaReading
 import model.Area
 import org.apache.logging.log4j.scala.Logging
+import output.OutputFiles
 
 import scala.collection.mutable.ListBuffer
 
-class BuildGraph extends AreaReading with Segmenting with AreaComparison with Logging {
+class BuildGraph extends OutputFiles with AreaReading with Segmenting with AreaComparison with Logging {
 
-  def buildGraph(inputFilename: String, outputFilename: String) = {
-    val areas = readAreasFromPbfFile(inputFilename)
+  def buildGraph(extractName: String) = {
+    val areas = readAreasFromPbfFile(areasFilePath(extractName))
 
     logger.info("Building graph")
 
@@ -77,7 +78,7 @@ class BuildGraph extends AreaReading with Segmenting with AreaComparison with Lo
     val executor = Executors.newFixedThreadPool(availableHardwareThreads).asInstanceOf[ThreadPoolExecutor]
 
     deduplicatedSegments.map { segment =>
-      val t = new SegmentTask(segment, planet, outputFilename, doneCounter, total)
+      val t = new SegmentTask(segment, extractName, planet, doneCounter, total)
       val value = executor.submit(t)
       value
     }

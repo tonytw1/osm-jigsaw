@@ -6,6 +6,7 @@ import areas.AreaComparison
 import input.{AreaReading, Extracts}
 import model.{Area, AreaIdSequence}
 import org.apache.logging.log4j.scala.Logging
+import output.OutputFiles
 import outputarea.OutputArea
 import outputresolvedarea.OutputResolvedArea
 import outputway.OutputWay
@@ -15,7 +16,8 @@ import resolving.PolygonBuilding
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class RenderAndDeduplicateAreas extends Extracts with AreaComparison with PolygonBuilding with AreaReading with Logging {
+class RenderAndDeduplicateAreas extends Extracts with AreaComparison with PolygonBuilding with AreaReading
+  with OutputFiles with Logging {
 
   def resolveAreas(extractName: String): Unit = {
     val areawaysInputFile = areaWaysFilepath(extractName)

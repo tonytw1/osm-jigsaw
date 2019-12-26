@@ -38,8 +38,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding
       case "areaways" => new ExtractAreas().resolveAreaWays(inputFilepath)
       case "areastats" => areaStats(inputFilepath)
       case "areas" => new RenderAndDeduplicateAreas().resolveAreas(inputFilepath)
-      case "tags" => new ExtractAreaTags().tags(cmd.getArgList.get(0), cmd.getArgList.get(1))
-      case "graph" => new BuildGraph().buildGraph(inputFilepath, cmd.getArgList.get(1))
+      case "graph" => new BuildGraph().buildGraph(inputFilepath)
+      case "tags" => new ExtractAreaTags().tags(inputFilepath)
       case "rels" => {
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
