@@ -8,14 +8,11 @@ import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
-import play.api.libs.json.Json
-import progress.CommaFormattedNumbers
 import resolving._
 import steps._
 
-
 object Main extends EntityRendering with Logging with PolygonBuilding
-  with ProtocolbufferReading with WayJoining with CommaFormattedNumbers with EntityOsmId
+  with ProtocolbufferReading with EntityOsmId
   with Extracts with WorkingFiles with EntitiesToGraph with AreaReading {
 
   private val STEP = "s"
@@ -33,7 +30,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     step match {
       case "stats" => stats(inputFilepath)
       case "boundaries" => new FindBoundaries().findEntityBoundaries(inputFilepath)
-      case "extract" => extract(inputFilepath)
+      case "extract" => new ExtractEntities().extract(inputFilepath)
       case "namednodes" => extractNamedNodes(inputFilepath, cmd.getArgList.get(1))
       case "areaways" => new ExtractAreas().resolveAreaWays(inputFilepath)
       case "areastats" => areaStats(inputFilepath)
@@ -117,26 +114,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
 
     namedNodesOutput.flush()
     namedNodesOutput.close()
-    logger.info("Done")
-  }
-
-  def extract(extractName: String) {
-
-    def recordRecursiveRelations(extractName: String, relationIds: Seq[Long]): Unit = {
-      val recursiveRelationsFile = new FileOutputStream(recursiveRelationsFilepath(extractName))
-      recursiveRelationsFile.write(Json.toBytes(Json.toJson(relationIds)))
-      recursiveRelationsFile.close()
-    }
-
-    val outputFilepath = extractedRelsFilepath(extractName)
-    logger.info("Extracting entities and their resolved components from " + extractName + " into " + outputFilepath)
-
-    val extractor = new RelationExtractor()
-    extractor.extract(extractName, entitiesToGraph, outputFilepath)
-
-    logger.info("Dumping discovered recursive relations")
-    recordRecursiveRelations(extractName, extractor.recursiveRelations())
-
     logger.info("Done")
   }
 
