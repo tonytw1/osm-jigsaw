@@ -23,8 +23,7 @@ class AreaResolver extends EntityRendering with BoundingBox with PolygonBuilding
           }
 
         case w: Way =>
-          val isClosed = w.isClosed
-          val resolvedArea = if (isClosed) {
+          val resolvedArea = if (w.isClosed) {
             val nodeIds = w.getWayNodes.asScala.map(n => n.getNodeId())
             val mw = model.Way(w.getId, nodeIds)
             val jw = JoinedWay(mw, false)

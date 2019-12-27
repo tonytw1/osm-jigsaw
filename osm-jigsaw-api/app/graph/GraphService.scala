@@ -8,13 +8,21 @@ import javax.inject.Inject
 import model.{GraphNode, OsmId}
 import play.api.Configuration
 import tags.TagService
+import ch.hsr.geohash.GeoHash
 
-class GraphService @Inject()(configuration: Configuration, tagService: TagService) extends AreaComparison  {
+class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader) extends AreaComparison {
 
-  val areasFile = new URL(configuration.getString("areas.url").get)
-  val graphFile = new URL(configuration.getString("graph.url").get)
+  val geohashCharacters = 4
 
-  val head = new GraphReader().loadGraph(areasFile, graphFile)
+  def headOfGraphCoveringThisPoint(point: Point) = {
+    val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashCharacters)
+
+    val dataUrl = configuration.getString("data.url").get
+    val extractName = configuration.getString("extract.name").get
+    val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph." + geohash.toBase32 + ".pbf")
+
+    new GraphReader(areasReader).loadGraph(segmentURL)
+  }
 
   def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
     def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
@@ -31,8 +39,8 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
       }
     }
 
-    val containing = nodesContaining(pt, head, Seq())
-    val withoutRoot= containing.map(r => r.drop(1)).filter(_.nonEmpty)
+    val containing = nodesContaining(pt, headOfGraphCoveringThisPoint(pt), Seq())
+    val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
     withoutRoot
   }
 

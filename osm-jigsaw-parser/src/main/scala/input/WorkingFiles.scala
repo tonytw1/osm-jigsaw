@@ -16,10 +16,6 @@ trait WorkingFiles {
     new FileOutputStream(outputFilepath: String)
   }
 
-  def tagsFile(outputFilepath: String): OutputStream = {
-    new FileOutputStream(outputFilepath)
-  }
-
   def extractedRelsFilepath(extractName: String) = {
     extractName + ".rels.pbf"
   }
@@ -30,14 +26,6 @@ trait WorkingFiles {
 
   def areaWaysWaysFilePath(extractName: String) = {
     areaWaysFilepath(extractName) + ".ways.pbf"
-  }
-
-  def areasFilePath(extractName: String): String = {
-    extractName + ".areas.pbf"
-  }
-
-  def tagsFilePath(extractName: String): String = {
-    extractName + ".tags.pbf"
   }
 
 }

@@ -1,3 +1,5 @@
+package input
+
 import java.io.{BufferedInputStream, FileInputStream, InputStream}
 
 import progress.ProgressCounter
