@@ -14,7 +14,7 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
 
   val geohashCharacters = 4
 
-  def headOfGraphCoveringThisPoint(point: Point) = {
+  def headOfGraphCoveringThisPoint(point: Point): Option[GraphNode] = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashCharacters)
 
     val dataUrl = configuration.getString("data.url").get
@@ -25,6 +25,7 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
   }
 
   def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
+
     def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
       val matchingChildren = node.children.filter { c =>
         areaContainsPoint(c, pt)
@@ -39,9 +40,14 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
       }
     }
 
-    val containing = nodesContaining(pt, headOfGraphCoveringThisPoint(pt), Seq())
-    val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
-    withoutRoot
+    headOfGraphCoveringThisPoint(pt).map { head =>
+      val containing = nodesContaining(pt, head, Seq())
+      val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
+      withoutRoot
+
+    }.getOrElse {
+      Seq.empty
+    }
   }
 
   def tagsFor(osmId: OsmId): Option[Map[String, String]] = {

@@ -58,33 +58,6 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     q.split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
   }
 
-  private def nodesFor(components: Seq[Long], point: Point): mutable.Seq[GraphNode] = {
-    def nodeIdentifier(node: GraphNode): Long = {
-      node.area.id
-    }
-
-    val nodes = mutable.ListBuffer[GraphNode]()
-
-    val queue = new mutable.Queue() ++ components
-
-    var currentNode = graphService.headOfGraphCoveringThisPoint(point: Point)
-    while (queue.nonEmpty) {
-      val next = queue.dequeue()
-      val children = currentNode.children
-
-      val found = children.find { c =>
-        nodeIdentifier(c) == next
-      }
-
-      found.foreach { f =>
-        nodes.+=(f)
-        currentNode = f
-      }
-    }
-
-    nodes
-  }
-
   private def renderNode(node: GraphNode, requestedLanguage: Option[String]  = None): JsValue = {
     val entities = node.area.osmIds.map { osmId =>
       val osmIdString = osmId.id.toString + osmId.`type`.toString
