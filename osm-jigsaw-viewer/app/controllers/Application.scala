@@ -20,10 +20,10 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   def index(qo: Option[String]) = Action.async { request =>
     val q = qo.getOrElse("")
 
-    ws.url((apiUrl + "/show").addParam("q", q)).get.flatMap { r =>
+    //ws.url((apiUrl + "/show").addParam("q", q)).get.flatMap { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
-      val graphNodes = Json.parse(r.body).as[Seq[GraphNode]]
+      val graphNodes: Seq[GraphNode] = Seq.empty // Json.parse(r.body).as[Seq[GraphNode]]
 
       val lastNode = graphNodes.lastOption
 
@@ -68,7 +68,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       } yield {
         Ok(views.html.index(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags))
       }
-    }
+    //}
   }
 
   def click(lat: Double, lon: Double) = Action.async { request =>
