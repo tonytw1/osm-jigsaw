@@ -14,7 +14,9 @@ import scala.collection.mutable
 class AreasReader @Inject()(configuration: Configuration) extends OsmIdParsing {
 
   private val areas = {
-    val areasFile = new URL(configuration.getString("areas.url").get)
+    val dataUrl = configuration.getString("data.url").get
+    val extractName = configuration.getString("extract.name").get
+    val areasFile = new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas.pbf")
     Logger.info("Loading areas from: " + areasFile)
     loadAreas(areasFile)
   }

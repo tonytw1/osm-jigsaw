@@ -14,7 +14,11 @@ import scala.collection.{immutable, mutable}
 @Singleton
 class TagService @Inject()(configuration: Configuration) extends OsmIdParsing with EntityNameTags {
 
-  val tagsFile = new URL(configuration.getString("tags.url").get)
+  val tagsFile = {
+    val dataUrl = configuration.getString("data.url").get
+    val extractName = configuration.getString("extract.name").get
+    new URL(dataUrl + "/" + extractName + "/" + extractName + ".tags.pbf")
+  }
 
   val tagsMap: (Map[OsmId, Seq[(Int, String)]], immutable.IndexedSeq[String]) = loadTags(tagsFile)
 
