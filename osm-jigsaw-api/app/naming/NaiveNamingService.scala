@@ -20,6 +20,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "historic" -> "yes",
     "boundary" ->	"historic_administrative",
     "boundary" ->	"historic_political",
+    "boundary" ->	"low_emission_zone",
     "political_division" -> "historical_local_const",
     "political_division" -> "euro_const",
     "political_division" -> "local_const",
