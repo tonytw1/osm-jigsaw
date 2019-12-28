@@ -24,17 +24,19 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     Future.successful(Ok(Json.toJson(tags)))
   }
 
+  // Given a location return all of sequences of overlapping areas which enclose it
   def reverse(lat: Double, lon: Double) = Action.async { request =>
     val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
     Logger.info("Accept language: " + requestedLanguage)
 
     val pt = new Point(lat, lon)
 
-    val jsons = graphService.pathsDownTo(pt).map(_.map(i => renderNode(i, requestedLanguage)))
+    val paths = graphService.pathsDownTo(pt).map(_.map(i => renderNode(i, requestedLanguage)))
 
-    Future.successful(Ok(Json.toJson(jsons)))
+    Future.successful(Ok(Json.toJson(paths)))
   }
 
+  // Given a location return a name for this location
   def name(lat: Double, lon: Double) = Action.async { request =>
     val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
     Logger.info("Accept language: " + requestedLanguage)
