@@ -7,6 +7,7 @@ scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(ws)
 libraryDependencies += "com.netaporter" %% "scala-uri" % "0.4.12"
+libraryDependencies += guice
 
 libraryDependencies += specs2 % Test
 
