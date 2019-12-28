@@ -3,3 +3,5 @@ GET     /tags       controllers.Application.tags(osm_id: String)
 GET     /reverse    controllers.Application.reverse(lat: Double, lon: Double)
 GET     /name       controllers.Application.name(lat: Double, lon: Double)
 GET     /show       controllers.Application.show(q: String, lat: Double, lon: Double)
+
+GET     /healthz    controllers.Application.ping()
