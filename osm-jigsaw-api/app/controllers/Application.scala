@@ -56,6 +56,42 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     Future.successful(Ok(Json.toJson(name)))
   }
 
+  def show(q: String, lat: Double, lon: Double) = Action.async { request =>
+    val components = parseComponents(q)
+    val pt = new Point(lat, lon)
+
+    val nodes = nodesFor(components, pt)
+    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n)))))
+  }
+
+  private def nodesFor(components: Seq[Long], point: Point): mutable.Seq[GraphNode] = {
+    def nodeIdentifier(node: GraphNode): Long = {
+      node.area.id
+    }
+
+    val nodes = mutable.ListBuffer[GraphNode]()
+
+    val queue = new mutable.Queue() ++ components
+    graphService.headOfGraphCoveringThisPoint(point: Point).map { headNode =>
+      var currentNode = headNode
+      while (queue.nonEmpty) {
+        val next = queue.dequeue()
+        val children = currentNode.children
+
+        val found = children.find { c =>
+          nodeIdentifier(c) == next
+        }
+
+        found.foreach { f =>
+          nodes.+=(f)
+          currentNode = f
+        }
+      }
+    }
+
+    nodes
+  }
+
   private def parseComponents(q: String): Seq[Long] = {
     q.split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
   }
