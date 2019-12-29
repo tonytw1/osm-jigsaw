@@ -53,9 +53,14 @@ class BuildGraph extends OutputFiles with AreaReading with Segmenting with AreaC
 
     val availableHardwareThreads = Runtime.getRuntime.availableProcessors()
     logger.info("Available processors: " + availableHardwareThreads)
-    val executor = Executors.newFixedThreadPool(availableHardwareThreads).asInstanceOf[ThreadPoolExecutor]
 
     val doneCounter = new AtomicInteger(0)
+
+    // Java Executor is used instead of Scala par.foreach as par.foreach seems to under utilise available threads towards the end of the job.
+    // Completion waits for the slowest thread to complete it's tasks before exiting.
+    // It feels like par.foreach is assigning tasks to threads upfront while Java ThreadPoolExecutor is assigning them
+    // to the next available thread keeping all threads fully utilised to the end of the job
+    val executor = Executors.newFixedThreadPool(availableHardwareThreads).asInstanceOf[ThreadPoolExecutor]
     deduplicatedSegments.map { segment =>
       executor.submit(new SegmentTask(segment, extractName, planet, doneCounter, total))
     }
