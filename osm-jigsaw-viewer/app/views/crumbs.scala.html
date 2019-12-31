@@ -1,4 +1,4 @@
-@(crumbs: Seq[(String, Seq[Long])])
+@(crumbs: Seq[(String, Seq[Long])], point: (Double, Double))
 @crumbs.map{ c =>
-    <a href="@routes.Application.index(Some((c._2).mkString("/")))">@c._1</a>
+    <a href="@routes.Application.index(Some((c._2).mkString("/")), Some(point))">@c._1</a>
 }
