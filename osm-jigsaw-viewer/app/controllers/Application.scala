@@ -60,10 +60,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         }
       }
 
-      val eventualTags: Future[Map[String, String]] = {
-        Future.successful(Map.empty)
-      }
-      /*lastNode.flatMap { ln =>
+      val eventualTagsForLastNode: Future[Map[String, String]] = lastNode.flatMap { ln =>
         ln.entities.headOption.map { e =>
           val osmId = e.osmId
           ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
@@ -73,11 +70,10 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
           }
         }
       }.getOrElse(Future.successful(Map.empty))
-      */
 
       for {
         areaBoundingBox <- eventualAreaBoundingBox
-        tags <- eventualTags
+        tags: Map[String, String] <- eventualTagsForLastNode
       } yield {
         Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags))
       }
