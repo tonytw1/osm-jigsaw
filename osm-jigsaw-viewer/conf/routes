@@ -1,4 +1,6 @@
-GET     /           controllers.Application.index(q: Option[String])
+GET     /           controllers.Application.index()
+GET     /show       controllers.Application.show(q: String, lat: Double, lon: Double)
+
 GET     /click      controllers.Application.click(lat: Double, lon: Double)
 
 GET  /assets/*file  controllers.Assets.versioned(path="/public", file: Asset)

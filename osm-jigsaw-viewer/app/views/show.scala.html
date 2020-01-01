@@ -1,5 +1,5 @@
 @import graph.GraphNode
-@(mapBoxApiKey: String)
+@(node: Option[GraphNode], crumb: Option[Seq[(String, Seq[Long])]], osmUrls: Option[Seq[(String, String)]], mapBoxApiKey: String, areaBoundingBox: Option[(Double, Double, Double, Double)], tags: Map[String, String])
 <link rel="stylesheet" href="https://unpkg.com/leaflet@@1.3.1/dist/leaflet.css"
       integrity="sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ=="
       crossorigin=""/>
@@ -39,12 +39,26 @@
 <div id="reverse"></div>
 
 <div id="node">
+@if(node.isEmpty) {
     <p>Click on map to examine a point.</p>
+}
+
 </div>
 
 <p>Map data © OpenStreetMap contributors</p>
 <hr/>
 
 <script src="@routes.Assets.versioned("scripts/app.js")"></script>
+
+@areaBoundingBox.map { boundingBox =>
+    <script>
+        mymap.fitBounds([
+                [@boundingBox._1, @boundingBox._2],
+                [@boundingBox._3, @boundingBox._4]
+            ]
+        );
+    </script>
+}
+
 </body>
 </html>
