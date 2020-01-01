@@ -18,61 +18,70 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
 
   def index() = Action.async { request =>
-      Future.successful(Ok(views.html.index(maxBoxApiKey)))
+    Future.successful(Ok(views.html.index(maxBoxApiKey)))
   }
 
   def show(q: String, lat: Double, lon: Double) = Action.async { request =>
-    //ws.url((apiUrl + "/show").addParam("q", q)).get.flatMap { r =>
-    implicit val er = Json.reads[Entity]
-    implicit val gnr = Json.reads[GraphNode]
-    val graphNodes: Seq[GraphNode] = Seq.empty // Json.parse(r.body).as[Seq[GraphNode]]
+    ws.url((apiUrl + "/show").addParam(
+      "q", q).addParam(
+      "lat", lat.toString).addParam(
+      "lon", lon.toString)
+    ).get.flatMap { r =>
+      implicit val er = Json.reads[Entity]
+      implicit val gnr = Json.reads[GraphNode]
+      val graphNodes: Seq[GraphNode] = Json.parse(r.body).as[Seq[GraphNode]]
 
-    val lastNode = graphNodes.lastOption
+      val lastNode = graphNodes.lastOption
 
-    val crumbs = lastNode.map { ln =>
-      areasToCrumbs(graphNodes)
-    }
-
-    val eventualAreaBoundingBox = lastNode.map { _ =>
-      ws.url((apiUrl + "/points").addParam("q", q)).get.map { psr =>
-        implicit val pr = Json.reads[Point]
-        val points = Json.parse(psr.body).as[Seq[Point]]
-        val b: (Double, Double, Double, Double) = boundingBoxFor(points)
-        Some(b)
+      val crumbs = lastNode.map { ln =>
+        areasToCrumbs(graphNodes)
       }
-    }.getOrElse {
-      Future.successful(None)
-    }
 
-    val osmUrls = lastNode.map { ln =>
-      ln.entities.map { e =>
-        val osmId = e.osmId
-        val osmTypes = Set("node", "way", "relation")
-        val osmType = osmId.takeRight(1).toLowerCase()
-        (osmId, "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1))
+      /*
+      val eventualAreaBoundingBox = lastNode.map { _ =>
+        ws.url((apiUrl + "/points").addParam("q", q)).get.map { psr =>
+          implicit val pr = Json.reads[Point]
+          val points = Json.parse(psr.body).as[Seq[Point]]
+          val b: (Double, Double, Double, Double) = boundingBoxFor(points)
+          Some(b)
+        }
+      }.getOrElse {
+        Future.successful(None)
       }
-    }
+      */
 
-    val eventualTags: Future[Map[String, String]] = lastNode.flatMap { ln =>
-      ln.entities.headOption.map { e =>
-        val osmId = e.osmId
-        ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
-          Json.parse(r.body).as[Map[String, JsValue]].map { i =>
-            (i._1, i._2.as[String])
-          }
+      val osmUrls = lastNode.map { ln =>
+        ln.entities.map { e =>
+          val osmId = e.osmId
+          val osmTypes = Set("node", "way", "relation")
+          val osmType = osmId.takeRight(1).toLowerCase()
+          (osmId, "https://www.openstreetmap.org/" + osmTypes.find(t => t.startsWith(osmType)).getOrElse(osmType) + "/" + osmId.dropRight(1))
         }
       }
-    }.getOrElse(Future.successful(Map.empty))
 
-    for {
-      areaBoundingBox <- eventualAreaBoundingBox
-      tags <- eventualTags
-    } yield {
-      Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags))
+      val eventualTags: Future[Map[String, String]] = {
+        Future.successful(Map.empty)
+      }
+      /*lastNode.flatMap { ln =>
+        ln.entities.headOption.map { e =>
+          val osmId = e.osmId
+          ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
+            Json.parse(r.body).as[Map[String, JsValue]].map { i =>
+              (i._1, i._2.as[String])
+            }
+          }
+        }
+      }.getOrElse(Future.successful(Map.empty))
+      */
+
+      for {
+        //areaBoundingBox <- eventualAreaBoundingBox
+        tags <- eventualTags
+      } yield {
+        Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, None, tags))
+      }
     }
-    //}
   }
-
 
   def click(lat: Double, lon: Double) = Action.async { request =>
     val reverseApiCallUrl = (apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)

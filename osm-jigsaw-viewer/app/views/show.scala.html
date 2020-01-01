@@ -39,10 +39,16 @@
 <div id="reverse"></div>
 
 <div id="node">
-@if(node.isEmpty) {
-    <p>Click on map to examine a point.</p>
+@node.map { area =>
+    <h6>OSM ids</h6>
+    @osmUrls.map { ous =>
+        @ous.map { ou =>
+            <a href="@ou._2" target="_blank">@ou._1</a>
+        }
+    }
+    <h6>Tags</h6>
+    @tagsTable(tags)
 }
-
 </div>
 
 <p>Map data © OpenStreetMap contributors</p>
