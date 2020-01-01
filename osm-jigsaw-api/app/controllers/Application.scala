@@ -18,10 +18,6 @@ import scala.concurrent.Future
 class Application @Inject()(configuration: Configuration, graphService: GraphService, val tagService: TagService,
                             naiveNamingService: NaiveNamingService) extends Controller with BoundingBox with OsmIdParsing with EntityNameTags {
 
-  def ping() = Action.async { request =>
-    Future.successful(Ok(Json.toJson("ok")))
-  }
-
   def tags(osmId: String) = Action.async { request =>
     val id = toOsmId(osmId)
     val tags = graphService.tagsFor(id).getOrElse(Map())
@@ -60,12 +56,27 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     Future.successful(Ok(Json.toJson(name)))
   }
 
+  // Given the path to an area return the sequence of graph nodes for that path
   def show(q: String, lat: Double, lon: Double) = Action.async { request =>
     val components = parseComponents(q)
     val pt = new Point(lat, lon)
 
     val nodes = nodesFor(components, pt)
     Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n)))))
+  }
+
+  // Given the path to an area return the outline for that area
+  def points(q: String, lat: Double, lon: Double) = Action.async { request =>
+    val components = parseComponents(q)
+    val pt = new Point(lat, lon)
+
+    nodesFor(components, pt).lastOption.map { node =>
+      val points = node.area.points // TODO simplify outline for quick rendering
+      implicit val pw = Json.writes[model.Point]
+      Future.successful(Ok(Json.toJson(points)))
+    }.getOrElse {
+      Future.successful(NotFound(Json.toJson("Not found")))
+    }
   }
 
   private def nodesFor(components: Seq[Long], point: Point): mutable.Seq[GraphNode] = {
@@ -96,11 +107,16 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
     nodes
   }
 
+  // Healthcheck end point
+  def ping() = Action.async { request =>
+    Future.successful(Ok(Json.toJson("ok")))
+  }
+
   private def parseComponents(q: String): Seq[Long] = {
     q.split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
   }
 
-  private def renderNode(node: GraphNode, requestedLanguage: Option[String]  = None): JsValue = {
+  private def renderNode(node: GraphNode, requestedLanguage: Option[String] = None): JsValue = {
     val entities = node.area.osmIds.map { osmId =>
       val osmIdString = osmId.id.toString + osmId.`type`.toString
       val name = tagService.nameForOsmId(osmId, requestedLanguage).getOrElse(node.area.id.toString)
