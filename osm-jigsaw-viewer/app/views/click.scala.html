@@ -1,10 +1,8 @@
 @(point: (Double, Double), results:  Seq[Seq[(String, Seq[Long])]], name: String, nameApiUrl: String, reverseApiUrl: String)
 
-<h6>Name (<a href="@nameApiUrl" target="_blank">API</a>)</h6>
-<h4>@name</h4>
+<h4>@name (<a href="@nameApiUrl" target="_blank">API</a>)</h4>
 
-<h6>Paths (<a href="@reverseApiUrl" target="_blank">API</a>)</h6>
-<p>Latitude @point._1, Longitude @point._2 is enclosed by these areas:</p>
+<p>Latitude @point._1, Longitude @point._2 is enclosed by these areas: (<a href="@reverseApiUrl" target="_blank">API</a>)</p>
 <ul>
 @results.map { r =>
     <li>@crumbs(r, point)</li>
