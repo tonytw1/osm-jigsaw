@@ -37,9 +37,11 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
         areasToCrumbs(graphNodes)
       }
 
-      /*
       val eventualAreaBoundingBox = lastNode.map { _ =>
-        ws.url((apiUrl + "/points").addParam("q", q)).get.map { psr =>
+        ws.url((apiUrl + "/points").addParam(
+          "q", q).addParam(
+          "lat", lat.toString).addParam(
+          "lon", lon.toString)).get.map { psr =>
           implicit val pr = Json.reads[Point]
           val points = Json.parse(psr.body).as[Seq[Point]]
           val b: (Double, Double, Double, Double) = boundingBoxFor(points)
@@ -48,7 +50,6 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       }.getOrElse {
         Future.successful(None)
       }
-      */
 
       val osmUrls = lastNode.map { ln =>
         ln.entities.map { e =>
@@ -75,10 +76,10 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       */
 
       for {
-        //areaBoundingBox <- eventualAreaBoundingBox
+        areaBoundingBox <- eventualAreaBoundingBox
         tags <- eventualTags
       } yield {
-        Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, None, tags))
+        Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags))
       }
     }
   }
