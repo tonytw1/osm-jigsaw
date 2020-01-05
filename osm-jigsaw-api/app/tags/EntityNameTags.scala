@@ -4,7 +4,7 @@ trait EntityNameTags {
 
   def getNameFromTags(tags: Map[String, String], encoding: String): Option[String] = {
     val preferredName = "name:" + encoding
-    val otherUsableNames = Seq(preferredName, "name")
+    val otherUsableNames = Seq(preferredName, "name", "addr:housename")
 
     val allAvailableNames = tags.filter(t => otherUsableNames.contains(t._1)).toSet
 
