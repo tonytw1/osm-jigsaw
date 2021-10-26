@@ -1,32 +1,30 @@
 package controllers
 
 import areas.BoundingBox
-import com.netaporter.uri.dsl._
 import graph._
-import javax.inject.Inject
+import io.lemonlabs.uri.Url
 import play.api.Configuration
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSClient
-import play.api.mvc.{Action, Controller}
+import play.api.mvc._
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, ws: WSClient) extends Controller with BoundingBox {
+class Application @Inject()(configuration: Configuration, ws: WSClient, cc: ControllerComponents) extends AbstractController(cc) with BoundingBox {
 
-  private val apiUrl = configuration.getString("api.url").get
-  private val maxBoxApiKey = configuration.getString("mapbox.api.key").get
+  private val apiUrl = configuration.get[String]("api.url")
+  private val maxBoxApiKey = configuration.get[String]("mapbox.api.key")
 
   def index() = Action.async { request =>
     Future.successful(Ok(views.html.index(maxBoxApiKey)))
   }
 
   def show(q: String, lat: Double, lon: Double) = Action.async { request =>
-    ws.url((apiUrl + "/show").addParam(
-      "q", q).addParam(
+    ws.url(Url.parse(apiUrl + "/show").addParam("q", q).addParam(
       "lat", lat.toString).addParam(
-      "lon", lon.toString)
-    ).get.flatMap { r =>
+      "lon", lon.toString).toString).get.flatMap { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
       val graphNodes: Seq[GraphNode] = Json.parse(r.body).as[Seq[GraphNode]]
@@ -38,10 +36,10 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       }
 
       val eventualAreaBoundingBox = lastNode.map { _ =>
-        ws.url((apiUrl + "/points").addParam(
+        ws.url(Url.parse(apiUrl + "/points").addParam(
           "q", q).addParam(
           "lat", lat.toString).addParam(
-          "lon", lon.toString)).get.map { psr =>
+          "lon", lon.toString).toString).get.map { psr =>
           implicit val pr = Json.reads[Point]
           val points = Json.parse(psr.body).as[Seq[Point]]
           val b: (Double, Double, Double, Double) = boundingBoxFor(points)
@@ -63,7 +61,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       val eventualTagsForLastNode: Future[Map[String, String]] = lastNode.flatMap { ln =>
         ln.entities.headOption.map { e =>
           val osmId = e.osmId
-          ws.url((apiUrl + "/tags").addParam("osm_id", osmId)).get.map { r =>
+          ws.url(Url.parse(apiUrl + "/tags").addParam("osm_id", osmId).toString).get.map { r =>
             Json.parse(r.body).as[Map[String, JsValue]].map { i =>
               (i._1, i._2.as[String])
             }
@@ -81,8 +79,8 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
   }
 
   def click(lat: Double, lon: Double) = Action.async { request =>
-    val reverseApiCallUrl = (apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)
-    val eventualCrumbs = ws.url(reverseApiCallUrl).get.map { r =>
+    val reverseApiCallUrl = Url.parse(apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)
+    val eventualCrumbs = ws.url(reverseApiCallUrl.toString).get.map { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
       Json.parse(r.body).as[Seq[Seq[GraphNode]]].map { as =>
@@ -90,8 +88,8 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       }
     }
 
-    val nameApiCallUrl = (apiUrl + "/name").addParam("lat", lat).addParam("lon", lon)
-    val eventualName = ws.url(nameApiCallUrl).get.map { r =>
+    val nameApiCallUrl = Url.parse(apiUrl + "/name").addParam("lat", lat).addParam("lon", lon)
+    val eventualName = ws.url(nameApiCallUrl.toString).get.map { r =>
       Json.parse(r.body).as[String]
     }
 
@@ -100,7 +98,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient) extends 
       name <- eventualName
 
     } yield {
-      Ok(views.html.click((lat, lon), crumbs, name, nameApiCallUrl, reverseApiCallUrl))
+      Ok(views.html.click((lat, lon), crumbs, name, nameApiCallUrl.toString, reverseApiCallUrl.toString))
     }
   }
 
