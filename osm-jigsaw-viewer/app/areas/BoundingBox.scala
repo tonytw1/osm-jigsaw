@@ -5,8 +5,8 @@ import graph.Point
 trait BoundingBox {
 
   def boundingBoxFor(points: Seq[Point]): (Double, Double, Double, Double) = {
-    var latitudes = points.map(_.lat)
-    var longitudes = points.map(_.lon)
+    val latitudes = points.map(_.lat)
+    val longitudes = points.map(_.lon)
 
     val minX = latitudes.min
     val maxX = latitudes.max
