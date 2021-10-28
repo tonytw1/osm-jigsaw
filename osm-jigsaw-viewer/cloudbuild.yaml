@@ -1,0 +1,11 @@
+steps:
+  - name: 'gcr.io/$PROJECT_ID/scala-sbt'
+    args: ['clean', 'test', 'docker:publishLocal']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', 'osm-jigsaw-viewer:1.0', 'eu.gcr.io/$PROJECT_ID/osm-jigsaw-viewer:$COMMIT_SHA']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'eu.gcr.io/$PROJECT_ID/osm-jigsaw-viewer:$COMMIT_SHA']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', 'osm-jigsaw-viewer:1.0', 'eu.gcr.io/$PROJECT_ID/osm-jigsaw-viewer']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'eu.gcr.io/$PROJECT_ID/osm-jigsaw-viewer']

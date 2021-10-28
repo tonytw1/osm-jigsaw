@@ -12,5 +12,5 @@ libraryDependencies += guice
 libraryDependencies += specs2 % Test
 
 enablePlugins(DockerPlugin)
-dockerBaseImage := "openjdk:8-jre"
+dockerBaseImage := "openjdk:11-jre"
 dockerExposedPorts in Docker := Seq(9000)
