@@ -45,7 +45,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
 
       a.children.foreach(c => {
-        Operator.deaccelerateGeometry(c.area.polygon)
+        //Operator.deaccelerateGeometry(c.area.polygon)
       })
       //Operator.deaccelerateGeometry(a.area.polygon)
 
