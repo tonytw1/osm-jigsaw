@@ -8,6 +8,7 @@ import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
+import java.util
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -25,30 +26,35 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     logger.info("Insert")
     head.insert(nodes)
     logger.info("Sift down")
-    siftDown(head)
 
-    sifts.keys.foreach{ k =>
-      val v = sifts(k)
-      if (v > 1) {
-        println("Sifts: " + v + " " + k.osmIds.mkString(","));
-      }
+
+    val queue: util.ArrayDeque[GraphNode] = new util.ArrayDeque[GraphNode]()
+    queue.add(head)
+    head.sifted = true
+
+    var done = 0
+    while (!queue.isEmpty) {
+      val node = queue.poll()
+      logger.info(done + " / " + areas.size + " areas sifted down")
+      done += 1
+      siftDown(node, queue)
     }
 
     head
   }
 
-  def siftDown(a: GraphNode): Unit = {
+  def siftDown(a: GraphNode, queue: util.ArrayDeque[GraphNode]): Unit = {
     if (a.children.size > 1) {
-      logger.info("Sifting down: " + a.area.osmIds.mkString(",")  + " with " + a.children.size + " children")
+      logger.info("Sifting down: " + a.area.osmIds.mkString(",") + " with " + a.children.size + " children")
       //logger.debug("Presorting by area to assist sift down effectiveness")
-      val inOrder = a.children.sortBy(-_.area.area)
+      val inOrder = a.children.toSeq.sortBy(-_.area.area)
 
       logger.info("Sifting down " + a.children.size + " children")
-      val accel = a.children.size > 10
+      val accel = inOrder.size > 10
       if (accel) {
         OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       }
-      a.children = ListBuffer()
+      a.children = mutable.Set()
 
       val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
       inOrder.foreach { b =>
@@ -65,13 +71,18 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       //Operator.deaccelerateGeometry(a.area.polygon)
 
       logger.info("Finished with " + a.children.size + " children")
+      a.sifted = true;
       val ss = sifts.getOrElse(a.area, 0L)
       sifts.put(a.area, ss + 1)
       a.children.foreach { c =>
         // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
-        siftDown(c)
+        if (!c.sifted) {
+          queue.add(c)
+          c.sifted = true
+        }
       }
     }
+
   }
 
   def siftDown(a: GraphNode, b: GraphNode, accel: Boolean): Unit = {
@@ -80,7 +91,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     //var startFilter = DateTime.now()
     val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
-      !areaSame(s.area, b.area) && areaContains(s.area, b.area)
+      areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
     //var secondFilterDuration: Option[Duration] = None
@@ -88,17 +99,15 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
         //logger.info("Added " + b.area.id + " " + b.area.fitsIn)
-        // logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
-        s.children.append(b.copy(children = ListBuffer()))
+        //logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
+        s.children.add(b)
       }
 
     } else {
-      // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
-      val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
       if (accel) {
-        OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
+        OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       }
-      a.children.append(b.copy(area = b.area.copy(polygon = geometry), children = ListBuffer()))
+      a.children.add(b)
     }
 
     // val duration = new Duration(start, DateTime.now)
