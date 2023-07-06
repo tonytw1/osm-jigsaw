@@ -66,7 +66,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //var siblings = a.children// .filter(c => c != b)
 
     //var startFilter = DateTime.now()
-    val existingSiblingsWhichNewValueWouldFitIn = a.children.filter { s =>
+    val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
       !areaSame(s.area, b.area) && areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
