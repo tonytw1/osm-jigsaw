@@ -32,10 +32,10 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       //logger.debug("Presorting by area to assist sift down effectiveness")
       val inOrder = a.children.sortBy(-_.area.area)
 
+      logger.info("Sifting down " + a.children.size + " children")
       if (a.children.size > 100) {
-        logger.info("Sifting down " + a.children.size + " children")
+        OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       }
-      OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       a.children = ListBuffer()
 
       val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
