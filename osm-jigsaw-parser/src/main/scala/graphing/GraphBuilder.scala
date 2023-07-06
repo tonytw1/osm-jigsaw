@@ -21,7 +21,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     val nodes = areas1.map(GraphNode(_))
     logger.info("Insert")
     head.insert(nodes)
-    logger.info("Sift down: " + head.area)
+    logger.info("Sift down")
     siftDown(head)
     head
   }
