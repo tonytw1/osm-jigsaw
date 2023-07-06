@@ -53,7 +53,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       //Operator.deaccelerateGeometry(a.area.polygon)
 
       logger.info("Finished with " + a.children.size + " children")
-      a.children.foreach { c =>
+      a.children.par.foreach { c =>
         // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
         siftDown(c)
       }
