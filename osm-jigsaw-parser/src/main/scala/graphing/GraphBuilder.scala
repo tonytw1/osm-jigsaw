@@ -8,9 +8,12 @@ import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
+
+  private val sifts = mutable.Map[Area, Long]()
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas using thread " + Thread.currentThread().getId)
@@ -23,6 +26,14 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     head.insert(nodes)
     logger.info("Sift down")
     siftDown(head)
+
+    sifts.keys.foreach{ k =>
+      val v = sifts(k)
+      if (v > 1) {
+        println("Sifts: " + v + " " + k.osmIds.mkString(","));
+      }
+    }
+
     head
   }
 
@@ -54,7 +65,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       //Operator.deaccelerateGeometry(a.area.polygon)
 
       logger.info("Finished with " + a.children.size + " children")
-      a.children.par.foreach { c =>
+      val ss = sifts.getOrElse(a.area, 0L)
+      sifts.put(a.area, ss + 1)
+      a.children.foreach { c =>
         // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
         siftDown(c)
       }
