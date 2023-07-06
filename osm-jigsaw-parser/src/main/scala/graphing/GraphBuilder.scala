@@ -38,7 +38,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
       inOrder.foreach { b =>
         //logger.info("B: " + a.area.id + " " + b.area.area)
-        OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+        //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
         counter.withProgress {
           siftDown(a, b)
         }
@@ -79,7 +79,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
       val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
       OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
-      a.children = a.children :+ (b.copy(area = b.area.copy(polygon = geometry)))
+      a.children = a.children :+ b.copy(area = b.area.copy(polygon = geometry))
     }
 
     // val duration = new Duration(start, DateTime.now)
