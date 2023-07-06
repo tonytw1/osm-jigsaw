@@ -71,14 +71,14 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
         //logger.info("Added " + b.area.id + " " + b.area.fitsIn)
         // logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
-        s.children = s.children :+ b.copy()
+        s.children.append(b.copy())
       }
 
     } else {
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
       val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
       OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
-      a.children = a.children :+ b.copy(area = b.area.copy(polygon = geometry))
+      a.children.append(b.copy(area = b.area.copy(polygon = geometry)))
     }
 
     // val duration = new Duration(start, DateTime.now)

@@ -2,7 +2,7 @@ package model
 
 import scala.collection.mutable.ListBuffer
 
-case class GraphNode(area: Area, var children: Seq[GraphNode] = ListBuffer()) {
+case class GraphNode(area: Area, var children: ListBuffer[GraphNode] = ListBuffer()) {
 
   def insert(nodes: Seq[GraphNode]) = {
     children = children ++ nodes
