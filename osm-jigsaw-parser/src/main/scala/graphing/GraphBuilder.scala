@@ -82,10 +82,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     } else {
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
-      val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
+      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       val gc = new Polygon()
       b.area.polygon.copyTo(gc)
-      OperatorContains.local().accelerateGeometry(gc, sr, GeometryAccelerationDegree.enumMedium)
       a.children.append(b.copy(area = b.area.copy(polygon = gc), children = ListBuffer()))
     }
 
