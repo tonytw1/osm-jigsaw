@@ -11,7 +11,7 @@ lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
       organization := "uk.co.eelpieconsulting",
-      scalaVersion := "2.12.10",
+      scalaVersion := "2.12.18",
       version      := "0.1.0-SNAPSHOT"
     )),
     name := "osm-jigsaw",
