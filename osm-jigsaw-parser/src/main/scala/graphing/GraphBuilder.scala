@@ -49,7 +49,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       })
       Operator.deaccelerateGeometry(a.area.polygon)
 
-      a.children.par.filter(i => i.children.nonEmpty).foreach { c =>
+      a.children.par.filter(i => i.children.nonEmpty).par.foreach { c =>
         // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
         siftDown(c)
       }
@@ -72,14 +72,14 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         b.area.fitsIn += s.area.id
         //logger.info("Added " + b.area.id + " " + b.area.fitsIn)
         // logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
-        s.children.append(b.copy())
+        s.children = s.children :+ b.copy()
       }
 
     } else {
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
       val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
       OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
-      a.children.append(b.copy(area = b.area.copy(polygon = geometry)))
+      a.children = a.children :+ b.copy(area = b.area.copy(polygon = geometry))
     }
 
     // val duration = new Duration(start, DateTime.now)
