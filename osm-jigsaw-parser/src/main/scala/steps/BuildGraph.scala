@@ -18,7 +18,7 @@ class BuildGraph extends OutputFiles with AreaReading with Segmenting with AreaC
     logger.info("Building graph")
 
     val headArea = areas.head
-    val drop = areas
+    val drop = areas.drop(1)
 
     val graph = new GraphBuilder().buildGraph(headArea, drop)
     writeGraph(graph, new FileOutputStream(graphFile(extractName)))
