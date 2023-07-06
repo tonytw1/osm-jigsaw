@@ -44,13 +44,14 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode, queue: util.ArrayDeque[GraphNode]): Unit = {
-    if (a.children.size > 1) {
+    if (a.children.nonEmpty) {
+
       logger.info("Sifting down: " + a.area.osmIds.mkString(",") + " with " + a.children.size + " children")
       //logger.debug("Presorting by area to assist sift down effectiveness")
       val inOrder = a.children.toSeq.sortBy(-_.area.area)
 
       logger.info("Sifting down " + a.children.size + " children")
-      val accel = inOrder.size > 10
+      val accel = true // inOrder.size > 10
       if (accel) {
         OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       }
@@ -80,7 +81,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
           queue.add(c)
           c.sifted = true
         }
+
       }
+
     }
 
   }
