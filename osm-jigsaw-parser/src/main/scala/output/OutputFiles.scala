@@ -12,6 +12,10 @@ trait OutputFiles {
     outputFolderFor(extractName) + "/" + extractName + ".graph." + segment.geohash.toBase32 + ".pbf"
   }
 
+  def graphFile(extractName: String) = {
+    outputFolderFor(extractName) + "/" + extractName + ".graph." + ".pbf"
+  }
+
   def tagsFilePath(extractName: String): String = {
     outputFolderFor(extractName) + "/" + extractName + ".tags.pbf"
   }
