@@ -8,7 +8,17 @@ trait AreaComparison {
   val sr = SpatialReference.create(1)
 
   def areaContains(a: Area, b: Area): Boolean = {
-    OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+    val contains = a.convexHull.map { ch =>
+      OperatorContains.local().execute(ch, b.polygon, sr, null) &&
+        OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+    }.getOrElse {
+      OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+    }
+    if (contains) {
+      !OperatorContains.local().execute(b.polygon, a.polygon, sr, null) // TODO this is a duplicate area check which should not have got this far
+    } else {
+      false
+    }
   }
 
   def areaSame(a: Area, b: Area): Boolean = {

@@ -50,7 +50,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       //logger.debug("Presorting by area to assist sift down effectiveness")
       val inOrder = a.children.toSeq.sortBy(-_.area.area)
 
-      logger.info("Sifting down " + a.children.size + " children")
       val accel = true // inOrder.size > 10
       if (accel) {
         OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
@@ -71,7 +70,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       })
       //Operator.deaccelerateGeometry(a.area.polygon)
 
-      logger.info("Finished with " + a.children.size + " children")
       a.sifted = true;
       val ss = sifts.getOrElse(a.area, 0L)
       sifts.put(a.area, ss + 1)
@@ -94,6 +92,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     //var startFilter = DateTime.now()
     val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
+      s != b &&
       areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
