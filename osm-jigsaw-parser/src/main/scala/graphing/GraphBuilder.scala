@@ -47,7 +47,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       a.children.foreach(c => {
         Operator.deaccelerateGeometry(c.area.polygon)
       })
-      Operator.deaccelerateGeometry(a.area.polygon)
+      //Operator.deaccelerateGeometry(a.area.polygon)
 
       a.children.foreach { c =>
         // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
@@ -69,7 +69,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
-        b.area.fitsIn += s.area.id
         //logger.info("Added " + b.area.id + " " + b.area.fitsIn)
         // logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
         s.children = s.children :+ b.copy()
