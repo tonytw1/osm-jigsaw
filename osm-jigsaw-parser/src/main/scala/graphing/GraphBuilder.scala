@@ -33,7 +33,8 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       val inOrder = a.children.sortBy(-_.area.area)
 
       logger.info("Sifting down " + a.children.size + " children")
-      if (a.children.size > 100) {
+      val accel = a.children.size > 100
+      if (accel) {
         OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       }
       a.children = ListBuffer()
@@ -43,7 +44,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         //logger.info("B: " + a.area.id + " " + b.area.area)
         //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
         counter.withProgress {
-          siftDown(a, b)
+          siftDown(a, b, accel)
         }
       }
 
@@ -60,7 +61,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     }
   }
 
-  def siftDown(a: GraphNode, b: GraphNode): Unit = {
+  def siftDown(a: GraphNode, b: GraphNode, accel: Boolean): Unit = {
     //var start = DateTime.now()
     //var siblings = a.children// .filter(c => c != b)
 
@@ -81,7 +82,9 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     } else {
       // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
       val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
-      OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
+      if (accel) {
+        OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
+      }
       a.children.append(b.copy(area = b.area.copy(polygon = geometry), children = ListBuffer()))
     }
 
