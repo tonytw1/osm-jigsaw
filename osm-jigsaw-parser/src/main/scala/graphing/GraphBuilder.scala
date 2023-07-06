@@ -35,7 +35,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       a.children = ListBuffer()
 
-      val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
+      val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",") + " " + a.children.size))
       inOrder.foreach { b =>
         //logger.info("B: " + a.area.id + " " + b.area.area)
         OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
