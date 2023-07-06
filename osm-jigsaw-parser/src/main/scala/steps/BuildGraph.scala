@@ -26,7 +26,7 @@ class BuildGraph extends OutputFiles with AreaReading with Segmenting with AreaC
   }
 
   private def writeGraph(head: GraphNode, outputStream: FileOutputStream) = {
-    logger.debug("Writing graph to disk")
+    logger.info("Writing graph to disk")
     val output = new BufferedOutputStream(outputStream)
     val counter = new ProgressCounter(10000)
     new GraphWriter().export(head, output, None, counter)

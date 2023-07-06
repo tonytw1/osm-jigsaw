@@ -2,13 +2,10 @@ package model
 
 import scala.collection.mutable.ListBuffer
 
-case class GraphNode(area: Area, var children: Seq[GraphNode] = ListBuffer()) {
+case class GraphNode(area: Area, var children: ListBuffer[GraphNode] = ListBuffer()) {
 
-  def insert(areas: Seq[Area]) = {
-    areas.foreach { a =>
-      val newNode = GraphNode(a)
-      children = children :+ newNode
-    }
+  def insert(nodes: Seq[GraphNode]) = {
+    children = children ++ nodes
   }
 
   override def hashCode(): Int = area.id.hashCode()
