@@ -33,7 +33,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       val inOrder = a.children.sortBy(-_.area.area)
 
       logger.info("Sifting down " + a.children.size + " children")
-      val accel = true // a.children.size > 100
+      val accel = a.children.size > 10
       if (accel) {
         OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
       }
