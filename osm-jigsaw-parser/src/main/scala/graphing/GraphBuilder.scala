@@ -2,7 +2,7 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{Operator, OperatorContains, Polygon}
+import com.esri.core.geometry.{Operator, OperatorContains, Polygon, OperatorConvexHull}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
@@ -70,10 +70,14 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         counter.withProgress(siftDown(a, b, true), progressMessage)
       }
 
-      a.children.foreach(c => {
+      // Will never appear in another sift down so can be deaccelerated
+      a.children.foreach { c=>
         Operator.deaccelerateGeometry(c.area.polygon)
-      })
-      //Operator.deaccelerateGeometry(a.area.polygon)
+        c.area.convexHull.foreach { ch =>
+          Operator.deaccelerateGeometry(ch)
+        }
+        c.area.convexHull = None
+      }
 
       a.sifted = true;
       val ss = sifts.getOrElse(a.area, 0L)
@@ -97,12 +101,10 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     //var startFilter = DateTime.now()
     val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
-      s != b &&
       areaContains(s.area, b.area)
     }
     //val filterDuration = new Duration(startFilter, DateTime.now)
     //var secondFilterDuration: Option[Duration] = None
-
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
         //logger.info("Added " + b.area.id + " " + b.area.fitsIn)
@@ -113,6 +115,11 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     } else {
       if (accel) {
         OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+        if (b.area.convexHull.isEmpty) {
+          val convexHull = OperatorConvexHull.local().execute(b.area.polygon, null)
+          OperatorContains.local().accelerateGeometry(convexHull, sr, GeometryAccelerationDegree.enumMedium)
+          b.area.convexHull = Some(convexHull)
+        }
       }
       a.children.add(b)
     }
