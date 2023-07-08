@@ -58,11 +58,16 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
       val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
       inOrder.foreach { b =>
-        //logger.info("B: " + a.area.id + " " + b.area.area)
-        //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-        counter.withProgress {
-          siftDown(a, b, accel)
+        val progressMessage: (Long, Option[Long], Long, Double) => String = (i: Long, total: Option[Long], delta: Long, rate: Double) => {
+          val areaName = if (a.area.osmIds.nonEmpty) {
+            a.area.osmIds.mkString(" ,")
+          } else {
+            a.area.id.toString
+          }
+          "Sifted down " + i + " / " + total.get + " for " + areaName + " in " + delta + "ms at " + rate + " per second." +
+            " " + a.children.size + " areas at top level"
         }
+        counter.withProgress(siftDown(a, b, true), progressMessage)
       }
 
       a.children.foreach(c => {
