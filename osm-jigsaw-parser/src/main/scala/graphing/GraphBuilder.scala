@@ -50,10 +50,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       //logger.debug("Presorting by area to assist sift down effectiveness")
       val inOrder = a.children.toSeq.sortBy(-_.area.area)
 
-      val accel = true // inOrder.size > 10
-      if (accel) {
-        OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-      }
       a.children = mutable.Set()
 
       val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
@@ -67,7 +63,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
           "Sifted down " + i + " / " + total.get + " for " + areaName + " in " + delta + "ms at " + rate + " per second." +
             " " + a.children.size + " areas at top level"
         }
-        counter.withProgress(siftDown(a, b, true), progressMessage)
+        counter.withProgress(siftDown(a, b), progressMessage)
       }
 
       // Will never appear in another sift down so can be deaccelerated
@@ -79,53 +75,36 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         c.area.convexHull = None
       }
 
-      a.sifted = true;
       val ss = sifts.getOrElse(a.area, 0L)
       sifts.put(a.area, ss + 1)
       a.children.foreach { c =>
-        // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
         if (!c.sifted) {
           queue.add(c)
           c.sifted = true
         }
-
       }
-
     }
-
   }
 
-  def siftDown(a: GraphNode, b: GraphNode, accel: Boolean): Unit = {
-    //var start = DateTime.now()
-    //var siblings = a.children// .filter(c => c != b)
-
-    //var startFilter = DateTime.now()
+  def siftDown(a: GraphNode, b: GraphNode): Unit = {
     val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
       areaContains(s.area, b.area)
     }
-    //val filterDuration = new Duration(startFilter, DateTime.now)
-    //var secondFilterDuration: Option[Duration] = None
+
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
-        //logger.info("Added " + b.area.id + " " + b.area.fitsIn)
-        //logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
         s.children.add(b)
       }
 
     } else {
-      if (accel) {
-        OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-        if (b.area.convexHull.isEmpty) {
-          val convexHull = OperatorConvexHull.local().execute(b.area.polygon, null)
-          OperatorContains.local().accelerateGeometry(convexHull, sr, GeometryAccelerationDegree.enumMedium)
-          b.area.convexHull = Some(convexHull)
-        }
+      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+      if (b.area.convexHull.isEmpty) {
+        val convexHull = OperatorConvexHull.local().execute(b.area.polygon, null)
+        OperatorContains.local().accelerateGeometry(convexHull, sr, GeometryAccelerationDegree.enumMedium)
+        b.area.convexHull = Some(convexHull)
       }
       a.children.add(b)
     }
-
-    // val duration = new Duration(start, DateTime.now)
-    // logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
     Unit
   }
 
