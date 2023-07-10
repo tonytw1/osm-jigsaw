@@ -41,48 +41,62 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   def siftDown(a: GraphNode, queue: util.ArrayDeque[GraphNode]): Unit = {
-    if (a.children.nonEmpty) {
-
-      logger.info("Sifting down: " + a.area.osmIds.mkString(",") + " with " + a.children.size + " children")
-      //logger.debug("Presorting by area to assist sift down effectiveness")
-      val inOrder = a.children.toSeq.sortBy(-_.area.area)
-
-      a.children = mutable.Set()
-
-      val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
-      inOrder.foreach { b =>
-        val progressMessage: (Long, Option[Long], Long, Double) => String = (i: Long, total: Option[Long], delta: Long, rate: Double) => {
-          val areaName = if (a.area.osmIds.nonEmpty) {
-            a.area.osmIds.mkString(" ,")
-          } else {
-            a.area.id.toString
-          }
-          "Sifted down " + i + " / " + total.get + " for " + areaName + " in " + delta + "ms at " + rate + " per second." +
-            " " + a.children.size + " areas at top level"
-        }
-        counter.withProgress(siftDown(a, b), progressMessage)
+    val toSift = a.children
+    if (toSift.nonEmpty) {
+      val taskName = if (a.area.osmIds.nonEmpty) {
+        a.area.osmIds.mkString(" ,")
+      } else {
+        a.area.id.toString
       }
-
-      // Will never appear in another sift down so can be deaccelerated
-      a.children.foreach { c=>
-        Operator.deaccelerateGeometry(c.area.polygon)
-        c.area.convexHull.foreach { ch =>
-          Operator.deaccelerateGeometry(ch)
-        }
-        c.area.convexHull = None
-      }
-
-      a.children.foreach { c =>
-        if (!c.sifted) {
-          queue.add(c)
-          c.sifted = true
-        }
-      }
+      val topLevel = siftDown(taskName, toSift, queue)
+      a.children = topLevel
     }
   }
 
-  def siftDown(a: GraphNode, b: GraphNode): Unit = {
-    val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
+  private def siftDown(taskName: String, toSift: mutable.Set[GraphNode], queue: util.ArrayDeque[GraphNode]) = {
+    if (toSift.size > 100) {
+      logger.info("Sifting down: " + taskName + " with " + toSift.size + " children")
+    }
+
+    val topLevelNodes = mutable.Set[GraphNode]()
+
+    //logger.debug("Presorting by area to assist sift down effectiveness")
+    val inOrder = toSift.toSeq.sortBy(-_.area.area)
+
+    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(taskName))
+    inOrder.foreach { b =>
+      val progressMessage: (Long, Option[Long], Long, Double) => String = (i: Long, total: Option[Long], delta: Long, rate: Double) => {
+        "Sifted down " + i + " / " + total.get + " for " + taskName + " in " + delta + "ms at " + rate + " per second." +
+          " " + topLevelNodes.size + " areas at top level"
+      }
+      counter.withProgress(siftDownNode(topLevelNodes, b), progressMessage)
+    }
+
+
+    // Will never appear in another sift down so can be deaccelerated
+    topLevelNodes.foreach { c =>
+      Operator.deaccelerateGeometry(c.area.polygon)
+      c.area.convexHull.foreach { ch =>
+        Operator.deaccelerateGeometry(ch)
+      }
+      c.area.convexHull = None
+    }
+
+    topLevelNodes.foreach { c =>
+      if (!c.sifted) {
+        queue.add(c)
+        c.sifted = true
+      }
+    }
+    topLevelNodes
+  }
+
+  def siftDownNode(existingSiblings: mutable.Set[GraphNode], b: GraphNode): Unit = {
+    // Compare b with the existing toplevel siblings.
+    // If b fits in any of them, add it as a child of those siblings.
+    // else add it to the top level siblings
+
+    val existingSiblingsWhichNewValueWouldFitIn = existingSiblings.par.filter { s =>
       areaContains(s.area, b.area)
     }
 
@@ -98,7 +112,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         OperatorContains.local().accelerateGeometry(convexHull, sr, GeometryAccelerationDegree.enumMedium)
         b.area.convexHull = Some(convexHull)
       }
-      a.children.add(b)
+      existingSiblings.add(b)
     }
     Unit
   }
