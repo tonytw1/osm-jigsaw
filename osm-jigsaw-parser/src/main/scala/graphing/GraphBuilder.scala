@@ -2,86 +2,110 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{Operator, OperatorContains, Polygon}
+import com.esri.core.geometry.{Operator, OperatorContains, Polygon, OperatorConvexHull}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
 import resolving.{BoundingBox, PolygonBuilding}
 
+import java.util
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
+  private val sifts = mutable.Map[Area, Long]()
+
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas using thread " + Thread.currentThread().getId)
-    logger.debug("Starting area sort")
-    var head = GraphNode(headArea)
-    head.insert(areas.sortBy(-_.area))
-    siftDown(head)
+    logger.info("Sorting areas")
+    val areas1 = areas.sortBy(-_.area)
+    val head = GraphNode(headArea)
+    logger.info("Map")
+    val nodes = areas1.map(GraphNode(_))
+    logger.info("Insert")
+    head.insert(nodes)
+    logger.info("Sift down")
+
+
+    val queue: util.ArrayDeque[GraphNode] = new util.ArrayDeque[GraphNode]()
+    queue.add(head)
+    head.sifted = true
+
+    var done = 0
+    while (!queue.isEmpty) {
+      val node = queue.poll()
+      logger.info(done + " / " + areas.size + " areas sifted down")
+      done += 1
+      siftDown(node, queue)
+    }
+
     head
   }
 
-  def siftDown(a: GraphNode): Unit = {
-    //logger.debug("Sifting down: " + a.area.osmIds  + " with " + a.children.size + " children")
-    //logger.debug("Presorting by area to assist sift down effectiveness")
-    val inOrder = a.children.sortBy(-_.area.area)
+  def siftDown(a: GraphNode, queue: util.ArrayDeque[GraphNode]): Unit = {
+    if (a.children.nonEmpty) {
 
-    //OperatorContains.local().accelerateGeometry(a.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-    a.children = ListBuffer()
+      logger.info("Sifting down: " + a.area.osmIds.mkString(",") + " with " + a.children.size + " children")
+      //logger.debug("Presorting by area to assist sift down effectiveness")
+      val inOrder = a.children.toSeq.sortBy(-_.area.area)
 
-    val counter = new ProgressCounter(10000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
-    inOrder.foreach { b =>
-      //logger.info("B: " + a.area.id + " " + b.area.area)
-      //OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-      counter.withProgress {
-        siftDown(a, b)
+      a.children = mutable.Set()
+
+      val counter = new ProgressCounter(1000, Some(inOrder.size), Some(a.area.osmIds.mkString(",")))
+      inOrder.foreach { b =>
+        val progressMessage: (Long, Option[Long], Long, Double) => String = (i: Long, total: Option[Long], delta: Long, rate: Double) => {
+          val areaName = if (a.area.osmIds.nonEmpty) {
+            a.area.osmIds.mkString(" ,")
+          } else {
+            a.area.id.toString
+          }
+          "Sifted down " + i + " / " + total.get + " for " + areaName + " in " + delta + "ms at " + rate + " per second." +
+            " " + a.children.size + " areas at top level"
+        }
+        counter.withProgress(siftDown(a, b), progressMessage)
       }
-    }
 
-    a.children.foreach(c => {
-      Operator.deaccelerateGeometry(c.area.polygon)
-    })
+      // Will never appear in another sift down so can be deaccelerated
+      a.children.foreach { c=>
+        Operator.deaccelerateGeometry(c.area.polygon)
+        c.area.convexHull.foreach { ch =>
+          Operator.deaccelerateGeometry(ch)
+        }
+        c.area.convexHull = None
+      }
 
-    a.children.filter(i => i.children.nonEmpty).foreach { c =>
-      // logger.debug("Sifting down from " + a.area.osmIds + " to " + c.area.osmIds)
-      siftDown(c)
+      val ss = sifts.getOrElse(a.area, 0L)
+      sifts.put(a.area, ss + 1)
+      a.children.foreach { c =>
+        if (!c.sifted) {
+          queue.add(c)
+          c.sifted = true
+        }
+      }
     }
   }
 
   def siftDown(a: GraphNode, b: GraphNode): Unit = {
-    //var start = DateTime.now()
-    //var siblings = a.children// .filter(c => c != b)
-
-    //var startFilter = DateTime.now()
-    val existingSiblingsWhichNewValueWouldFitIn = a.children.filter { s =>
-        alreadyFitsIn(s, b) ||
-        areaContains(s.area, b.area)
+    val existingSiblingsWhichNewValueWouldFitIn = a.children.par.filter { s =>
+      areaContains(s.area, b.area)
     }
-    //val filterDuration = new Duration(startFilter, DateTime.now)
-    //var secondFilterDuration: Option[Duration] = None
 
     if (existingSiblingsWhichNewValueWouldFitIn.nonEmpty) {
       existingSiblingsWhichNewValueWouldFitIn.foreach { s =>
-        b.area.fitsIn += s.area.id
-        //logger.info("Added " + b.area.id + " " + b.area.fitsIn)
-        // logger.debug("Found sibling which new value " + b.area.osmIds + " would fit in: " + s.area.osmIds)
-        s.children = s.children :+ b.copy()
+        s.children.add(b)
       }
 
     } else {
-      // logger.debug("Inserting " + b.area.osmIds + " into " + a.area.osmIds)
-      val geometry = b.area.polygon.copy().asInstanceOf[Polygon]
-      OperatorContains.local().accelerateGeometry(geometry, sr, GeometryAccelerationDegree.enumMedium)
-      a.children = a.children :+ b.copy(area = b.area.copy(polygon = geometry))
+      OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
+      if (b.area.convexHull.isEmpty) {
+        val convexHull = OperatorConvexHull.local().execute(b.area.polygon, null)
+        OperatorContains.local().accelerateGeometry(convexHull, sr, GeometryAccelerationDegree.enumMedium)
+        b.area.convexHull = Some(convexHull)
+      }
+      a.children.add(b)
     }
-
-    // val duration = new Duration(start, DateTime.now)
-    // logger.debug("Sift down " + siblings.size + " took " + duration.getMillis + " filter " + filterDuration.getMillis + ", second filter: " + secondFilterDuration.map(d => d.getMillis))
     Unit
-  }
-
-  private def alreadyFitsIn(a: GraphNode, s: GraphNode) = {
-    s.area.fitsIn.contains(a.area.id)
   }
 
   private def render(nodes: Set[GraphNode]): String = {

@@ -3,7 +3,7 @@ package steps
 import areas.AreaComparison
 import graphing.{GraphBuilder, GraphWriter}
 import input.AreaReading
-import model.GraphNode
+import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import output.OutputFiles
 import progress.ProgressCounter
@@ -17,16 +17,14 @@ class BuildGraph extends OutputFiles with AreaReading with Segmenting with AreaC
 
     logger.info("Building graph")
 
-    val headArea = areas.head
-    val drop = areas
-
-    val graph = new GraphBuilder().buildGraph(headArea, drop)
+    val headArea = Area(-1L, null, (0,0,0,0), area = 0, convexHull = None)
+    val graph = new GraphBuilder().buildGraph(headArea, areas)
     writeGraph(graph, new FileOutputStream(graphFile(extractName)))
     logger.info("Done")
   }
 
   private def writeGraph(head: GraphNode, outputStream: FileOutputStream) = {
-    logger.debug("Writing graph to disk")
+    logger.info("Writing graph to disk")
     val output = new BufferedOutputStream(outputStream)
     val counter = new ProgressCounter(10000)
     new GraphWriter().export(head, output, None, counter)
