@@ -2,7 +2,7 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{Operator, OperatorContains, Polygon, OperatorConvexHull}
+import com.esri.core.geometry.{Operator, OperatorContains, OperatorConvexHull}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
@@ -10,11 +10,8 @@ import resolving.{BoundingBox, PolygonBuilding}
 
 import java.util
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
-
-  private val sifts = mutable.Map[Area, Long]()
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas using thread " + Thread.currentThread().getId)
@@ -75,8 +72,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
         c.area.convexHull = None
       }
 
-      val ss = sifts.getOrElse(a.area, 0L)
-      sifts.put(a.area, ss + 1)
       a.children.foreach { c =>
         if (!c.sifted) {
           queue.add(c)
