@@ -34,15 +34,21 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     var depth = 0;
     var done = 0
+    var c = 0;
     while (!queue.isEmpty) {
       val node = queue.poll()
       if (node == eol && !queue.isEmpty) {
-        depth = depth + 1;
+        depth = depth + 1
+        logger.info(s"Starting depth $depth with ${queue.size()} areas to sift down")
         queue.add(eol)
       }
       siftDown(node, queue, depth)
       done += 1
-      logger.info(done + " / " + totalAreas + " areas sifted down")
+      c = c + 1
+      if (c == 1000) {
+        logger.info(done + " / " + totalAreas + " areas sifted down")
+        c = 0
+      }
     }
 
     head
@@ -62,7 +68,10 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   }
 
   private def siftDown(taskName: String, toSift: mutable.Set[GraphNode], queue: util.ArrayDeque[GraphNode], depth: Int) = {
-    logger.info("Sifting down: " + taskName + " with " + toSift.size + " children at depth " + depth)
+    val toSiftSize = toSift.size
+    if (toSiftSize > 1000) {
+      logger.info("Sifting down: " + taskName + " with " + toSiftSize + " children at depth " + depth)
+    }
 
     val topLevelNodes = mutable.Set[GraphNode]()
 
