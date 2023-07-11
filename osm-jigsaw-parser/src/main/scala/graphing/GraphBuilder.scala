@@ -13,6 +13,8 @@ import scala.collection.mutable
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
+  private val eol = GraphNode(area = Area(-1L, null, (0, 0, 0, 0), area = 0, convexHull = None))  // A null would have been better
+
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     logger.info("Building graph from " + areas.size + " areas using thread " + Thread.currentThread().getId)
     logger.info("Sorting areas")
@@ -26,21 +28,26 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
 
     val queue: util.ArrayDeque[GraphNode] = new util.ArrayDeque[GraphNode]()
+    queue.add(eol)
     queue.add(head)
     head.sifted = true
 
+    var depth = 0;
     var done = 0
     while (!queue.isEmpty) {
       val node = queue.poll()
-      logger.info(done + " / " + areas.size + " areas sifted down")
+      if (node == eol && !queue.isEmpty) {
+        depth = depth + 1;
+        queue.add(eol)
+      }
+      siftDown(node, queue, depth)
       done += 1
-      siftDown(node, queue)
     }
 
     head
   }
 
-  def siftDown(a: GraphNode, queue: util.ArrayDeque[GraphNode]): Unit = {
+  def siftDown(a: GraphNode, queue: util.ArrayDeque[GraphNode], depth: Int): Unit = {
     val toSift = a.children
     if (toSift.nonEmpty) {
       val taskName = if (a.area.osmIds.nonEmpty) {
@@ -48,15 +55,13 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       } else {
         a.area.id.toString
       }
-      val topLevel = siftDown(taskName, toSift, queue)
+      val topLevel = siftDown(taskName, toSift, queue, depth)
       a.children = topLevel
     }
   }
 
-  private def siftDown(taskName: String, toSift: mutable.Set[GraphNode], queue: util.ArrayDeque[GraphNode]) = {
-    if (toSift.size > 100) {
-      logger.info("Sifting down: " + taskName + " with " + toSift.size + " children")
-    }
+  private def siftDown(taskName: String, toSift: mutable.Set[GraphNode], queue: util.ArrayDeque[GraphNode], depth: Int) = {
+    logger.info("Sifting down: " + taskName + " with " + toSift.size + " children at depth " + depth)
 
     val topLevelNodes = mutable.Set[GraphNode]()
 
