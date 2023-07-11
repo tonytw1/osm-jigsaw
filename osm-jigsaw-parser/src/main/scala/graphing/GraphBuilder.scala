@@ -16,7 +16,8 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
   private val eol = GraphNode(area = Area(-1L, null, (0, 0, 0, 0), area = 0, convexHull = None))  // A null would have been better
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
-    logger.info("Building graph from " + areas.size + " areas using thread " + Thread.currentThread().getId)
+    val totalAreas = areas.size // .size seems to be vaguely O^n so catch it
+    logger.info("Building graph from " + totalAreas + " areas using thread " + Thread.currentThread().getId)
     logger.info("Sorting areas")
     val areas1 = areas.sortBy(-_.area)
     val head = GraphNode(headArea)
@@ -25,7 +26,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     logger.info("Insert")
     head.insert(nodes)
     logger.info("Sift down")
-
 
     val queue: util.ArrayDeque[GraphNode] = new util.ArrayDeque[GraphNode]()
     queue.add(eol)
@@ -42,6 +42,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
       }
       siftDown(node, queue, depth)
       done += 1
+      logger.info(done + " / " + totalAreas + " areas sifted down")
     }
 
     head
@@ -68,15 +69,15 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     //logger.debug("Presorting by area to assist sift down effectiveness")
     val inOrder = toSift.toSeq.sortBy(-_.area.area)
 
-    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(taskName))
-    inOrder.foreach { b =>
-      val progressMessage: (Long, Option[Long], Long, Double) => String = (i: Long, total: Option[Long], delta: Long, rate: Double) => {
-        "Sifted down " + i + " / " + total.get + " for " + taskName + " in " + delta + "ms at " + rate + " per second." +
-          " " + topLevelNodes.size + " areas at top level"
-      }
-      counter.withProgress(siftDownNode(topLevelNodes, b), progressMessage)
+    val progressMessage: (Long, Option[Long], Long, Double) => String = (i: Long, total: Option[Long], delta: Long, rate: Double) => {
+      "Sifted down " + i + " / " + total.get + " for " + taskName + " in " + delta + "ms at " + rate + " per second." +
+        " " + topLevelNodes.size + " areas at top level"
     }
 
+    val counter = new ProgressCounter(1000, Some(inOrder.size), Some(taskName))
+    inOrder.foreach { b =>
+      counter.withProgress(siftDownNode(topLevelNodes, b), progressMessage)
+    }
 
     // Will never appear in another sift down so can be deaccelerated
     topLevelNodes.foreach { c =>
@@ -89,7 +90,7 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     topLevelNodes.foreach { c =>
       if (!c.sifted) {
-        queue.add(c)
+        queue.offer(c)
         c.sifted = true
       }
     }
