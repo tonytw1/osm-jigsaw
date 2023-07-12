@@ -1,6 +1,6 @@
 package areas
 
-import com.esri.core.geometry.{OperatorContains, OperatorEquals, Polygon, SpatialReference}
+import com.esri.core.geometry.{OperatorContains, Polygon, SpatialReference}
 import model.Area
 
 trait AreaComparison {
@@ -8,12 +8,7 @@ trait AreaComparison {
   val sr = SpatialReference.create(1)
 
   def areaContains(a: Area, b: Area): Boolean = {
-    a.convexHull.map { ch =>
-      OperatorContains.local().execute(ch, b.polygon, sr, null) &&
-        OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
-    }.getOrElse {
-      OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
-    }
+    OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
   }
 
   def areaSame(a: Area, b: Area): Boolean = {

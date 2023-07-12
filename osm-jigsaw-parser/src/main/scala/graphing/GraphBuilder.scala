@@ -2,7 +2,7 @@ package graphing
 
 import areas.AreaComparison
 import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
-import com.esri.core.geometry.{Operator, OperatorContains, OperatorConvexHull}
+import com.esri.core.geometry.{Operator, OperatorContains}
 import model.{Area, GraphNode}
 import org.apache.logging.log4j.scala.Logging
 import progress.ProgressCounter
@@ -13,7 +13,7 @@ import scala.collection.mutable
 
 class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with AreaComparison {
 
-  private val eol = GraphNode(area = Area(-1L, null, (0, 0, 0, 0), area = 0, convexHull = None))  // A null would have been better
+  private val eol = GraphNode(area = Area(-1L, null, (0, 0, 0, 0), area = 0))  // A null would have been better
 
   def buildGraph(headArea: Area, areas: Seq[Area]): GraphNode = {
     val totalAreas = areas.size // .size seems to be vaguely O^n so catch it
@@ -91,10 +91,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     // Will never appear in another sift down so can be deaccelerated
     topLevelNodes.foreach { c =>
       Operator.deaccelerateGeometry(c.area.polygon)
-      c.area.convexHull.foreach { ch =>
-        Operator.deaccelerateGeometry(ch)
-      }
-      c.area.convexHull = None
     }
 
     topLevelNodes.foreach { c =>
@@ -122,11 +118,6 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
 
     } else {
       OperatorContains.local().accelerateGeometry(b.area.polygon, sr, GeometryAccelerationDegree.enumMedium)
-      if (b.area.convexHull.isEmpty) {
-        val convexHull = OperatorConvexHull.local().execute(b.area.polygon, null)
-        OperatorContains.local().accelerateGeometry(convexHull, sr, GeometryAccelerationDegree.enumMedium)
-        b.area.convexHull = Some(convexHull)
-      }
       existingSiblings.add(b)
     }
     Unit

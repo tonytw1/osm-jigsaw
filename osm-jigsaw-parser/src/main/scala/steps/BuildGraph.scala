@@ -17,7 +17,7 @@ class BuildGraph extends OutputFiles with AreaReading with Segmenting with AreaC
 
     logger.info("Building graph")
 
-    val headArea = Area(-1L, null, (0,0,0,0), area = 0, convexHull = None)
+    val headArea = Area(-1L, null, (0,0,0,0), area = 0)
     val graph = new GraphBuilder().buildGraph(headArea, areas)
     writeGraph(graph, new FileOutputStream(graphFile(extractName)))
     logger.info("Done")
