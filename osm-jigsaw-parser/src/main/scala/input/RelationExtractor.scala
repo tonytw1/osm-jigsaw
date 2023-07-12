@@ -65,8 +65,9 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
       Serializer.LONG_ARRAY
     ).createFromSink()
 
-    val nodesRequiredToBuildRequiredWays = mutable.Set[Long]()
-
+    // July 2023 - HashSet resizing operation exceeds max integer value for set size now
+    // TreeSet will be slower but will run to completion
+    val nodesRequiredToBuildRequiredWays = mutable.TreeSet[Long](Integer.MAX_VALUE)
     def persistWayAndExpandNodeIds(entity: Entity) = {
       entity match {
         case w: Way =>
