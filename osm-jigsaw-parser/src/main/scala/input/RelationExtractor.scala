@@ -99,14 +99,14 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
 
     def allNodes(entity: Entity): Boolean = entity.getType == EntityType.Node
 
-    var foundNodes = 0L
+    var foundNodesUsedInWays = 0L
 
     def addToFoundNodes(entity: Entity) = {
       entity match {
         case n: Node =>
           if (nodesRequiredToBuildRequiredWays.contains(entity.getId)) {
             nodeSink.put(n.getId, Array(n.getLatitude, n.getLongitude))
-            foundNodes = foundNodes + 1
+            foundNodesUsedInWays = foundNodesUsedInWays + 1
           }
           if (hasName(n)) {
             entityWriter.write(n)
@@ -118,7 +118,7 @@ class RelationExtractor extends Logging with EntityRendering with CommaFormatted
     nodeSink.create()
     nodeVolume.close()
 
-    logger.info("Found " + foundNodes + " nodes")
+    logger.info("Found " + foundNodesUsedInWays + " nodes used in ways")
     entityWriter.close()
 
     logger.warn("Found " + relationExpander.recursingRelations.size + " infinitely recursing relations: " +
