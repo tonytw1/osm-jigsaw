@@ -3,6 +3,7 @@ package graph
 import areas.AreaComparison
 import ch.hsr.geohash.GeoHash
 import com.esri.core.geometry.Point
+import com.google.common.cache.CacheBuilder
 import model.{GraphNode, OsmId}
 import play.api.{Configuration, Logger}
 import tags.TagService
@@ -14,6 +15,11 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
 
   val geohashCharacters = 4
 
+  val segmentCache = CacheBuilder.newBuilder()
+    .maximumSize(10)
+    .build[String, GraphNode]
+
+
   def headOfGraphCoveringThisPoint(point: Point): Option[GraphNode] = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashCharacters)
 
@@ -22,8 +28,22 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
     //val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph." + geohash.toBase32 + ".pbf")
     val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph.pbf")
 
-    Logger.info("Loading graph segment from " + segmentURL + " for point " + point)
-    new GraphReader(areasReader).loadGraph(segmentURL)
+    val cacheKey = segmentURL.toExternalForm
+    val cached = segmentCache.getIfPresent(cacheKey)
+    Option(cached).map { n =>
+      Logger.info("Cache hit for " + cacheKey)
+      Some(n)
+
+    }.getOrElse {
+      Logger.info("Loading graph segment from " + segmentURL + " for point " + point)
+      val maybeNode = new GraphReader(areasReader).loadGraph(segmentURL)
+      maybeNode.foreach { n =>
+        // Cache this; makes more sense which segmented
+        val cacheKey = segmentURL.toExternalForm
+        segmentCache.put(cacheKey, n)
+      }
+      maybeNode
+    }
   }
 
   def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
