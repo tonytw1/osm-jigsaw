@@ -25,7 +25,7 @@ lazy val root = (project in file(".")).
       case "META-INF/ECLIPSE_.SF" => MergeStrategy.discard
       case x => MergeStrategy.first
     },
-    libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.2.3",
+    libraryDependencies += "com.esri.geometry" % "esri-geometry-api" % "2.2.4",
     libraryDependencies += "joda-time" % "joda-time" % "2.9.9",
     libraryDependencies += "commons-cli" % "commons-cli" % "1.4",
     libraryDependencies += "com.google.guava" % "guava" % "23.0",
