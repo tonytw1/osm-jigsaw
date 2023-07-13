@@ -35,8 +35,8 @@ class AreasReader @Inject()(configuration: Configuration) extends OsmIdParsing {
     }
 
     val areasMap = mutable.Map[Long, Area]()
-    val planet = Area(id = 0L, points = Seq.empty, osmIds = Seq.empty, area = 0.0) // TODO meh
-    areasMap += 0L -> planet
+    val planet = Area(id = -1L, points = Seq.empty, osmIds = Seq.empty, area = 0.0) // TODO If we need this root node then it should be in the graph and areas file
+    areasMap += planet.id -> planet
     val input = new BufferedInputStream(areasFile.openStream())
     val counter = new ProgressCounter(step = 100000, label = Some("Reading areas"))
     var ok = true

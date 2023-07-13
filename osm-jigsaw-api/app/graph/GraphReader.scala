@@ -16,11 +16,15 @@ class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
   def loadGraph(graphFile: URL): Option[GraphNode] = {
     try {
       def toGraphNode(ogn: OutputGraphNode): Option[GraphNode] = {
-        ogn.area.flatMap { areaId =>
+        val maybeNode = ogn.area.flatMap { areaId =>
           areasReader.getAreas().get(areaId).map { area =>
             GraphNode(area = area)
           }
         }
+        if (maybeNode.isEmpty) {
+          Logger.warn("No area found for " + ogn)
+        }
+        maybeNode
       }
 
       val stack = mutable.Stack[GraphNode]()
@@ -55,6 +59,7 @@ class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
         input.close()
 
         Logger.info("Finished reading")
+        Logger.info("Head node is: " + stack.lastOption.map(_.area.id))
         stack.lastOption
 
       } catch {

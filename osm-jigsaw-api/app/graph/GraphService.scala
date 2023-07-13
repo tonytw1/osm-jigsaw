@@ -1,14 +1,14 @@
 package graph
 
-import java.net.URL
-
 import areas.AreaComparison
-import com.esri.core.geometry.Point
-import javax.inject.Inject
-import model.{GraphNode, OsmId}
-import play.api.Configuration
-import tags.TagService
 import ch.hsr.geohash.GeoHash
+import com.esri.core.geometry.Point
+import model.{GraphNode, OsmId}
+import play.api.{Configuration, Logger}
+import tags.TagService
+
+import java.net.URL
+import javax.inject.Inject
 
 class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader) extends AreaComparison {
 
@@ -19,8 +19,10 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
 
     val dataUrl = configuration.getString("data.url").get
     val extractName = configuration.getString("extract.name").get
-    val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph." + geohash.toBase32 + ".pbf")
+    //val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph." + geohash.toBase32 + ".pbf")
+    val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph.pbf")
 
+    Logger.info("Loading graph segment from " + segmentURL + " for point " + point)
     new GraphReader(areasReader).loadGraph(segmentURL)
   }
 
