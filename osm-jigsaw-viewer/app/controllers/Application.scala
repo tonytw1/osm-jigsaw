@@ -79,7 +79,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
   }
 
   def click(lat: Double, lon: Double) = Action.async { request =>
-    val reverseApiCallUrl = Url.parse(apiUrl + "/reverse").addParam("lat", lat).addParam("lon", lon)
+    val reverseApiCallUrl = Url.parse(apiUrl + "/reverse").addParam("lat", lat.toString).addParam("lon", lon.toString)
     val eventualCrumbs = ws.url(reverseApiCallUrl.toString).get.map { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
@@ -88,7 +88,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
       }
     }
 
-    val nameApiCallUrl = Url.parse(apiUrl + "/name").addParam("lat", lat).addParam("lon", lon)
+    val nameApiCallUrl = Url.parse(apiUrl + "/name").addParam("lat", lat.toString).addParam("lon", lon.toString)
     val eventualName = ws.url(nameApiCallUrl.toString).get.map { r =>
       Json.parse(r.body).as[String]
     }

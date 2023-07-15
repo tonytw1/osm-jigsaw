@@ -5,9 +5,8 @@ lazy val `osm-jigsaw-viewer` = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.12.13"
 
-libraryDependencies ++= Seq(ws)
-libraryDependencies += "io.lemonlabs" %% "scala-uri" % "3.6.0"
-libraryDependencies += guice
+libraryDependencies ++= Seq(ws, guice)
+libraryDependencies += "io.lemonlabs" %% "scala-uri" % "1.5.1"
 
 libraryDependencies += specs2 % Test
 
