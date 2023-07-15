@@ -1,19 +1,24 @@
-import java.io._
-
 import graphing.EntitiesToGraph
 import input._
 import model.EntityRendering
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
+import output.OutputFiles
+import outputgraphnode.OutputGraphNode
+import outputgraphnodev2.OutputGraphNodeV2
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
+import progress.ProgressCounter
 import resolving._
 import steps._
 
+import java.io._
+import scala.collection.mutable
+
 object Main extends EntityRendering with Logging with PolygonBuilding
   with ProtocolbufferReading with EntityOsmId
-  with Extracts with WorkingFiles with EntitiesToGraph with AreaReading {
+  with Extracts with WorkingFiles with EntitiesToGraph with AreaReading with OutputFiles {
 
   private val STEP = "s"
 
@@ -41,6 +46,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
       }
+      case "flip" =>
+        flipGraph(inputFilepath)
       case _ => logger.info("Unknown step") // TODO exit code
     }
   }
@@ -125,6 +132,84 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     }
 
     new RelationExtractor().extract(extractName, selectedRelations, outputFilepath)
+
+    logger.info("Done")
+  }
+
+  case class FlippedGraphNode(id: Long, children: mutable.Set[FlippedGraphNode]) {
+    override def hashCode(): Int = id.hashCode()
+  }
+
+  def flipGraph(extractName: String): Unit = {
+    val input = new BufferedInputStream(new FileInputStream(new File(graphFile(extractName))))
+    val rootId = -1L
+
+    var ok = true
+    // Remap out nodes with parents formatted graph into nodes with children
+    // There is likely massive duplication of nodes in the existing format which is hurting on memory
+    val nodes = mutable.Map[Long, FlippedGraphNode]()
+
+    val progressMessage: (Long, scala.Option[Long], Long, Double) => String = (i: Long, total: scala.Option[Long], delta: Long, rate: Double) => {
+        i + " / Unique nodes: " + nodes.size
+    }
+
+    var root: FlippedGraphNode = null
+    val counterSecond = new ProgressCounter(step = 100, label = Some("Flipping graph"))
+    while (ok) {
+      counterSecond.withProgress({
+        val maybeNode = OutputGraphNode.parseDelimitedFrom(input)
+        ok = maybeNode.nonEmpty
+        maybeNode.foreach { o =>
+          for {
+            area <- o.area
+          } yield {
+            // Get of create this node
+            val node = nodes.getOrElseUpdate(area, FlippedGraphNode(area, mutable.Set[FlippedGraphNode]()))
+            nodes.put(area, node)
+
+            val parentId = o.parent.getOrElse(rootId)
+            // Find or create the node for out parent
+            val parentNode = nodes.getOrElseUpdate(parentId, {
+              val newParent = FlippedGraphNode(parentId, mutable.Set[FlippedGraphNode]())
+              nodes.put(parentId, newParent)
+              newParent
+            })
+
+            if (node.id != rootId) {
+              parentNode.children.add(node)
+            }
+
+            // Latch the root node when we see it go past
+            if (area == rootId) {
+              root = node
+            }
+          }
+        }
+      }, progressMessage)
+    }
+    logger.info("Root: " + root.id + " -> " + root.children.size)
+
+    logger.info("Writing out flipped graph")
+    val output = new BufferedOutputStream(new FileOutputStream(new File(graphV2File(extractName))))
+
+    // Now we can write out the flipped graph
+    // If we DFS write leaf nodes first then all children will have already been encountered by the time they are read.
+    // Given our leaf first ordering, if a node appears more than once we can skip it; the reader will have already encountered it and it's children
+    val persisted = mutable.Set[Long]()
+
+    def visit(node: FlippedGraphNode): Unit = {
+      if (!persisted.contains(node.id)) {
+        node.children.foreach { c =>
+          visit(c)
+        }
+        persisted.add(node.id)
+        new OutputGraphNodeV2(node.id, node.children.map(_.id).toSeq).writeDelimitedTo(output)
+      }
+    }
+
+    visit(root)
+    output.flush()
+    output.close()
 
     logger.info("Done")
   }

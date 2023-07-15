@@ -13,7 +13,11 @@ trait OutputFiles {
   }
 
   def graphFile(extractName: String) = {
-    outputFolderFor(extractName) + "/" + extractName + ".graph." + ".pbf"
+    outputFolderFor(extractName) + "/" + extractName + ".graph" + ".pbf"
+  }
+
+  def graphV2File(extractName: String) = {
+    outputFolderFor(extractName) + "/" + extractName + ".graphv2" + ".pbf"
   }
 
   def tagsFilePath(extractName: String): String = {
