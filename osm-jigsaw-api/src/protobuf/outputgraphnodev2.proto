@@ -1,0 +1,6 @@
+syntax = "proto2";
+
+message OutputGraphNodeV2 {
+   required int64 area = 1;
+   repeated int64 children = 2 [packed=true];
+}

@@ -26,7 +26,7 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
     val dataUrl = configuration.getString("data.url").get
     val extractName = configuration.getString("extract.name").get
     //val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph." + geohash.toBase32 + ".pbf")
-    val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph.pbf")
+    val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
 
     val cacheKey = segmentURL.toExternalForm
     val cached = segmentCache.getIfPresent(cacheKey)
