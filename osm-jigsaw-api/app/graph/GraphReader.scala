@@ -38,6 +38,7 @@ class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
             ok = OutputGraphNodeV2.parseDelimitedFrom(input).map { oa =>
               val node = toGraphNode(oa)
               root = node
+              nodes.put(node.area.id, node)
               node
             }.nonEmpty
           }
