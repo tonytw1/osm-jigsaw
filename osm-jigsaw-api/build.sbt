@@ -16,7 +16,7 @@ libraryDependencies += specs2 % Test
 libraryDependencies += "org.mockito" % "mockito-core" % "1.9.5" % Test
 
 enablePlugins(DockerPlugin)
-dockerBaseImage := "openjdk:10-jre"
+dockerBaseImage := "openjdk:11-jre"
 dockerExposedPorts in Docker := Seq(9000)
 
 javaOptions in Universal ++= Seq(
