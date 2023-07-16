@@ -13,7 +13,7 @@ trait OutputFiles {
   }
 
   def graphFile(extractName: String) = {
-    outputFolderFor(extractName) + "/" + extractName + ".graph" + ".pbf"
+      extractName + ".graph" + ".pbf"
   }
 
   def graphV2File(extractName: String) = {
