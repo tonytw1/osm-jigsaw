@@ -83,9 +83,9 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
     val eventualCrumbs = ws.url(reverseApiCallUrl.toString).get.map { r =>
       implicit val er = Json.reads[Entity]
       implicit val gnr = Json.reads[GraphNode]
-      Json.parse(r.body).as[Seq[Seq[GraphNode]]].map { as =>
-        areasToCrumbs(as)
-      }
+      val crumbs = Json.parse(r.body).as[Seq[Seq[GraphNode]]].map(areasToCrumbs)
+      val duration = r.headers.get("request-time").flatMap(_.headOption).map(d => d.toInt).getOrElse(0)
+      (crumbs, duration)
     }
 
     val nameApiCallUrl = Url.parse(apiUrl + "/name").addParam("lat", lat.toString).addParam("lon", lon.toString)
@@ -96,9 +96,8 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
     for {
       crumbs <- eventualCrumbs
       name <- eventualName
-
     } yield {
-      Ok(views.html.click((lat, lon), crumbs, name, nameApiCallUrl.toString, reverseApiCallUrl.toString))
+      Ok(views.html.click((lat, lon), crumbs._1, name, nameApiCallUrl.toString, reverseApiCallUrl.toString, crumbs._2))
     }
   }
 
