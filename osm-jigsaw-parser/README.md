@@ -24,22 +24,26 @@ The extract file appears to be grouped by entity type; it lists all Nodes then W
 
 Been able to seek to the start of different types of entities is useful so scan the extract file and record the offsets for the edges between different record types.
 
+```
+malta-230704.boundaries.json
+{
+    "Node":189,
+    "Relation":5573612,
+    "EOF":5706583,
+    "Way":3194269,
+    "Bound":0
+}
+```
 
 ##### 2) Extract area entities
 
-Extract the entities from which could be parts of areas.
+Read the extract file and extract the entities from which could be parts of areas.
 
-All of the named relations and their sub relations.
-All of the named and closed ways.
-And of the ways and nodes which are parts of the above.
+- All of the named relations and their sub relations.
+- All of the named and closed ways.
+- The ways and nodes which are parts of the above.
 
 Extract to separate relations, ways and nodes files; with the ways and nodes been indexed by id.
-
-```
-input="ireland-and-northern-ireland-180717"
-jarfile="target/scala/osm-jigsaw-assembly-0.1.0-SNAPSHOT.jar"
-java -jar $jarfile -s split $input.osm.pbf
-```
 
 This produces 3 new files:
 
@@ -49,42 +53,39 @@ new-zealand-230705.rels.pbf.nodes.vol
 new-zealand-230705.rels.pbf.ways.vol
 ```
 
-##### 3) Resolve Areas
+##### 3) Resolve Areas ways
 
 Resolve the areas formed by the extracted relations and closed ways.
 
-For relations which involves finding a combination of it's ways which can be arranged nose to tail 
-in a way which uses all of the ways and forms a closed loop.
+
+For relations which involves finding a combination of it's ways which can be arranged nose to tail in a way which uses all of the ways and forms a closed loop.
+All sub relations need to be expanded so that the entire relation is described as a set of ways.
+
 I'm quite surprised that this actually works and is extremely fast (it's probably O(n^2) but n is small for a given relation).
 
 Outputs a list of `OutputArea's which describe sequence of ways which make up a closed area.
 
-Resolve the way points from the nodes which make up these ways.
-Output a list `OutputWay`s which contain the points which make up those ways.
-
 ```
 new-zealand-230705.areaways.pbf
+```
+
+The resolve the nodes which make up the ways to produce the outlines of the areas.
+Outputs a list `OutputWay`s which contain the points which make up those ways.
+
+```
 new-zealand-230705.areaways.pbf.ways.pbf
 ```
 
+
 #### 4) Build areas
 
-Render and duplicate.
+Remaps the OutputWays into `OutputArea`s.
+Deduplicates areas with identical shapes and merges their OSM ids.
 
-Render areas described as a sequence of ways into polygon outlines made up of points.
-Deduplicate areas with identical shapes and merge there OSM ids.
-
-Output an areas describing all the closed area polygons found in the extract.
+Outputs a file of `OutputArea`s describing all the polygons found in the extract.
 
 ```
 new-zealand-230705/new-zealand-230705.areas.pbf
-```
-
-
-
-
-```
-java -Xmx16G -jar $jarfile -s areas $input.rels.pbf $input.areas.pbf
 ```
 
 #### 5) Sort the areas into a graph
@@ -92,27 +93,25 @@ java -Xmx16G -jar $jarfile -s areas $input.rels.pbf $input.areas.pbf
 Given the polygons representing the area shapes found in the extract, sort them into a graph where every area fits inside it's parent.
 ie. England fixes inside the UK, which fits inside Europe, which fits inside the World.
 
-
-```
-java -Xmx28G -jar $jarfile -s graph $input.areas.pbf $input.graph.pbf
-```
-
 The step may take some time (approximately 14 hours for a full planet extract).
 
+`new-zealand-230705.graph.pbf`
 
 #### 6) Flip the graph
 
+The graph produced in the previous step is formatted as nodes with parents; nodes with children is actually more useful 
+to the consuming app and can be represented in a more compact format.
+Read the graph and invert into.
+
+`new-zealand-230705.graphv2.pbf`
 
 
-#### 5) Extract the tags for areas
+#### 7) Extract the tags for areas
 
 Extracts the OSM tags for the entities which produced areas. This allows names for the areas to be derived at runtime.
 
-```
-java -jar $jarfile -s tags $input.rels.pbf $input.tags.pbf
-```
 
-On completion you should have 3 files representing the extracted, sorted areas.
+On completion we should have 3 files representing the extracted, sorted areas.
 
 ```
 ireland-and-northern-ireland-180717.areas.pbf
