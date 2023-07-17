@@ -9,9 +9,7 @@ trait AreaComparison extends BoundingBox {
 
   private val sr = SpatialReference.create(1)
 
-  val polygonCache = CacheBuilder.newBuilder()
-    .maximumSize(200000)
-    .build[java.lang.Long, Polygon]
+  def polygonCache: PolygonCache
 
   def areaContainsPoint(node: GraphNode, pt: Point): Boolean = {
 

@@ -1,6 +1,6 @@
 package graph
 
-import areas.AreaComparison
+import areas.{AreaComparison, PolygonCache}
 import ch.hsr.geohash.GeoHash
 import com.esri.core.geometry.Point
 import com.google.common.cache.CacheBuilder
@@ -11,7 +11,7 @@ import tags.TagService
 import java.net.URL
 import javax.inject.Inject
 
-class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader) extends AreaComparison {
+class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
   val geohashCharacters = 4
 
