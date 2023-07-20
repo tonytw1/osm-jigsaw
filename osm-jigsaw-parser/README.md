@@ -1,6 +1,6 @@
 ## OpenStreetMap Jigsaw
 
-Parses an OSM protocol buffer extract and produces a sorted graph of areas.
+Parses an OSM protocol buffer extract and produces a sorted graph of the areas found in that extract.
 
 
 ### Usage
@@ -16,6 +16,8 @@ sbt clean assembly
 #### Processing an extract file
 
 Obtain a planet.osm extract (using the protocol buffer .pbf format).
+
+We run the extract file through the following steps to arrive at a sorted graph of the areas found in the extract:
 
 
 ##### 1) Boundaries
