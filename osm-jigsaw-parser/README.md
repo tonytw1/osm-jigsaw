@@ -120,3 +120,15 @@ ireland-and-northern-ireland-180717.areas.pbf
 ireland-and-northern-ireland-180717.graph.pbf
 ireland-and-northern-ireland-180717.tags.pbf
 ```
+
+
+#### 8) Tiling
+
+The full planet graph, area polygons and OSM tag data can be read entirely into a 64Gb heap.
+This isn't completely our or order and would probably be an ok value proposition if the API had consistent usage.
+
+But it's only a demo so we'd like to optimise for the occasional user / low traffic / low standing cost.
+Requests from a given user are likely to be for areas which are close to each other.
+
+Segmenting the graph into tiles which cover small areas of the graph should allow us to not have to retain the entire graph in memory.
+We're happy to accept duplication of data between tiles to achieve this smaller memory footprint.
