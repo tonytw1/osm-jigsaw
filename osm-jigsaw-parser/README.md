@@ -1,4 +1,4 @@
-## OpenStreetMap Jigsaw
+## OpenStreetMap Jigsaw parser
 
 Parses an OSM protocol buffer extract and produces a sorted graph of the areas found in that extract.
 
@@ -71,7 +71,7 @@ Outputs a list of `OutputArea's which describe sequence of ways which make up a 
 new-zealand-230705.areaways.pbf
 ```
 
-The resolve the nodes which make up the ways to produce the outlines of the areas.
+Then resolve the nodes which make up the ways to produce the outlines of the areas.
 Outputs a list `OutputWay`s which contain the points which make up those ways.
 
 ```
@@ -103,7 +103,7 @@ The step may take some time (approximately 14 hours for a full planet extract).
 
 The graph produced in the previous step is formatted as nodes with parents; nodes with children is actually more useful 
 to the consuming app and can be represented in a more compact format.
-Read the graph and invert into.
+Read the graph and invert it into a new file.
 
 `new-zealand-230705.graphv2.pbf`
 
@@ -124,11 +124,13 @@ ireland-and-northern-ireland-180717.tags.pbf
 
 #### 8) Tiling
 
-The full planet graph, area polygons and OSM tag data can be read entirely into a 64Gb heap.
-This isn't completely our or order and would probably be an ok value proposition if the API had consistent usage.
+The full planet graph, area polygons and OSM tag data for those areas can be read entirely into a 64Gb heap.
+This isn't completely out of order and would probably be an ok value proposition if the API had constant use.
 
-But it's only a demo so we'd like to optimise for the occasional user / low traffic / low standing cost.
+But it's only a demo, so we'd like to optimise for occasional user / low traffic / low standing cost.
+Standing memory usage is the most expensive problem.
+
 Requests from a given user are likely to be for areas which are close to each other.
+Segmenting the graph into tiles which cover small areas of the graph should allow us to service occasional users without having to retain the entire graph in memory.
 
-Segmenting the graph into tiles which cover small areas of the graph should allow us to not have to retain the entire graph in memory.
 We're happy to accept duplication of data between tiles to achieve this smaller memory footprint.
