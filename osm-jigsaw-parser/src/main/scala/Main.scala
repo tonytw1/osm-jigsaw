@@ -46,8 +46,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
       }
-      case "flip" =>
-        flipGraph(inputFilepath)
+      case "flip" => flipGraph(inputFilepath)
+      case "tile" => tileGraph(inputFilepath)
       case _ => logger.info("Unknown step") // TODO exit code
     }
   }
@@ -150,7 +150,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     val nodes = mutable.Map[Long, FlippedGraphNode]()
 
     val progressMessage: (Long, scala.Option[Long], Long, Double) => String = (i: Long, total: scala.Option[Long], delta: Long, rate: Double) => {
-        i + " / Unique nodes: " + nodes.size
+      i + " / Unique nodes: " + nodes.size
     }
 
     var root: FlippedGraphNode = null
@@ -212,6 +212,17 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     output.close()
 
     logger.info("Done")
+  }
+
+  def tileGraph(extractName: String): Unit = {
+    // Read the entire graph into memory
+    val graphInput = new BufferedInputStream(new FileInputStream(new File(graphV2File(extractName))))
+    throw new RuntimeException("Not implemented")
+
+    // Generate some tile shapes
+    // For each file filter walk the graph and filter for all areas which intersect the tile
+    // Output these; probably as a graph with the tile as the root node.
+    // Output area and tags files for this subset of the graph.
   }
 
 }
