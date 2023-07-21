@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
-  val geohashCharacters = 4
+  val geohashResolution = 2
 
   val segmentCache = CacheBuilder.newBuilder()
     .maximumSize(10)
@@ -21,12 +21,16 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
 
 
   def headOfGraphCoveringThisPoint(point: Point): Option[GraphNode] = {
-    val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashCharacters)
+    val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
 
     val dataUrl = configuration.getString("data.url").get
     val extractName = configuration.getString("extract.name").get
-    //val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph." + geohash.toBase32 + ".pbf")
-    val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
+
+    val segmentURL = if (geohashResolution > 0 ) {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
+    } else {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
+    }
 
     val cacheKey = segmentURL.toExternalForm
     val cached = segmentCache.getIfPresent(cacheKey)
