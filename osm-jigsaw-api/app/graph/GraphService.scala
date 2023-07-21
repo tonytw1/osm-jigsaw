@@ -4,14 +4,13 @@ import areas.{AreaComparison, PolygonCache}
 import ch.hsr.geohash.GeoHash
 import com.esri.core.geometry.Point
 import com.google.common.cache.CacheBuilder
-import model.{GraphNode, OsmId}
+import model.GraphNode
 import play.api.{Configuration, Logger}
-import tags.TagService
 
 import java.net.URL
 import javax.inject.Inject
 
-class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
+class GraphService @Inject()(configuration: Configuration, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
   val geohashResolution = 2
 
@@ -80,10 +79,6 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
     }.getOrElse {
       Seq.empty
     }
-  }
-
-  def tagsFor(osmId: OsmId): Option[Map[String, String]] = {
-    tagService.tagsFor(osmId)
   }
 
 }

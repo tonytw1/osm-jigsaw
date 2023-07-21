@@ -104,7 +104,7 @@ class Application @Inject()(configuration: Configuration, graphService: GraphSer
   // Given an OSM id return it's tags as a map
   def tags(osmId: String) = Action.async { request =>
     val id = toOsmId(osmId)
-    val tags = graphService.tagsFor(id).getOrElse(Map())
+    val tags = tagService.tagsFor(id).getOrElse(Map())
     Future.successful(Ok(Json.toJson(tags)))
   }
 
