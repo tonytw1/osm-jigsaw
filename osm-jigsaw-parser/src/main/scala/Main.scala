@@ -227,7 +227,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     // Generate some tile shapes
     val tiles = new TileGenerator().generateTiles(2)
 
-    tiles.foreach { t =>
+    tiles.par.foreach { t =>
       // For each tile filter walk the graph and filter for all areas which intersect the tile
       val topLeft = (t.boundingBox.getNorthEastCorner.getLatitude, t.boundingBox.getSouthWestCorner.getLongitude)
       val bottomRight = (t.boundingBox.getSouthWestCorner.getLatitude, t.boundingBox.getNorthEastCorner.getLongitude)
