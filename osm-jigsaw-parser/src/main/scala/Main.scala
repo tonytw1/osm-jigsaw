@@ -1,4 +1,6 @@
 import areas.AreaComparison
+import com.esri.core.geometry.Geometry.GeometryAccelerationDegree
+import com.esri.core.geometry.{Operator, OperatorContains}
 import graph.GraphReader
 import graphing.EntitiesToGraph
 import input._
@@ -232,6 +234,8 @@ object Main extends EntityRendering with Logging with PolygonBuilding
       val topLeft = (t.boundingBox.getNorthEastCorner.getLatitude, t.boundingBox.getSouthWestCorner.getLongitude)
       val bottomRight = (t.boundingBox.getSouthWestCorner.getLatitude, t.boundingBox.getNorthEastCorner.getLongitude)
       val tilePolygon = makePolygonD(topLeft, bottomRight)
+      OperatorContains.local().accelerateGeometry(tilePolygon, sr, GeometryAccelerationDegree.enumMedium)
+
       val tileArea = new Area(-1, tilePolygon, boundingBoxFor(tilePolygon), area = 0.0)
 
       // Create a new graph root for this segment
@@ -301,6 +305,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
         tileGraphOutput.close()
       }
 
+      Operator.deaccelerateGeometry(tilePolygon)
     }
     // Output these; probably as a graph with the tile as the root node.
     // Output area and tags files for this subset of the graph.
