@@ -1,6 +1,6 @@
 package areas
 
-import com.esri.core.geometry.{OperatorContains, Polygon, SpatialReference}
+import com.esri.core.geometry.{OperatorContains, OperatorIntersects, Polygon, SpatialReference}
 import model.Area
 
 trait AreaComparison {
@@ -11,6 +11,10 @@ trait AreaComparison {
 
   def areaContains(a: Area, b: Area): Boolean = {
     OperatorContains.local().execute(a.polygon, b.polygon, sr, null)
+  }
+
+  def areasIntersect(a: Area, b: Area): Boolean = {
+    OperatorIntersects.local().execute(a.polygon, b.polygon, sr, null)
   }
 
   def areaSame(a: Area, b: Area): Boolean = {

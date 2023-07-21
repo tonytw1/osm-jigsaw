@@ -1,10 +1,13 @@
+import areas.AreaComparison
+import graph.GraphReader
 import graphing.EntitiesToGraph
 import input._
-import model.EntityRendering
+import model.{Area, EntityRendering, GraphNode}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.OutputFiles
+import outputarea.OutputArea
 import outputgraphnode.OutputGraphNode
 import outputgraphnodev2.OutputGraphNodeV2
 import outputnode.OutputNode
@@ -12,13 +15,14 @@ import outputresolvedarea.OutputResolvedArea
 import progress.ProgressCounter
 import resolving._
 import steps._
+import tiles.TileGenerator
 
 import java.io._
 import scala.collection.mutable
 
 object Main extends EntityRendering with Logging with PolygonBuilding
   with ProtocolbufferReading with EntityOsmId
-  with Extracts with WorkingFiles with EntitiesToGraph with AreaReading with OutputFiles {
+  with Extracts with WorkingFiles with EntitiesToGraph with AreaReading with OutputFiles with AreaComparison {
 
   private val STEP = "s"
 
@@ -42,10 +46,9 @@ object Main extends EntityRendering with Logging with PolygonBuilding
       case "areas" => new RenderAndDeduplicateAreas().resolveAreas(inputFilepath)
       case "graph" => new BuildGraph().buildGraph(inputFilepath)
       case "tags" => new ExtractAreaTags().tags(inputFilepath)
-      case "rels" => {
+      case "rels" =>
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
-      }
       case "flip" => flipGraph(inputFilepath)
       case "tile" => tileGraph(inputFilepath)
       case _ => logger.info("Unknown step") // TODO exit code
@@ -216,11 +219,89 @@ object Main extends EntityRendering with Logging with PolygonBuilding
 
   def tileGraph(extractName: String): Unit = {
     // Read the entire graph into memory
+    val areas = readAreasFromPbfFile(areasFilePath(extractName))
     val graphInput = new BufferedInputStream(new FileInputStream(new File(graphV2File(extractName))))
-    throw new RuntimeException("Not implemented")
+    val root = new GraphReader().loadGraph(graphInput, areas).get
 
+    // Geohash boundaries are a nice repeatable set of tiles with some course control over tile size
     // Generate some tile shapes
-    // For each file filter walk the graph and filter for all areas which intersect the tile
+    val tiles = new TileGenerator().generateTiles(2)
+
+    tiles.foreach { t =>
+      // For each tile filter walk the graph and filter for all areas which intersect the tile
+      val topLeft = (t.boundingBox.getNorthEastCorner.getLatitude, t.boundingBox.getSouthWestCorner.getLongitude)
+      val bottomRight = (t.boundingBox.getSouthWestCorner.getLatitude, t.boundingBox.getNorthEastCorner.getLongitude)
+      val tilePolygon = makePolygonD(topLeft, bottomRight)
+      val tileArea = new Area(-1, tilePolygon, boundingBoxFor(tilePolygon), area = 0.0)
+
+      // Create a new graph root for this segment
+      val newRoot = root.copy(children = mutable.Set[GraphNode]())
+      val tileAreas = mutable.Set[Area]()
+
+      def visit(node: GraphNode, appendTo: GraphNode): Unit = {
+        // Check if we fit in the tile
+        val intersectsWithTile = areasIntersect(node.area, tileArea)
+
+        if (intersectsWithTile) {
+          // This node belongs in this tiles graph
+          // Add it to the new graph and append the area to this tile's areas
+          val newNode = node.copy(children = mutable.Set[GraphNode]())
+          appendTo.children.add(newNode)
+          tileAreas.add(node.area)
+          // Recurse down into children
+          node.children.foreach(c => visit(c, newNode))
+        }
+      }
+
+      root.children.foreach { c =>
+        visit(c, newRoot)
+      }
+
+      logger.info(t.geohash + ": " + tileAreas.size)
+      if (newRoot.children.nonEmpty) {
+        val segmentGraphFile = new File(graphV2File(extractName, Some(t.geohash)))
+        logger.info("Writing out tile graph: " + segmentGraphFile.getAbsolutePath)
+        // Write this new graph to a new file
+        val tileGraphOutput = new BufferedOutputStream(new FileOutputStream(segmentGraphFile))
+
+        def save(node: GraphNode): Unit = {
+          // Leaf first for easy reading
+          node.children.foreach { c =>
+            save(c)
+          }
+          new OutputGraphNodeV2(node.area.id, node.children.map(_.area.id).toSeq).writeDelimitedTo(tileGraphOutput)
+        }
+
+        save(newRoot)
+        tileGraphOutput.flush()
+        tileGraphOutput.close()
+
+        // Write out segmented areas file
+
+        def exportArea(area: Area, output: OutputStream): Unit = { // TODO duplication
+          val latitudes = mutable.ListBuffer[Double]()
+          val longitudes = mutable.ListBuffer[Double]()
+          val pointCount = area.polygon.getPointCount - 1
+          (0 to pointCount).map { i =>
+            val p = area.polygon.getPoint(i)
+            latitudes.+=(p.getX)
+            longitudes.+=(p.getY)
+          }
+
+          OutputArea(id = Some(area.id), osmIds = area.osmIds, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
+        }
+
+        val tileAreasFile: File = new File(areasFilePath(extractName, Some(t.geohash)))
+        logger.info("Writing out tile areas: " + tileAreasFile.getAbsolutePath)
+        val tileAreasOutput = new BufferedOutputStream(new FileOutputStream(tileAreasFile))
+        tileAreas.foreach { a =>
+          exportArea(a, tileAreasOutput)
+        }
+        tileAreasOutput.flush()
+        tileGraphOutput.close()
+      }
+
+    }
     // Output these; probably as a graph with the tile as the root node.
     // Output area and tags files for this subset of the graph.
   }
