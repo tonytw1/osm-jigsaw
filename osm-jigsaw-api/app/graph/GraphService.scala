@@ -26,24 +26,30 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
     val dataUrl = configuration.getString("data.url").get
     val extractName = configuration.getString("extract.name").get
 
-    val segmentURL = if (geohashResolution > 0 ) {
+    val graphFileURL = if (geohashResolution > 0 ) {
       new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
     } else {
       new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
     }
 
-    val cacheKey = segmentURL.toExternalForm
+    val areasFileURL = if (geohashResolution > 0) {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas-" + geohash.toBase32 + ".pbf")
+    } else {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas.pbf")
+    }
+
+    val cacheKey = graphFileURL.toExternalForm
     val cached = segmentCache.getIfPresent(cacheKey)
     Option(cached).map { n =>
       Logger.info("Cache hit for " + cacheKey)
       Some(n)
 
     }.getOrElse {
-      Logger.info("Loading graph segment from " + segmentURL + " for point " + point)
-      val maybeNode = new GraphReader(areasReader).loadGraph(segmentURL)
+      Logger.info("Loading graph segment from " + graphFileURL + " for point " + point)
+      val maybeNode = new GraphReader(areasReader).loadGraph(graphFileURL, areasFileURL)
       maybeNode.foreach { n =>
         // Cache this; makes more sense which segmented
-        val cacheKey = segmentURL.toExternalForm
+        val cacheKey = graphFileURL.toExternalForm
         segmentCache.put(cacheKey, n)
       }
       maybeNode

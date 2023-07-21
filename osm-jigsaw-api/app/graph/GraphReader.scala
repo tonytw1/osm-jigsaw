@@ -1,6 +1,6 @@
 package graph
 
-import model.{GraphNode, OsmIdParsing}
+import model.{Area, GraphNode, OsmIdParsing}
 import outputgraphnodev2.OutputGraphNodeV2
 import play.api.Logger
 import progress.ProgressCounter
@@ -12,13 +12,15 @@ import scala.collection.mutable
 
 class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
 
-  def loadGraph(graphFile: URL): Option[GraphNode] = {
+  def loadGraph(graphFile: URL, areasFile: URL): Option[GraphNode] = {
     try {
+      // Load areas
+      val areas = areasReader.loadAreas(areasFile)
 
+      // Load graph
       val nodes = mutable.Map[Long, GraphNode]()
-
       def toGraphNode(ogn: OutputGraphNodeV2): GraphNode = {
-        val area = areasReader.getAreas()(ogn.area)
+        val area = areas(ogn.area)
         // Map the children; leaf nodes appear first in the input file so will always have been created before been referenced
         val children = ogn.children.map { childId =>
           nodes(childId)
