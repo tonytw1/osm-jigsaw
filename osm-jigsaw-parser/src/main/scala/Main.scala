@@ -197,26 +197,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
 
     logger.info("Writing out flipped graph")
     val output = new BufferedOutputStream(new FileOutputStream(new File(graphV2File(extractName))))
-
-    // Now we can write out the flipped graph
-    // If we DFS write leaf nodes first then all children will have already been encountered by the time they are read.
-    // Given our leaf first ordering, if a node appears more than once we can skip it; the reader will have already encountered it and it's children
-    val persisted = mutable.Set[Long]()
-
-    def visit(node: FlippedGraphNode): Unit = {
-      if (!persisted.contains(node.id)) {
-        node.children.foreach { c =>
-          visit(c)
-        }
-        persisted.add(node.id)
-        new OutputGraphNodeV2(node.id, node.children.map(_.id).toSeq).writeDelimitedTo(output)
-      }
-    }
-
-    visit(root)
-    output.flush()
-    output.close()
-
+    outputFlippedGraph(root, output)
     logger.info("Done")
   }
 
@@ -317,17 +298,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
           val segmentGraphFile = new File(graphV2File(extractName, Some(t.geohash)))
           // Write this new graph to a new file
           val tileGraphOutput = new BufferedOutputStream(new FileOutputStream(segmentGraphFile))
-
-          def save(node: FlippedGraphNode): Unit = {
-            // Leaf first for easy reading
-            node.children.foreach { c =>
-              save(c)
-            }
-            new OutputGraphNodeV2(node.id, node.children.map(_.id).toSeq).writeDelimitedTo(tileGraphOutput)
-          }
-          save(newRoot)
-          tileGraphOutput.flush()
-          tileGraphOutput.close()
+          outputFlippedGraph(newRoot, tileGraphOutput)
 
           // Write out segmented areas file
           val tileAreasFile = new File(areasFilePath(extractName, Some(t.geohash)))
@@ -355,6 +326,27 @@ object Main extends EntityRendering with Logging with PolygonBuilding
         Operator.deaccelerateGeometry(tilePolygon)
       }
     }
+  }
+
+  private def outputFlippedGraph(root: FlippedGraphNode, output: OutputStream): Unit = {
+    // Now we can write out the flipped graph
+    // If we DFS write leaf nodes first then all children will have already been encountered by the time they are read.
+    // Given our leaf first ordering, if a node appears more than once we can skip it; the reader will have already encountered it and it's children
+    val persisted = mutable.Set[Long]()
+
+    def visit(node: FlippedGraphNode): Unit = {
+      if (!persisted.contains(node.id)) {
+        node.children.foreach { c =>
+          visit(c)
+        }
+        persisted.add(node.id)
+        new OutputGraphNodeV2(node.id, node.children.map(_.id).toSeq).writeDelimitedTo(output)
+      }
+    }
+
+    visit(root)
+    output.flush()
+    output.close()
   }
 
 }
