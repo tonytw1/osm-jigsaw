@@ -1,5 +1,7 @@
 package tags
 
+import ch.hsr.geohash.GeoHash
+import com.esri.core.geometry.Point
 import com.google.common.cache.CacheBuilder
 import model.{OsmId, OsmIdParsing}
 import outputtagging.OutputTagging
@@ -14,16 +16,23 @@ import scala.collection.mutable
 @Singleton
 class TagService @Inject()(configuration: Configuration) extends OsmIdParsing with EntityNameTags {
 
-  val tagsCache = CacheBuilder.newBuilder()
+  private val dataUrl = configuration.getString("data.url").get
+  private val extractName = configuration.getString("extract.name").get
+
+  private val geohashResolution = 3
+
+  private val tagsCache = CacheBuilder.newBuilder()
     .maximumSize(10)
     .build[String, Map[OsmId, Map[String, String]]]
 
-  val English = "en"
+  private val English = "en"
 
-  def tagsFor(osmId: OsmId): Option[Map[String, String]] = {
-    val tagsFileURL = {
-      val dataUrl = configuration.getString("data.url").get
-      val extractName = configuration.getString("extract.name").get
+  def tagsFor(osmId: OsmId, point: Point): Option[Map[String, String]] = {
+    val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
+
+    val tagsFileURL = if (geohashResolution > 0) {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".tags-" + geohash.toBase32 + ".pbf")
+    } else {
       new URL(dataUrl + "/" + extractName + "/" + extractName + ".tags.pbf")
     }
 
@@ -42,8 +51,8 @@ class TagService @Inject()(configuration: Configuration) extends OsmIdParsing wi
     maybeTagsForSegment.flatMap(_.get(osmId))
   }
 
-  def nameForOsmId(osmId: OsmId, encoding: Option[String] = None): Option[String] = { // TODO put another class
-    tagsFor(osmId).flatMap { tags =>
+  def nameForOsmId(osmId: OsmId, point: Point, encoding: Option[String] = None): Option[String] = { // TODO put another class
+    tagsFor(osmId, point).flatMap { tags =>
       getNameFromTags(tags, encoding.getOrElse(English))
     }
   }

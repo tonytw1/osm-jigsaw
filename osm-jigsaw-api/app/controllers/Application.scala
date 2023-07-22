@@ -19,24 +19,21 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
 
   // Given a location return all of sequences of overlapping areas which enclose it
   def reverse(lat: Double, lon: Double) = Action.async { request =>
+    val point = new Point(lat, lon)
     val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
     Logger.info("Accept language: " + requestedLanguage)
 
-    val pt = new Point(lat, lon)
-
-    val paths = graphService.pathsDownTo(pt).map(_.map(i => renderNode(i, requestedLanguage)))
+    val paths = graphService.pathsDownTo(point).map(_.map(i => renderNode(i, point, requestedLanguage)))
 
     Future.successful(Ok(Json.toJson(paths)))
   }
 
   // Given a location return a name for this location
   def name(lat: Double, lon: Double) = Action.async { request =>
+    val point = new Point(lat, lon)
     val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
-    Logger.info("Accept language: " + requestedLanguage)
 
-    val pt = new Point(lat, lon)
-
-    val paths = graphService.pathsDownTo(pt)
+    val paths = graphService.pathsDownTo(point)
 
     val pathInformationNeededToInferPlaceName = paths.map { path =>
       path.map { node =>
@@ -44,7 +41,7 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
       }
     }
 
-    val name = naiveNamingService.nameFor(pathInformationNeededToInferPlaceName, requestedLanguage)
+    val name = naiveNamingService.nameFor(pathInformationNeededToInferPlaceName, point, requestedLanguage)
 
     Future.successful(Ok(Json.toJson(name)))
   }
@@ -52,18 +49,18 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
   // Given the path to an area return the sequence of graph nodes for that path
   def show(q: String, lat: Double, lon: Double) = Action.async { request =>
     val components = parseComponents(q)
-    val pt = new Point(lat, lon)
+    val point = new Point(lat, lon)
 
-    val nodes = nodesFor(components, pt)
-    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n)))))
+    val nodes = nodesFor(components, point)
+    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n, point)))))
   }
 
   // Given the path to an area return the outline for that area
   def points(q: String, lat: Double, lon: Double) = Action.async { request =>
     val components = parseComponents(q)
-    val pt = new Point(lat, lon)
+    val point = new Point(lat, lon)
 
-    nodesFor(components, pt).lastOption.map { node =>
+    nodesFor(components, point).lastOption.map { node =>
       val points = node.area.points // TODO simplify outline for quick rendering
       implicit val pw = Json.writes[model.Point]
       Future.successful(Ok(Json.toJson(points)))
@@ -101,9 +98,11 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
   }
 
   // Given an OSM id return it's tags as a map
-  def tags(osmId: String) = Action.async { request =>
+  def tags(osmId: String, lat: Double, lon: Double) = Action.async { request =>
     val id = toOsmId(osmId)
-    val tags = tagService.tagsFor(id).getOrElse(Map())
+    val point = new Point(lat, lon)
+
+    val tags = tagService.tagsFor(id, point).getOrElse(Map())
     Future.successful(Ok(Json.toJson(tags)))
   }
 
@@ -116,10 +115,10 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
     q.split("/").toSeq.filter(_.nonEmpty).map(_.toLong)
   }
 
-  private def renderNode(node: GraphNode, requestedLanguage: Option[String] = None): JsValue = {
+  private def renderNode(node: GraphNode, point: Point, requestedLanguage: Option[String] = None): JsValue = {
     val entities = node.area.osmIds.map { osmId =>
       val osmIdString = osmId.id.toString + osmId.`type`.toString
-      val name = tagService.nameForOsmId(osmId, requestedLanguage).getOrElse(node.area.id.toString)
+      val name = tagService.nameForOsmId(osmId, point, requestedLanguage).getOrElse(node.area.id.toString)
       OutputEntity(osmIdString, name)
     }
 

@@ -1,8 +1,9 @@
 package naming
 
+import com.esri.core.geometry.Point
 import model.OsmId
 import org.mockito.Matchers.any
-import org.mockito.Mockito
+import org.mockito.{Matchers, Mockito}
 import org.specs2.mutable._
 import tags.TagService
 
@@ -11,7 +12,7 @@ class NaiveNamingServiceSpec extends Specification {
   private val R = "R".charAt(0)
   private val W = "W".charAt(0)
 
-  "place name is a concatenation of the the enclosing area names" in {
+  "place name is a concatenation of the enclosing area names" in {
     val australia = OsmId(80500L, R)
     val westernAustralia = OsmId(2316598, R)
     val ngaanyatjarra = OsmId(8165171, R)
@@ -22,16 +23,18 @@ class NaiveNamingServiceSpec extends Specification {
       (Seq(ngaanyatjarra), 0D)
     ))
 
+    val point = new Point(0, 0)
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
-    Mockito.when(tagServiceMock.nameForOsmId(australia, None)).thenReturn(Some("Australia"))
-    Mockito.when(tagServiceMock.nameForOsmId(westernAustralia, None)).thenReturn(Some("Western Australia"))
-    Mockito.when(tagServiceMock.nameForOsmId(ngaanyatjarra, None)).thenReturn(Some("Ngaanyatjarra Indigenous Protected Area"))
-    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+    Mockito.when(tagServiceMock.nameForOsmId(australia, point, None)).thenReturn(Some("Australia"))
+    Mockito.when(tagServiceMock.nameForOsmId(westernAustralia, point, None)).thenReturn(Some("Western Australia"))
+    Mockito.when(tagServiceMock.nameForOsmId(ngaanyatjarra, point, None)).thenReturn(Some("Ngaanyatjarra Indigenous Protected Area"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId], Matchers.eq(point))).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
 
-    val name = namingService.nameFor(paths)
+    val name = namingService.nameFor(paths, point)
 
     name must equalTo("Ngaanyatjarra Indigenous Protected Area, Western Australia, Australia")
   }
@@ -49,17 +52,19 @@ class NaiveNamingServiceSpec extends Specification {
       (Seq(douglas), 0D)
     ))
 
+    val point = new Point(0, 0)
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
-    Mockito.when(tagServiceMock.nameForOsmId(isleOfManAdminBoundary, None)).thenReturn(Some("Isle of Man"))
-    Mockito.when(tagServiceMock.nameForOsmId(isleOfManIsland, None)).thenReturn(Some("Isle of Man"))
-    Mockito.when(tagServiceMock.nameForOsmId(middle, None)).thenReturn(Some("Middle"))
-    Mockito.when(tagServiceMock.nameForOsmId(douglas, None)).thenReturn(Some("Douglas"))
-    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+    Mockito.when(tagServiceMock.nameForOsmId(isleOfManAdminBoundary, point, None)).thenReturn(Some("Isle of Man"))
+    Mockito.when(tagServiceMock.nameForOsmId(isleOfManIsland, point, None)).thenReturn(Some("Isle of Man"))
+    Mockito.when(tagServiceMock.nameForOsmId(middle, point, None)).thenReturn(Some("Middle"))
+    Mockito.when(tagServiceMock.nameForOsmId(douglas, point, None)).thenReturn(Some("Douglas"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId], Matchers.eq(point))).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
 
-    val name = namingService.nameFor(paths)
+    val name = namingService.nameFor(paths, point)
 
     name must equalTo("Douglas, Middle, Isle of Man")
   }
@@ -83,27 +88,29 @@ class NaiveNamingServiceSpec extends Specification {
 
     val paths = Seq(mariposaPath, yosemitePath)
 
+    val point = new Point(0, 0)
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
 
-    Mockito.when(tagServiceMock.nameForOsmId(unitedStates, None)).thenReturn(Some("United States of America"))
-    Mockito.when(tagServiceMock.nameForOsmId(california, None)).thenReturn(Some("California"))
-    Mockito.when(tagServiceMock.nameForOsmId(mariposaCounty, None)).thenReturn(Some("Mariposa County"))
-    Mockito.when(tagServiceMock.nameForOsmId(yosemite, None)).thenReturn(Some("Yosemite National Park"))
-    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+    Mockito.when(tagServiceMock.nameForOsmId(unitedStates, point, None)).thenReturn(Some("United States of America"))
+    Mockito.when(tagServiceMock.nameForOsmId(california, point, None)).thenReturn(Some("California"))
+    Mockito.when(tagServiceMock.nameForOsmId(mariposaCounty, point, None)).thenReturn(Some("Mariposa County"))
+    Mockito.when(tagServiceMock.nameForOsmId(yosemite, point, None)).thenReturn(Some("Yosemite National Park"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId], Matchers.eq(point))).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
 
-    val name = namingService.nameFor(paths)
+    val name = namingService.nameFor(paths, point)
 
     name must contain("Yosemite National Park")
   }
 
   "merging overlapping areas should preserve the ordering of nested areas" in {
     val unitedKingdom = OsmId(16689, R)
-    val england =OsmId(16137, R)
-    val southWestEngland =OsmId(151339, R)
-    val dorset =OsmId(375535, R)
-    val bournemouth =OsmId(42134, R)
+    val england = OsmId(16137, R)
+    val southWestEngland = OsmId(151339, R)
+    val dorset = OsmId(375535, R)
+    val bournemouth = OsmId(42134, R)
 
     val viaEnglandPath = Seq(
       (Seq(unitedKingdom), 0D),
@@ -119,17 +126,19 @@ class NaiveNamingServiceSpec extends Specification {
 
     val paths = Seq(viaEnglandPath, viaSouthWestEnglandPath)
 
+    val point = new Point(0, 0)
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
-    Mockito.when(tagServiceMock.nameForOsmId(unitedKingdom, None)).thenReturn(Some("United Kingdom"))
-    Mockito.when(tagServiceMock.nameForOsmId(england, None)).thenReturn(Some("England"))
-    Mockito.when(tagServiceMock.nameForOsmId(southWestEngland, None)).thenReturn(Some("South West England"))
-    Mockito.when(tagServiceMock.nameForOsmId(dorset, None)).thenReturn(Some("Dorset"))
-    Mockito.when(tagServiceMock.nameForOsmId(bournemouth, None)).thenReturn(Some("Bournemouth"))
-    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+    Mockito.when(tagServiceMock.nameForOsmId(unitedKingdom, point, None)).thenReturn(Some("United Kingdom"))
+    Mockito.when(tagServiceMock.nameForOsmId(england, point, None)).thenReturn(Some("England"))
+    Mockito.when(tagServiceMock.nameForOsmId(southWestEngland, point, None)).thenReturn(Some("South West England"))
+    Mockito.when(tagServiceMock.nameForOsmId(dorset, point, None)).thenReturn(Some("Dorset"))
+    Mockito.when(tagServiceMock.nameForOsmId(bournemouth, point, None)).thenReturn(Some("Bournemouth"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId], Matchers.eq(point))).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
 
-    val name = namingService.nameFor(paths)
+    val name = namingService.nameFor(paths, point)
 
     name must equalTo("Bournemouth, Dorset, England, South West England, United Kingdom")
   }
@@ -147,21 +156,23 @@ class NaiveNamingServiceSpec extends Specification {
 
     val paths = Seq(path)
 
+    val point = new Point(0, 0)
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
-    Mockito.when(tagServiceMock.nameForOsmId(ireland, None)).thenReturn(Some("Ireland"))
-    Mockito.when(tagServiceMock.nameForOsmId(dublinCity1954, None)).thenReturn(Some("Dublin City 1953"))
-    Mockito.when(tagServiceMock.nameForOsmId(dublin, None)).thenReturn(Some("Dublin"))
+    Mockito.when(tagServiceMock.nameForOsmId(ireland, point, None)).thenReturn(Some("Ireland"))
+    Mockito.when(tagServiceMock.nameForOsmId(dublinCity1954, point, None)).thenReturn(Some("Dublin City 1953"))
+    Mockito.when(tagServiceMock.nameForOsmId(dublin, point, None)).thenReturn(Some("Dublin"))
 
-    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId], Matchers.eq(point))).thenReturn(None)
 
-    val historicTags = Map[String, String]{
+    val historicTags = Map[String, String] {
       "historic" -> "yes"
     }
-    Mockito.when(tagServiceMock.tagsFor(OsmId(6741826, R))).thenReturn(Some(historicTags))
+    Mockito.when(tagServiceMock.tagsFor(OsmId(6741826, R), point)).thenReturn(Some(historicTags))
 
     val namingService = new NaiveNamingService(tagServiceMock)
 
-    val name = namingService.nameFor(paths)
+    val name = namingService.nameFor(paths, point)
 
     name must equalTo("Dublin, Ireland")
   }
@@ -184,28 +195,30 @@ class NaiveNamingServiceSpec extends Specification {
 
     val paths = Seq(normalPath, outlinerPath)
 
+    val point = new Point(0, 0)
+
     val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
-    Mockito.when(tagServiceMock.nameForOsmId(spain, None)).thenReturn(Some("Spain"))
-    Mockito.when(tagServiceMock.nameForOsmId(andalusia, None)).thenReturn(Some("Andalusia"))
-    Mockito.when(tagServiceMock.nameForOsmId(almeria, None)).thenReturn(Some("Almeria"))
-    Mockito.when(tagServiceMock.nameForOsmId(yahooAlmeria, None)).thenReturn(Some("Almeria"))
-    Mockito.when(tagServiceMock.tagsFor(any[OsmId])).thenReturn(None)
+    Mockito.when(tagServiceMock.nameForOsmId(spain, point, None)).thenReturn(Some("Spain"))
+    Mockito.when(tagServiceMock.nameForOsmId(andalusia, point, None)).thenReturn(Some("Andalusia"))
+    Mockito.when(tagServiceMock.nameForOsmId(almeria, point, None)).thenReturn(Some("Almeria"))
+    Mockito.when(tagServiceMock.nameForOsmId(yahooAlmeria, point, None)).thenReturn(Some("Almeria"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId], Matchers.eq(point))).thenReturn(None)
 
     val namingService = new NaiveNamingService(tagServiceMock)
 
-    val name = namingService.nameFor(paths)
+    val name = namingService.nameFor(paths, point)
 
     name must equalTo("Almeria, Andalusia, Spain")
   }
 
- /*
- "When naming an area with overlapping relations prefer localised name tags" in {
-   //https://www.openstreetmap.org/relation/51477
-   //https://www.openstreetmap.org/relation/4108738#map=7/51.351/10.454
-   //Germany, not 'Deutschland, Germany'
-   failure
- }
- */
+  /*
+  "When naming an area with overlapping relations prefer localised name tags" in {
+    //https://www.openstreetmap.org/relation/51477
+    //https://www.openstreetmap.org/relation/4108738#map=7/51.351/10.454
+    //Germany, not 'Deutschland, Germany'
+    failure
+  }
+  */
 
 
   /*

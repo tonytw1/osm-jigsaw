@@ -12,17 +12,17 @@ import javax.inject.Inject
 
 class GraphService @Inject()(configuration: Configuration, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
-  val geohashResolution = 2
+  private val dataUrl = configuration.getString("data.url").get
+  private val extractName = configuration.getString("extract.name").get
 
-  val segmentCache = CacheBuilder.newBuilder()
+  private val geohashResolution = 3
+
+  private val segmentCache = CacheBuilder.newBuilder()
     .maximumSize(10)
     .build[String, GraphNode]
 
   def headOfGraphCoveringThisPoint(point: Point): Option[GraphNode] = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
-
-    val dataUrl = configuration.getString("data.url").get
-    val extractName = configuration.getString("extract.name").get
 
     val graphFileURL = if (geohashResolution > 0 ) {
       new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
