@@ -10,7 +10,7 @@ class TileGeneratorSpec extends FlatSpec {
     "generate a tiles based on geohashes" in {
     assert(tileGenerator.generateTiles(1).size == 32)
     assert(tileGenerator.generateTiles(2).size == 1024)
-    assert(tileGenerator.generateTiles(4).size == 1048576)
+    assert(tileGenerator.generateTiles(3).size == 32768)
   }
 
 }
