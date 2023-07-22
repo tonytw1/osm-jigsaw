@@ -18,7 +18,6 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
     .maximumSize(10)
     .build[String, GraphNode]
 
-
   def headOfGraphCoveringThisPoint(point: Point): Option[GraphNode] = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
 
@@ -55,7 +54,7 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
     }
   }
 
-  def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
+  def pathsDownTo(point: Point): Seq[Seq[GraphNode]] = {
 
     def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
       val matchingChildren = node.children.filter { c =>
@@ -71,8 +70,8 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
       }
     }
 
-    headOfGraphCoveringThisPoint(pt).map { head =>
-      val containing = nodesContaining(pt, head, Seq())
+    headOfGraphCoveringThisPoint(point).map { head =>
+      val containing = nodesContaining(point, head, Seq())
       val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
       withoutRoot
 

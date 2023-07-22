@@ -1,22 +1,21 @@
 package controllers
 
-import javax.inject.Inject
-
 import areas.BoundingBox
 import com.esri.core.geometry.Point
 import graph.GraphService
 import model._
 import naming.NaiveNamingService
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
-import play.api.{Configuration, Logger}
 import tags.{EntityNameTags, TagService}
 
+import javax.inject.Inject
 import scala.collection.mutable
 import scala.concurrent.Future
 
-class Application @Inject()(configuration: Configuration, graphService: GraphService, val tagService: TagService,
-                            naiveNamingService: NaiveNamingService) extends Controller with BoundingBox with OsmIdParsing with EntityNameTags {
+class Application @Inject()(graphService: GraphService, val tagService: TagService, naiveNamingService: NaiveNamingService)
+  extends Controller with BoundingBox with OsmIdParsing with EntityNameTags {
 
   // Given a location return all of sequences of overlapping areas which enclose it
   def reverse(lat: Double, lon: Double) = Action.async { request =>
