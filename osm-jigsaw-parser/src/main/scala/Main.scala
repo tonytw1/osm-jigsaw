@@ -14,6 +14,7 @@ import outputgraphnode.OutputGraphNode
 import outputgraphnodev2.OutputGraphNodeV2
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
+import outputtagging.OutputTagging
 import progress.ProgressCounter
 import resolving._
 import steps._
@@ -222,8 +223,28 @@ object Main extends EntityRendering with Logging with PolygonBuilding
   def tileGraph(extractName: String): Unit = {
     // Read the entire graph into memory
     val areas = readAreasFromPbfFile(areasFilePath(extractName))
+
     val graphInput = new BufferedInputStream(new FileInputStream(new File(graphV2File(extractName))))
     val root = new GraphReader().loadGraph(graphInput, areas).get
+
+    val tagsFile = new File(tagsFilePath(extractName))
+    val tagsInput = new BufferedInputStream(new FileInputStream(tagsFile))
+    val taggings = mutable.Map[String, Map[String, String]]()
+    val tagsCount = new ProgressCounter(step = 10000, label = Some("Reading tags"))
+    var ok = true
+    while (ok) {
+      tagsCount.withProgress {
+        val outputTagging = OutputTagging.parseDelimitedFrom(tagsInput)
+        outputTagging.foreach { ot =>
+          val keys: Seq[String] = ot.keys
+          val values: Seq[String] = ot.values
+          val tuples: Map[String, String] = keys.zip(values).toMap
+          taggings.put(ot.osmId.get, tuples)
+        }
+        ok = outputTagging.nonEmpty
+      }
+    }
+    tagsInput.close()
 
     def exportArea(area: Area, output: OutputStream): Unit = { // TODO duplication
       val latitudes = mutable.ListBuffer[Double]()
@@ -246,6 +267,7 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     tiles.par.foreach { t =>
       counterTiles.withProgress {
         val nodes = mutable.Map[Long, FlippedGraphNode]()
+        val tileTaggings = mutable.Map[String, Map[String, String]]()
 
         // For each tile filter walk the graph and filter for all areas which intersect the tile
         val topLeft = (t.boundingBox.getNorthEastCorner.getLatitude, t.boundingBox.getSouthWestCorner.getLongitude)
@@ -271,6 +293,13 @@ object Main extends EntityRendering with Logging with PolygonBuilding
             appendTo.children.add(newNode)
             if (!visited.contains(node.area.id)) {
               tileAreas.add(node.area)
+              // Capture the tags for this node
+              val areasTags: mutable.Seq[(String, Map[String, String])] = node.area.osmIds.map { osmId =>
+                (osmId, taggings.getOrElse(osmId, Map[String, String]()))
+              }
+              areasTags.foreach { kv: (String, Map[String, String]) =>
+                tileTaggings.put(kv._1, kv._2)
+              }
               visited.add(node.area.id)
               // Recurse down into children
               val children = node.children.toSeq
@@ -296,7 +325,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
             }
             new OutputGraphNodeV2(node.id, node.children.map(_.id).toSeq).writeDelimitedTo(tileGraphOutput)
           }
-
           save(newRoot)
           tileGraphOutput.flush()
           tileGraphOutput.close()
@@ -309,13 +337,24 @@ object Main extends EntityRendering with Logging with PolygonBuilding
           }
           tileAreasOutput.flush()
           tileGraphOutput.close()
+
+          // Write out segment tags file
+          val tagsOutputFilepath = tagsFilePath(extractName, Some(t.geohash))
+          val tagsOutput = new BufferedOutputStream(new FileOutputStream(tagsOutputFilepath))
+          tileTaggings.foreach { tagging: (String, Map[String, String]) =>
+            val osmId = tagging._1
+            val tags: Seq[(String, String)] = tagging._2.toSeq
+            val keys = tags.map(_._1) // TODO unzip?
+            val values = tags.map(_._2)
+            OutputTagging(osmId = Some(osmId), keys = keys, values = values).writeDelimitedTo(tagsOutput)
+          }
+          tagsOutput.flush()
+          tagsOutput.close()
         }
 
         Operator.deaccelerateGeometry(tilePolygon)
       }
     }
-    // Output these; probably as a graph with the tile as the root node.
-    // Output area and tags files for this subset of the graph.
   }
 
 }
