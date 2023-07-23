@@ -12,6 +12,7 @@ import tags.{EntityNameTags, TagService}
 
 import javax.inject.Inject
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class Application @Inject()(graphService: GraphService, val tagService: TagService, naiveNamingService: NaiveNamingService)
@@ -23,9 +24,11 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
     val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
     Logger.info("Accept language: " + requestedLanguage)
 
-    val paths = graphService.pathsDownTo(point).map(_.map(i => renderNode(i, point, requestedLanguage)))
-
-    Future.successful(Ok(Json.toJson(paths)))
+    graphService.pathsDownTo(point).map { paths =>
+      paths.map(_.map(i => renderNode(i, point, requestedLanguage)))
+    }.map { paths =>
+      Ok(Json.toJson(paths))
+    }
   }
 
   // Given a location return a name for this location
@@ -33,17 +36,18 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
     val point = new Point(lat, lon)
     val requestedLanguage = request.acceptLanguages.headOption.map(l => l.locale.getLanguage)
 
-    val paths = graphService.pathsDownTo(point)
-
-    val pathInformationNeededToInferPlaceName = paths.map { path =>
-      path.map { node =>
-        (node.area.osmIds, node.area.area)
+    val eventualPaths = graphService.pathsDownTo(point)
+    eventualPaths.map { paths =>
+      val pathInformationNeededToInferPlaceName = paths.map { path =>
+        path.map { node =>
+          (node.area.osmIds, node.area.area)
+        }
       }
+
+      val name = naiveNamingService.nameFor(pathInformationNeededToInferPlaceName, point, requestedLanguage)
+
+      Ok(Json.toJson(name))
     }
-
-    val name = naiveNamingService.nameFor(pathInformationNeededToInferPlaceName, point, requestedLanguage)
-
-    Future.successful(Ok(Json.toJson(name)))
   }
 
   // Given the path to an area return the sequence of graph nodes for that path
@@ -51,8 +55,9 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
     val components = parseComponents(q)
     val point = new Point(lat, lon)
 
-    val nodes = nodesFor(components, point)
-    Future.successful(Ok(Json.toJson(nodes.map(n => renderNode(n, point)))))
+    nodesFor(components, point).map { nodes =>
+      Ok(Json.toJson(nodes.map(n => renderNode(n, point))))
+    }
   }
 
   // Given the path to an area return the outline for that area
@@ -60,41 +65,45 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
     val components = parseComponents(q)
     val point = new Point(lat, lon)
 
-    nodesFor(components, point).lastOption.map { node =>
-      val points = node.area.points // TODO simplify outline for quick rendering
-      implicit val pw = Json.writes[model.Point]
-      Future.successful(Ok(Json.toJson(points)))
-    }.getOrElse {
-      Future.successful(NotFound(Json.toJson("Not found")))
+    val eventualNodesFor: Future[Seq[GraphNode]] = nodesFor(components, point)
+    eventualNodesFor.map { nodes =>
+      nodes.lastOption.map { node =>
+        val points = node.area.points // TODO simplify outline for quick rendering
+        implicit val pw = Json.writes[model.Point]
+        Ok(Json.toJson(points))
+      }.getOrElse {
+        NotFound(Json.toJson("Not found"))
+      }
     }
   }
 
-  private def nodesFor(components: Seq[Long], point: Point): mutable.Seq[GraphNode] = {
+  private def nodesFor(components: Seq[Long], point: Point): Future[Seq[GraphNode]] = {
     def nodeIdentifier(node: GraphNode): Long = {
       node.area.id
     }
 
-    val nodes = mutable.ListBuffer[GraphNode]()
-
     val queue = new mutable.Queue() ++ components
-    graphService.headOfGraphCoveringThisPoint(point: Point).map { headNode =>
-      var currentNode = headNode
-      while (queue.nonEmpty) {
-        val next = queue.dequeue()
-        val children = currentNode.children
+    val eventualMaybeHead = graphService.headOfGraphCoveringThisPoint(point: Point)
+    eventualMaybeHead.map { maybeHeadNode =>
+      val nodes = mutable.ListBuffer[GraphNode]()
+      maybeHeadNode.foreach { headNode =>
+        var currentNode = headNode
+        while (queue.nonEmpty) {
+          val next = queue.dequeue()
+          val children = currentNode.children
 
-        val found = children.find { c =>
-          nodeIdentifier(c) == next
-        }
+          val found = children.find { c =>
+            nodeIdentifier(c) == next
+          }
 
-        found.foreach { f =>
-          nodes.+=(f)
-          currentNode = f
+          found.foreach { f =>
+            nodes.+=(f)
+            currentNode = f
+          }
         }
       }
+      nodes
     }
-
-    nodes
   }
 
   // Given an OSM id return it's tags as a map

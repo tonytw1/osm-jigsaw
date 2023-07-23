@@ -9,6 +9,8 @@ import play.api.{Configuration, Logger}
 
 import java.net.URL
 import javax.inject.Inject
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class GraphService @Inject()(configuration: Configuration, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
@@ -21,7 +23,7 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
     .maximumSize(10)
     .build[String, GraphNode]
 
-  def headOfGraphCoveringThisPoint(point: Point): Option[GraphNode] = {
+  def headOfGraphCoveringThisPoint(point: Point): Future[Option[GraphNode]] = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
 
     val graphFileURL = if (geohashResolution > 0 ) {
@@ -38,7 +40,8 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
 
     val cacheKey = graphFileURL.toExternalForm
     val cached = segmentCache.getIfPresent(cacheKey)
-    Option(cached).map { n =>
+
+    val maybeHead = Option(cached).map { n =>
       Logger.info("Cache hit for " + cacheKey)
       Some(n)
 
@@ -52,9 +55,11 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
       }
       maybeNode
     }
+
+    Future.successful(maybeHead)
   }
 
-  def pathsDownTo(point: Point): Seq[Seq[GraphNode]] = {
+  def pathsDownTo(point: Point): Future[Seq[Seq[GraphNode]]] = {
 
     def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
       val matchingChildren = node.children.filter { c =>
@@ -70,13 +75,16 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
       }
     }
 
-    headOfGraphCoveringThisPoint(point).map { head =>
-      val containing = nodesContaining(point, head, Seq())
-      val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
-      withoutRoot
+    val eventualMaybeHeadOfGraph = headOfGraphCoveringThisPoint(point)
+    eventualMaybeHeadOfGraph.map { maybeHead: Option[GraphNode] =>
+      maybeHead.map { head =>
+        val containing = nodesContaining(point, head, Seq())
+        val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
+        withoutRoot
 
-    }.getOrElse {
-      Seq.empty
+      }.getOrElse {
+        Seq.empty
+      }
     }
   }
 
