@@ -25,38 +25,21 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
 
   def headOfGraphCoveringThisPoint(point: Point): Future[Option[GraphNode]] = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
+    val cacheKey = geohash.toBase32
 
-    val graphFileURL = if (geohashResolution > 0 ) {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
-    } else {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
-    }
-
-    val areasFileURL = if (geohashResolution > 0) {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas-" + geohash.toBase32 + ".pbf")
-    } else {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas.pbf")
-    }
-
-    val cacheKey = graphFileURL.toExternalForm
-    val cached = segmentCache.getIfPresent(cacheKey)
-
-    val maybeHead = Option(cached).map { n =>
+    Option(segmentCache.getIfPresent(cacheKey)).map { n =>
       Logger.info("Cache hit for " + cacheKey)
-      Some(n)
+      Future.successful(Some(n))
 
     }.getOrElse {
-      Logger.info("Loading graph segment from " + graphFileURL + " for point " + point)
-      val maybeNode = new GraphReader(areasReader).loadGraph(graphFileURL, areasFileURL)
-      maybeNode.foreach { n =>
-        // Cache this; makes more sense which segmented
-        val cacheKey = graphFileURL.toExternalForm
-        segmentCache.put(cacheKey, n)
+      loadGraphFor(point, geohash).map { maybeLoaded =>
+        maybeLoaded.foreach { n =>
+          // Cache this; makes more sense which segmented
+          segmentCache.put(cacheKey, n)
+        }
+        maybeLoaded
       }
-      maybeNode
     }
-
-    Future.successful(maybeHead)
   }
 
   def pathsDownTo(point: Point): Future[Seq[Seq[GraphNode]]] = {
@@ -86,6 +69,25 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
         Seq.empty
       }
     }
+  }
+
+  // TODO dog pile protection here
+  private def loadGraphFor(point: Point, geohash: GeoHash): Future[Option[GraphNode]] = {
+    val graphFileURL = if (geohashResolution > 0) {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
+    } else {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
+    }
+
+    val areasFileURL = if (geohashResolution > 0) {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas-" + geohash.toBase32 + ".pbf")
+    } else {
+      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas.pbf")
+    }
+
+    Logger.info("Loading graph segment from " + graphFileURL + " for point " + point)
+    val maybeNode = new GraphReader(areasReader).loadGraph(graphFileURL, areasFileURL)
+    Future.successful(maybeNode)
   }
 
 }
