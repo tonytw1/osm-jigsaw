@@ -9,8 +9,9 @@ import play.api.{Configuration, Logger}
 
 import java.net.URL
 import javax.inject.Inject
-import scala.concurrent.Future
+import scala.collection.mutable
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class GraphService @Inject()(configuration: Configuration, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
@@ -23,6 +24,9 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
     .maximumSize(10)
     .build[String, GraphNode]
 
+  private val inflightReads = mutable.Map.empty[String, Future[Option[GraphNode]]]
+  private val inflightReadsLock = new Object()
+
   def headOfGraphCoveringThisPoint(point: Point): Future[Option[GraphNode]] = {
     val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
     val cacheKey = geohash.toBase32
@@ -32,12 +36,26 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
       Future.successful(Some(n))
 
     }.getOrElse {
-      loadGraphFor(point, geohash).map { maybeLoaded =>
-        maybeLoaded.foreach { n =>
-          // Cache this; makes more sense which segmented
-          segmentCache.put(cacheKey, n)
+      Logger.info("Need to load graph covering " + cacheKey)
+      inflightReadsLock.synchronized {
+        // Lock for an flight request we can subscribe to
+        val maybeInflight: Option[Future[Option[GraphNode]]] = inflightReads.get(cacheKey)
+        maybeInflight.map { inflight =>
+          Logger.info("Reusing inflight request for " + cacheKey)
+          inflight
+        }.getOrElse {
+          Logger.info("Reading graph for " + cacheKey)
+          val eventualMaybeNode = loadGraphFor(point, geohash)
+          inflightReads.put(cacheKey, eventualMaybeNode)
+          eventualMaybeNode
+        }.map { maybeLoaded =>
+          inflightReads.remove(cacheKey)
+          maybeLoaded.foreach { n =>
+            // Cache this; makes more sense which segmented
+            segmentCache.put(cacheKey, n)
+          }
+          maybeLoaded
         }
-        maybeLoaded
       }
     }
   }
