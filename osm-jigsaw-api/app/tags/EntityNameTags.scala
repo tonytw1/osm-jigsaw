@@ -4,16 +4,18 @@ trait EntityNameTags {
 
   def getNameFromTags(tags: Map[String, String], encoding: String): Option[String] = {
     val preferredName = "name:" + encoding
-    val otherUsableNames = Seq(preferredName, "name", "addr:housename")
 
-    val allAvailableNames = tags.filter(t => otherUsableNames.contains(t._1)).toSet
+    val availablePreferredNames = tags.filter(t => t._1 == preferredName).toSet
+    if (availablePreferredNames.nonEmpty) {
+      // If multiple options are available for the same encoding use the shortest one
+      availablePreferredNames.toSeq.sortBy(t => t._2.length).headOption.map(t => t._2)
 
-    val preferredNames = allAvailableNames.filter(t => t._1 == preferredName)
-    val otherNames = allAvailableNames -- preferredNames
-
-    val bestName = (preferredNames.toSeq.sortBy(t => t._2.length) ++ otherNames.toSeq.sortBy(t => t._2.length)).headOption
-    bestName.map { t =>
-      t._2
+    } else {
+      val otherUsableNames = Seq("name", "addr:housename")
+      val availableOtherNames = otherUsableNames.flatMap { tag =>
+        tags.get(tag)
+      }
+      availableOtherNames.headOption
     }
   }
 
