@@ -14,6 +14,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "boundary" -> "fire",
     "boundary" -> "historic",
     "boundary" -> "maritime",
+    "boundary" -> "low_emission_zone",
     "boundary" -> "police",
     "boundary" -> "proposed",
     "boundary" -> "timezone",
@@ -24,7 +25,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "political_division" -> "historical_local_const",
     "political_division" -> "euro_const",
     "political_division" -> "local_const",
-
+    "public_transport" ->	"pay_scale_area",
     "type" -> "toll"
   )
 
