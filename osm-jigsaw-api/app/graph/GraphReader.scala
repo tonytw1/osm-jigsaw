@@ -1,6 +1,6 @@
 package graph
 
-import model.{Area, GraphNode, OsmIdParsing}
+import model.{GraphNode, OsmIdParsing}
 import outputgraphnodev2.OutputGraphNodeV2
 import play.api.Logger
 import progress.ProgressCounter
@@ -31,7 +31,7 @@ class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
       try {
         val input = new BufferedInputStream(graphFile.openStream())
 
-        val counterSecond = new ProgressCounter(step = 100, label = Some("Reading graph"))
+        val counterSecond = new ProgressCounter(step = 1000, label = Some("Reading graph"))
         var ok = true
 
         var root: GraphNode = null
