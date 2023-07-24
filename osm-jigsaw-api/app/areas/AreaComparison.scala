@@ -27,7 +27,7 @@ trait AreaComparison extends BoundingBox {
     def polygonForNode(node: GraphNode): Option[Polygon] = {
       val key = node.area.id
       Option(polygonCache.getIfPresent(key)).fold {
-        Logger.info("Cache miss for area polygon: " + key)
+        Logger.debug("Cache miss for area polygon: " + key)
         buildPolygonForPoints(node.area.points).map { p =>
           polygonCache.put(key, p)
           p

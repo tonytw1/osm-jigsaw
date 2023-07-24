@@ -2,11 +2,11 @@ package resolving
 
 import input.TestValues
 import model.EntityRendering
-import org.openstreetmap.osmosis.core.domain.v0_6.{Node, Relation, Way}
+import org.openstreetmap.osmosis.core.domain.v0_6.{Relation, Way}
 import org.scalatest.FlatSpec
 
-import scala.collection.mutable
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class OutlineBuilderSpec extends FlatSpec with TestValues with LoadTestEntities with EntityRendering {
 

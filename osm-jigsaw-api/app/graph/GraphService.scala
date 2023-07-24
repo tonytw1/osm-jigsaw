@@ -4,49 +4,63 @@ import areas.{AreaComparison, PolygonCache}
 import ch.hsr.geohash.GeoHash
 import com.esri.core.geometry.Point
 import com.google.common.cache.CacheBuilder
-import model.{GraphNode, OsmId}
+import model.GraphNode
 import play.api.{Configuration, Logger}
-import tags.TagService
 
 import java.net.URL
 import javax.inject.Inject
+import scala.collection.mutable
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class GraphService @Inject()(configuration: Configuration, tagService: TagService, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
+class GraphService @Inject()(configuration: Configuration, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
-  val geohashCharacters = 4
+  private val dataUrl = configuration.getString("data.url").get
+  private val extractName = configuration.getString("extract.name").get
 
-  val segmentCache = CacheBuilder.newBuilder()
+  private val geohashResolution = 3
+
+  private val segmentCache = CacheBuilder.newBuilder()
     .maximumSize(10)
     .build[String, GraphNode]
 
+  private val inflightReads = mutable.Map.empty[String, Future[Option[GraphNode]]]
+  private val inflightReadsLock = new Object()
 
-  def headOfGraphCoveringThisPoint(point: Point): Option[GraphNode] = {
-    val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashCharacters)
+  def headOfGraphCoveringThisPoint(point: Point): Future[Option[GraphNode]] = {
+    val geohash = GeoHash.withCharacterPrecision(point.getX, point.getY, geohashResolution)
+    val cacheKey = geohash.toBase32
 
-    val dataUrl = configuration.getString("data.url").get
-    val extractName = configuration.getString("extract.name").get
-    //val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graph." + geohash.toBase32 + ".pbf")
-    val segmentURL = new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
-
-    val cacheKey = segmentURL.toExternalForm
-    val cached = segmentCache.getIfPresent(cacheKey)
-    Option(cached).map { n =>
+    Option(segmentCache.getIfPresent(cacheKey)).map { n =>
       Logger.info("Cache hit for " + cacheKey)
-      Some(n)
+      Future.successful(Some(n))
 
     }.getOrElse {
-      Logger.info("Loading graph segment from " + segmentURL + " for point " + point)
-      val maybeNode = new GraphReader(areasReader).loadGraph(segmentURL)
-      maybeNode.foreach { n =>
-        // Cache this; makes more sense which segmented
-        val cacheKey = segmentURL.toExternalForm
-        segmentCache.put(cacheKey, n)
+      Logger.info("Need to load graph covering " + cacheKey)
+      inflightReadsLock.synchronized {
+        // Lock for an flight request we can subscribe to
+        val maybeInflight: Option[Future[Option[GraphNode]]] = inflightReads.get(cacheKey)
+        maybeInflight.map { inflight =>
+          Logger.info("Reusing inflight request for " + cacheKey)
+          inflight
+        }.getOrElse {
+          Logger.info("Reading graph for " + cacheKey)
+          val eventualMaybeNode = loadGraphFor(point, geohash)
+          inflightReads.put(cacheKey, eventualMaybeNode)
+          eventualMaybeNode
+        }.map { maybeLoaded =>
+          inflightReads.remove(cacheKey)
+          maybeLoaded.foreach { n =>
+            // Cache this; makes more sense which segmented
+            segmentCache.put(cacheKey, n)
+          }
+          maybeLoaded
+        }
       }
-      maybeNode
     }
   }
 
-  def pathsDownTo(pt: Point): Seq[Seq[GraphNode]] = {
+  def pathsDownTo(point: Point): Future[Seq[Seq[GraphNode]]] = {
 
     def nodesContaining(pt: Point, node: GraphNode, stack: Seq[GraphNode]): Seq[Seq[GraphNode]] = {
       val matchingChildren = node.children.filter { c =>
@@ -62,18 +76,37 @@ class GraphService @Inject()(configuration: Configuration, tagService: TagServic
       }
     }
 
-    headOfGraphCoveringThisPoint(pt).map { head =>
-      val containing = nodesContaining(pt, head, Seq())
-      val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
-      withoutRoot
+    val eventualMaybeHeadOfGraph = headOfGraphCoveringThisPoint(point)
+    eventualMaybeHeadOfGraph.map { maybeHead: Option[GraphNode] =>
+      maybeHead.map { head =>
+        val containing = nodesContaining(point, head, Seq())
+        val withoutRoot = containing.map(r => r.drop(1)).filter(_.nonEmpty)
+        withoutRoot
 
-    }.getOrElse {
-      Seq.empty
+      }.getOrElse {
+        Seq.empty
+      }
     }
   }
 
-  def tagsFor(osmId: OsmId): Option[Map[String, String]] = {
-    tagService.tagsFor(osmId)
+  // TODO dog pile protection here
+  private def loadGraphFor(point: Point, geohash: GeoHash): Future[Option[GraphNode]] = {
+    Future.successful {
+      val graphFileURL = if (geohashResolution > 0) {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
+      } else {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
+      }
+
+      val areasFileURL = if (geohashResolution > 0) {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas-" + geohash.toBase32 + ".pbf")
+      } else {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas.pbf")
+      }
+
+      Logger.info("Loading graph segment from " + graphFileURL + " for point " + point)
+      new GraphReader(areasReader).loadGraph(graphFileURL, areasFileURL)
+    }
   }
 
 }

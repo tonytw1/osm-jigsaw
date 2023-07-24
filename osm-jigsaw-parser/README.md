@@ -134,3 +134,36 @@ Requests from a given user are likely to be for areas which are close to each ot
 Segmenting the graph into tiles which cover small areas of the graph should allow us to service occasional users without having to retain the entire graph in memory.
 
 We're happy to accept duplication of data between tiles to achieve this smaller memory footprint.
+
+Untiled disk usage:
+```
+13G Jul 12 11:29 planet-230703.areas.pbf
+185M Jul 15 17:44 planet-230703.graphv2.pbf
+2.3G Jul 13 11:44 planet-230703.tags.pbf
+```
+
+Tilted disk usage:
+```
+du -h
+83G .
+```
+
+```
+-rw-rw-r-- 1 tony tony   4795094 Jul 22 09:06 planet-230703.areas-dws.pbf
+-rw-rw-r-- 1 tony tony   4795094 Jul 22 09:04 planet-230703.areas-dwt.pbf
+-rw-rw-r-- 1 tony tony   4795094 Jul 22 09:04 planet-230703.areas-dwu.pbf
+-rw-rw-r-- 1 tony tony   4795094 Jul 22 09:05 planet-230703.areas-dwv.pbf
+```
+
+```
+sha256sum planet-230703.areas-dws.pbf planet-230703.areas-dwt.pbf
+94dcd56575779c1a36e53a5f6364dcc6650269309a2b15bea4495f52535ef944  planet-230703.areas-dws.pbf
+94dcd56575779c1a36e53a5f6364dcc6650269309a2b15bea4495f52535ef944  planet-230703.areas-dwt.pbf
+```
+
+```
+rdfind .
+
+It seems like you have 40374 files that are not unique
+Totally, 12 GiB can be reduced.
+```

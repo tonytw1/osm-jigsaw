@@ -3,6 +3,7 @@ package naming
 import javax.inject.Inject
 import model.OsmId
 import tags.TagService
+import com.esri.core.geometry.Point
 
 import scala.collection.mutable
 
@@ -27,10 +28,10 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "type" -> "toll"
   )
 
-  def nameFor(paths: Seq[Seq[(Seq[OsmId], Double)]], requestedLanguage: Option[String] = None): String = {
+  def nameFor(paths: Seq[Seq[(Seq[OsmId], Double)]], point: Point, requestedLanguage: Option[String] = None): String = {
 
     def hasExcludedTags(osmId: OsmId): Boolean = {
-      val osmIdTags = tagService.tagsFor(osmId).getOrElse(Map.empty).toSet
+      val osmIdTags = tagService.tagsFor(osmId, point).getOrElse(Map.empty).toSet
       val excludedTags = osmIdTags.intersect(TagsWhichDoNotContributeToLocationNames)
       excludedTags.nonEmpty
     }
@@ -85,7 +86,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     }
 
     val names = sortedByArea.map { n =>
-      tagService.nameForOsmId(n, requestedLanguage)
+      tagService.nameForOsmId(n, point, requestedLanguage)
     }.flatten
 
 

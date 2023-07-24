@@ -12,13 +12,15 @@ import scala.collection.mutable
 
 class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
 
-  def loadGraph(graphFile: URL): Option[GraphNode] = {
+  def loadGraph(graphFile: URL, areasFile: URL): Option[GraphNode] = {
     try {
+      // Load areas
+      val areas = areasReader.loadAreas(areasFile)
 
+      // Load graph
       val nodes = mutable.Map[Long, GraphNode]()
-
       def toGraphNode(ogn: OutputGraphNodeV2): GraphNode = {
-        val area = areasReader.getAreas()(ogn.area)
+        val area = areas(ogn.area)
         // Map the children; leaf nodes appear first in the input file so will always have been created before been referenced
         val children = ogn.children.map { childId =>
           nodes(childId)
@@ -29,7 +31,7 @@ class GraphReader @Inject()(areasReader: AreasReader) extends OsmIdParsing {
       try {
         val input = new BufferedInputStream(graphFile.openStream())
 
-        val counterSecond = new ProgressCounter(step = 100, label = Some("Reading graph"))
+        val counterSecond = new ProgressCounter(step = 1000, label = Some("Reading graph"))
         var ok = true
 
         var root: GraphNode = null

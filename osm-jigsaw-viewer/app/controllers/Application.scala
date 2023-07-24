@@ -36,10 +36,10 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
       }
 
       val eventualAreaBoundingBox = lastNode.map { _ =>
-        ws.url(Url.parse(apiUrl + "/points").addParam(
-          "q", q).addParam(
-          "lat", lat.toString).addParam(
-          "lon", lon.toString).toString).get.map { psr =>
+        ws.url(Url.parse(apiUrl + "/points").
+          addParam("q", q).
+          addParam("lat", lat.toString).
+          addParam("lon", lon.toString).toString).get.map { psr =>
           implicit val pr = Json.reads[Point]
           val points = Json.parse(psr.body).as[Seq[Point]]
           val b: (Double, Double, Double, Double) = boundingBoxFor(points)
@@ -61,7 +61,9 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
       val eventualTagsForLastNode: Future[Map[String, String]] = lastNode.flatMap { ln =>
         ln.entities.headOption.map { e =>
           val osmId = e.osmId
-          ws.url(Url.parse(apiUrl + "/tags").addParam("osm_id", osmId).toString).get.map { r =>
+          ws.url(Url.parse(apiUrl + "/tags").addParam("osm_id", osmId).
+            addParam("lat", lat.toString).
+            addParam("lon", lon.toString).toString).get.map { r =>
             Json.parse(r.body).as[Map[String, JsValue]].map { i =>
               (i._1, i._2.as[String])
             }
