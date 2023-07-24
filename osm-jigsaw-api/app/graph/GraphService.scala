@@ -91,21 +91,22 @@ class GraphService @Inject()(configuration: Configuration, areasReader: AreasRea
 
   // TODO dog pile protection here
   private def loadGraphFor(point: Point, geohash: GeoHash): Future[Option[GraphNode]] = {
-    val graphFileURL = if (geohashResolution > 0) {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
-    } else {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
-    }
+    Future.successful {
+      val graphFileURL = if (geohashResolution > 0) {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2-" + geohash.toBase32 + ".pbf")
+      } else {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".graphv2.pbf")
+      }
 
-    val areasFileURL = if (geohashResolution > 0) {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas-" + geohash.toBase32 + ".pbf")
-    } else {
-      new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas.pbf")
-    }
+      val areasFileURL = if (geohashResolution > 0) {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas-" + geohash.toBase32 + ".pbf")
+      } else {
+        new URL(dataUrl + "/" + extractName + "/" + extractName + ".areas.pbf")
+      }
 
-    Logger.info("Loading graph segment from " + graphFileURL + " for point " + point)
-    val maybeNode = new GraphReader(areasReader).loadGraph(graphFileURL, areasFileURL)
-    Future.successful(maybeNode)
+      Logger.info("Loading graph segment from " + graphFileURL + " for point " + point)
+      new GraphReader(areasReader).loadGraph(graphFileURL, areasFileURL)
+    }
   }
 
 }
