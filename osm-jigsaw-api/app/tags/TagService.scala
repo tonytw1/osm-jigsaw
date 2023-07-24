@@ -38,7 +38,7 @@ class TagService @Inject()(configuration: Configuration) extends OsmIdParsing wi
 
     val cached = tagsCache.getIfPresent(tagsFileURL.toExternalForm)
     val maybeTagsForSegment = Option(cached).map { t =>
-      Logger.info("Cache hit for " + tagsFileURL.toExternalForm)
+      Logger.debug("Cache hit for " + tagsFileURL.toExternalForm)
       Some(t)
     }.getOrElse {
       val maybeTags = loadTags(tagsFileURL)
