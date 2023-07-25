@@ -24,7 +24,7 @@ We run the extract file through the following steps to arrive at a sorted graph 
 
 The extract file appears to be grouped by entity type; it lists all Nodes then Ways and then all Relations (*caution [Hyrum's Law](https://www.hyrumslaw.com)).
 
-Been able to seek to the start of different types of entities is useful so scan the extract file and record the offsets for the edges between different record types.
+Been able to seek to the start of different types of entities is useful during the extract step. Scan the extract file and record the offsets for the edges between different record types.
 
 ```
 malta-230704.boundaries.json
