@@ -131,7 +131,7 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
       OutputEntity(osmIdString, name)
     }
 
-    val outputNode = OutputNode(node.area.id, entities, entities.size, node.area.area)
+    val outputNode = OutputNode(node.area.id, entities, node.children.size, node.area.area)
 
     implicit val ew = Json.writes[OutputEntity]
     implicit val nw = Json.writes[OutputNode]
