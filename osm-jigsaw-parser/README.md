@@ -97,18 +97,10 @@ ie. England fixes inside the UK, which fits inside Europe, which fits inside the
 
 The step may take some time (approximately 14 hours for a full planet extract).
 
-`new-zealand-230705.graph.pbf`
-
-#### 6) Flip the graph
-
-The graph produced in the previous step is formatted as nodes with parents; nodes with children is actually more useful 
-to the consuming app and can be represented in a more compact format.
-Read the graph and invert it into a new file.
-
 `new-zealand-230705.graphv2.pbf`
 
 
-#### 7) Extract the tags for areas
+#### 6) Extract the tags for areas
 
 Extracts the OSM tags for the entities which produced areas. This allows names for the areas to be derived at runtime.
 
@@ -121,8 +113,7 @@ ireland-and-northern-ireland-180717.graph.pbf
 ireland-and-northern-ireland-180717.tags.pbf
 ```
 
-
-#### 8) Tiling
+#### 7) Tiling
 
 The full planet graph, area polygons and OSM tag data for those areas can be read entirely into a 64Gb heap.
 This isn't completely out of order and would probably be an ok value proposition if the API had constant use.

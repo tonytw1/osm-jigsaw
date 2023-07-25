@@ -51,7 +51,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
       case "rels" =>
         val relationIds = cmd.getArgList.get(2).split(",").map(s => s.toLong).toSeq
         extractRelations(inputFilepath, cmd.getArgList.get(1), relationIds)
-      case "flip" => flipGraph(inputFilepath)
       case "tile" => tileGraph(inputFilepath)
       case _ => logger.info("Unknown step") // TODO exit code
     }
@@ -138,61 +137,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
 
     new RelationExtractor().extract(extractName, selectedRelations, outputFilepath)
 
-    logger.info("Done")
-  }
-
-  def flipGraph(extractName: String): Unit = {
-    val input = new BufferedInputStream(new FileInputStream(new File(graphFile(extractName))))
-    val rootId = -1L
-
-    var ok = true
-    // Remap out nodes with parents formatted graph into nodes with children
-    // There is likely massive duplication of nodes in the existing format which is hurting on memory
-    val nodes = mutable.Map[Long, FlippedGraphNode]()
-
-    val progressMessage: (Long, scala.Option[Long], Long, Double) => String = (i: Long, total: scala.Option[Long], delta: Long, rate: Double) => {
-      i + " / Unique nodes: " + nodes.size
-    }
-
-    var root: FlippedGraphNode = null
-    val counterSecond = new ProgressCounter(step = 100, label = Some("Flipping graph"))
-    while (ok) {
-      counterSecond.withProgress({
-        val maybeNode = OutputGraphNode.parseDelimitedFrom(input)
-        ok = maybeNode.nonEmpty
-        maybeNode.foreach { o =>
-          for {
-            area <- o.area
-          } yield {
-            // Get of create this node
-            val node = nodes.getOrElseUpdate(area, FlippedGraphNode(area, mutable.Set[FlippedGraphNode]()))
-            nodes.put(area, node)
-
-            val parentId = o.parent.getOrElse(rootId)
-            // Find or create the node for out parent
-            val parentNode = nodes.getOrElseUpdate(parentId, {
-              val newParent = FlippedGraphNode(parentId, mutable.Set[FlippedGraphNode]())
-              nodes.put(parentId, newParent)
-              newParent
-            })
-
-            if (node.id != rootId) {
-              parentNode.children.add(node)
-            }
-
-            // Latch the root node when we see it go past
-            if (area == rootId) {
-              root = node
-            }
-          }
-        }
-      }, progressMessage)
-    }
-    logger.info("Root: " + root.id + " -> " + root.children.size)
-
-    logger.info("Writing out flipped graph")
-    val output = new BufferedOutputStream(new FileOutputStream(new File(graphV2File(extractName))))
-    outputFlippedGraph(root, output)
     logger.info("Done")
   }
 
