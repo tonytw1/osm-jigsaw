@@ -123,8 +123,4 @@ class GraphBuilder extends BoundingBox with PolygonBuilding with Logging with Ar
     Unit
   }
 
-  private def render(nodes: Set[GraphNode]): String = {
-    nodes.map(s => s.area.osmIds).mkString(", ")
-  }
-
 }

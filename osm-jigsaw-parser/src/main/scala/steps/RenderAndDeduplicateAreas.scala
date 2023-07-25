@@ -1,40 +1,25 @@
 package steps
 
-import java.io.{BufferedOutputStream, FileOutputStream, InputStream, OutputStream}
-
 import areas.AreaComparison
 import input.{AreaReading, Extracts}
 import model.{Area, AreaIdSequence}
 import org.apache.logging.log4j.scala.Logging
-import output.OutputFiles
-import outputarea.OutputArea
+import output.{AreaWriting, OutputFiles}
 import outputresolvedarea.OutputResolvedArea
 import outputway.OutputWay
 import progress.ProgressCounter
 import resolving.PolygonBuilding
 
+import java.io.{BufferedOutputStream, FileOutputStream, InputStream}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-class RenderAndDeduplicateAreas extends Extracts with AreaComparison with PolygonBuilding with AreaReading
-  with OutputFiles with Logging {
+class RenderAndDeduplicateAreas extends Extracts with AreaComparison with PolygonBuilding
+  with AreaReading with AreaWriting with OutputFiles with Logging {
 
   def resolveAreas(extractName: String): Unit = {
     val areawaysInputFile = areaWaysFilepath(extractName)
     val areasFilepath = areasFilePath(extractName)
-
-    def exportArea(area: Area, output: OutputStream): Unit = {
-      val latitudes = mutable.ListBuffer[Double]()
-      val longitudes = mutable.ListBuffer[Double]()
-      val pointCount = area.polygon.getPointCount - 1
-      (0 to pointCount).map { i =>
-        val p = area.polygon.getPoint(i)
-        latitudes.+=(p.getX)
-        longitudes.+=(p.getY)
-      }
-
-      OutputArea(id = Some(area.id), osmIds = area.osmIds, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
-    }
 
     def buildAreas: Unit = {
       val areawaysWaysFilepath = areaWaysWaysFilePath(extractName)
@@ -73,6 +58,7 @@ class RenderAndDeduplicateAreas extends Extracts with AreaComparison with Polygo
       } // TODO isolate for reuse in test fixtures
 
       logger.info("Resolving areas")
+
       def readResolvedArea(inputStream: InputStream) = OutputResolvedArea.parseDelimitedFrom(inputStream)
 
       logger.info("Expanding way areas")
@@ -85,6 +71,7 @@ class RenderAndDeduplicateAreas extends Extracts with AreaComparison with Polygo
 
     def deduplicate = {
       logger.info("Deduplicating areas")
+
       def deduplicateAreas(areas: Seq[Area]): Seq[Area] = {
         logger.info("Sorting areas by size")
         val sortedAreas = areas.sortBy(_.area)

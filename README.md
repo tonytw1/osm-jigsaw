@@ -119,36 +119,43 @@ A collection of [prebuilt files](https://s3-eu-west-1.amazonaws.com/osm-jigsaw) 
 
 Describes and areas extracted from an OSM relation or way.
 
-| Field | Type | Description|
-| ------------- | ------------- | ------------- |
-| id  |  Long  | A disposable id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time.|
-| osm_ids     | List of String | A list of the OSM ids for entities which match this area. ie. 123W, 456W|
-| latitudes   | List of Double | A list of the latitudes of the points which form the outline for this area.|
-| longitudes  | List of Double  | A list of the longitudes of the points which form the outline for this area.|
-| area | Double | The size of the area.|
+| Field      | Type           | Description                                                                                                                                                   |
+|------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id         | Long           | A disposable id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time. |
+| osm_ids    | List of String | A list of the OSM ids for entities which have this area. ie. 123W, 456W                                                                                       |
+| latitudes  | List of Double | A list of the latitudes of the points which form the outline for this area.                                                                                   |
+| longitudes | List of Double | A list of the longitudes of the points which form the outline for this area.                                                                                  |
+| area       | Double         | The size of the area.                                                                                                                                         |
 
 #### OutputGraphNode
 
-Describes a node on the graph of sorted areas.
+Describes a node in the graph of sorted areas.
 
-| Field | Type | Description|
-| ------------- | ------------- | ------------- |
-| area  |  Long  | The id of the area which occupies this node.|
-| parent  |  Long  | The (optional) id of the graph node which is the parent of this node.|
+| Field  | Type | Description                                                           |
+|--------|------|-----------------------------------------------------------------------|
+| area   | Long | The id of the area which occupies this node.                          |
+| parent | Long | The (optional) id of the graph node which is the parent of this node. |
 
 The graph protocol buffer file is written in the order of a depth first traversal.
+
+#### OutputGraphNodeV2
+
+Describes a graph node in node with children format.
+
+| Field    | Type         | Description                                  |
+|----------|--------------|----------------------------------------------|
+| area     | Long         | The id of the area which occupies this node. |
+| children | List of Long | The ids of the child nodes of this node.     |
 
 #### OutputTagging
 
 Represents the OSM tags for an OSM id.
 
-| Field | Type | Description|
-| ------------- | ------------- | ------------- |
-| osm_ids     | String | The OSM ids these tags apply to. ie. 123R |
-| keys     | List of String | The tag keys. ie. name:en |
-| osm_ids     | List of String | The tag values. ie. England |
-
-
+| Field   | Type           | Description                                   |
+|---------|----------------|-----------------------------------------------|
+| osm_id  | String         | The OSM id<br/> these tags apply to. ie. 123R |
+| keys    | List of String | The tag keys. ie. name:en                     |
+| osm_ids | List of String | The tag values. ie. England                   |
 
 Why aren't the areas and tags inlined into the graph file?
 Keeping the areas and tags separate from the graph allows for deduplication of the areas which appear in overlaps.
