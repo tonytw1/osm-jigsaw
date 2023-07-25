@@ -1,13 +1,15 @@
 ## OpenStreetMap Jigsaw
 
 An area based approach to geocoding with OpenStreetMap extracts.
-This system attempts to extract every area from an OpenStreetMap extract and sort them into a graph.
+This system extracts every area from an OpenStreetMap extract and sorts them into a graph.
 
-This graph is then exported as a [set of Protocol buffer files](#output-files) which can be exposed as a [JSON API](osm-jigsaw-api).
+This graph is exported as a [set of Protocol buffer files](#output-files) and exposed as a [JSON API](osm-jigsaw-api).
 
-This hierarchy can be used to infer a place name from the areas enclosing a given point.
+The graph of areas is used to [infer places name for points](#inferring-location-names).
 
-An full [planet example is viewable here](https://osm-jigsaw.eelpieconsulting.co.uk).
+As a side effect we can detect relations in the extract file which reference themselves.
+
+A full [planet example is viewable here](https://osm-jigsaw.eelpieconsulting.co.uk).
 
 
 ### Background
@@ -104,6 +106,7 @@ Output the graph in a format which can be sensibly parsed by a consumer.
 
 The [OSM Jigsaw parser](osm-jigsaw-parser) takes an OSM protocol buffer extract, preforms the steps described above and outputs the files described below.
 
+
 ### Output files
 
 The 3 output files are in protocol buffer format and contain [OutputArea](osm-jigsaw-parser/src/main/protobuf/outputarea.proto), [OutputGraphNode](osm-jigsaw-parser/src/main/protobuf/outputgraphnode.proto) and [OutputTagging](osm-jigsaw-parser/src/main/protobuf/outputtagging.proto) objects.
@@ -181,7 +184,7 @@ With a distribution like:
 ![Way reuse](r/way-reuse.png)
 
 
-### Deriving a location name from the area hierarchy
+### Inferring location names
 
 Given a point it is a fairly fast operation (vaguely like descending a b-tree) to step down the hierarchy of nested areas,
 extracting all of the possible paths down to the smallest area enclosing the point of interest.
