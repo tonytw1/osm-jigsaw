@@ -8,8 +8,7 @@ import model.{Area, EntityRendering, GraphNode}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
-import output.OutputFiles
-import outputarea.OutputArea
+import output.{AreaWriting, OutputFiles}
 import outputgraphnode.OutputGraphNode
 import outputgraphnodev2.OutputGraphNodeV2
 import outputnode.OutputNode
@@ -25,7 +24,8 @@ import scala.collection.mutable
 
 object Main extends EntityRendering with Logging with PolygonBuilding
   with ProtocolbufferReading with EntityOsmId
-  with Extracts with WorkingFiles with EntitiesToGraph with AreaReading with OutputFiles with AreaComparison {
+  with Extracts with WorkingFiles with EntitiesToGraph with AreaReading
+  with AreaWriting with OutputFiles with AreaComparison {
 
   private val STEP = "s"
 
@@ -226,19 +226,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
       }
     }
     tagsInput.close()
-
-    def exportArea(area: Area, output: OutputStream): Unit = { // TODO duplication
-      val latitudes = mutable.ListBuffer[Double]()
-      val longitudes = mutable.ListBuffer[Double]()
-      val pointCount = area.polygon.getPointCount - 1
-      (0 to pointCount).map { i =>
-        val p = area.polygon.getPoint(i)
-        latitudes.+=(p.getX)
-        longitudes.+=(p.getY)
-      }
-
-      OutputArea(id = Some(area.id), osmIds = area.osmIds, latitudes = latitudes, longitudes = longitudes, area = Some(area.area)).writeDelimitedTo(output)
-    }
 
     // Geohash boundaries are a nice repeatable set of tiles with some course control over tile size
     // Generate some tile shapes
