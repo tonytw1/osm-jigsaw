@@ -1,16 +1,9 @@
 package output
 
-import steps.Segment
-
 trait OutputFiles {
 
   def areasFilePath(extractName: String, segment: Option[String] = None): String = {
     outputFolderFor(extractName) + "/" + extractName + ".areas" + segment.map(s => "-" + s).getOrElse("") + ".pbf"
-  }
-
-  @Deprecated
-  def segmentGraphFile(extractName: String, segment: Segment) = {
-    outputFolderFor(extractName) + "/" + extractName + ".graph." + segment.geohash.toBase32 + ".pbf"
   }
 
   def graphFile(extractName: String) = {

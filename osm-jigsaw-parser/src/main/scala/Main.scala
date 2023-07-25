@@ -8,9 +8,8 @@ import model.{Area, EntityRendering, FlippedGraphNode, GraphNode}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
-import output.{AreaWriting, OutputFiles}
+import output.{AreaWriting, GraphWriting, OutputFiles}
 import outputgraphnode.OutputGraphNode
-import outputgraphnodev2.OutputGraphNodeV2
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
@@ -25,7 +24,7 @@ import scala.collection.mutable
 object Main extends EntityRendering with Logging with PolygonBuilding
   with ProtocolbufferReading with EntityOsmId
   with Extracts with WorkingFiles with EntitiesToGraph with AreaReading
-  with AreaWriting with OutputFiles with AreaComparison {
+  with AreaWriting with OutputFiles with AreaComparison with GraphWriting {
 
   private val STEP = "s"
 
@@ -309,27 +308,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
         Operator.deaccelerateGeometry(tilePolygon)
       }
     }
-  }
-
-  private def outputFlippedGraph(root: FlippedGraphNode, output: OutputStream): Unit = {
-    // Now we can write out the flipped graph
-    // If we DFS write leaf nodes first then all children will have already been encountered by the time they are read.
-    // Given our leaf first ordering, if a node appears more than once we can skip it; the reader will have already encountered it and it's children
-    val persisted = mutable.Set[Long]()
-
-    def visit(node: FlippedGraphNode): Unit = {
-      if (!persisted.contains(node.id)) {
-        node.children.foreach { c =>
-          visit(c)
-        }
-        persisted.add(node.id)
-        new OutputGraphNodeV2(node.id, node.children.map(_.id).toSeq).writeDelimitedTo(output)
-      }
-    }
-
-    visit(root)
-    output.flush()
-    output.close()
   }
 
 }
