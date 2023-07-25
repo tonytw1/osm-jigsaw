@@ -157,10 +157,6 @@ Represents the OSM tags for an OSM id.
 | keys    | List of String | The tag keys. ie. name:en                     |
 | osm_ids | List of String | The tag values. ie. England                   |
 
-Why aren't the areas and tags inlined into the graph file?
-Keeping the areas and tags separate from the graph allows for deduplication of the areas which appear in overlaps.
-This provides a memory saving when reloading the graph.
-
 
 ### Execution
 
