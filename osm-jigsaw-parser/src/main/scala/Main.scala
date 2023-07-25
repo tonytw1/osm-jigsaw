@@ -4,7 +4,7 @@ import com.esri.core.geometry.{Operator, OperatorContains}
 import graph.GraphReader
 import graphing.EntitiesToGraph
 import input._
-import model.{Area, EntityRendering, GraphNode}
+import model.{Area, EntityRendering, FlippedGraphNode, GraphNode}
 import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
@@ -140,10 +140,6 @@ object Main extends EntityRendering with Logging with PolygonBuilding
     new RelationExtractor().extract(extractName, selectedRelations, outputFilepath)
 
     logger.info("Done")
-  }
-
-  case class FlippedGraphNode(id: Long, children: mutable.Set[FlippedGraphNode]) {
-    override def hashCode(): Int = id.hashCode()
   }
 
   def flipGraph(extractName: String): Unit = {
