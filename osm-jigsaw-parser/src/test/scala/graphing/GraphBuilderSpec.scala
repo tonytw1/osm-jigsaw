@@ -55,7 +55,6 @@ class GraphBuilderSpec extends FlatSpec with TestValues with EntityRendering wit
   "graph builder" should "sift existing nodes down into enclosing siblings which are inserted after them" in {
     val graph = graphBuilder.buildGraph(earth, Seq(small, large))
 
-    println(graph.children.map(_.area.osmIds))
     assert(graph.children.size == 1)
     assert(graph.children.head.area.osmIds.head == "Large")
     assert(graph.children.head.children.size == 1)
