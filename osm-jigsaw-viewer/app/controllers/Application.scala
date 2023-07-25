@@ -110,7 +110,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
     val chumbLabels = nodes.map { a =>
       a.entities.map { e =>
         e.name
-      }.mkString(", ")
+      }.mkString(" + ")
     }
 
     chumbLabels.zip(crumbIdChains)
