@@ -40,7 +40,7 @@
 
 <div id="node">
 @node.map { graphNode =>
-    <h4>@graphNode.entities.map(_.name).mkString(" / ")</h4>
+    <h4>@graphNode.entities.map(_.name).mkString(" + ")</h4>
     <h6>OSM ids</h6>
     @osmUrls.map { ous =>
         @ous.map { ou =>
