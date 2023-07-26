@@ -12,8 +12,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@@0.67.0/dist/L.Control.Locate.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@@0.67.0/dist/L.Control.Locate.min.js"></script>
 
-<h2><a href="/">OpenStreetMap Jigsaw</a></h2>
-<a href="https://github.com/tonytw1/osm-jigsaw" target="_blank">Github</a>
+<link rel="stylesheet" href="@routes.Assets.versioned("css/styles.css")" />
+
+<h1><a href="/">OpenStreetMap Jigsaw</a></h1>
 <hr/>
 
 <div id="mapid"></div>
@@ -34,14 +35,14 @@
     L.control.locate().addTo(mymap);
 </script>
 
-<p><div id="locate-error"></div></p>
+<div id="locate-error"></div>
 
 <div id="reverse"></div>
 
 <div id="node">
 @node.map { graphNode =>
     <h4>@graphNode.entities.map(_.name).mkString(" + ") (<a href="@apiUrl" target="_blank">API</a>)</h4>
-    <h6>These OSM elements have this area:</h6>
+    <p>These OSM elements have this area:</p>
     @osmUrls.map { ous =>
         @ous.map { ou =>
             <a href="@ou._2" target="_blank">@ou._1</a>
@@ -52,7 +53,7 @@
 }
 </div>
 
-<p>Map data © OpenStreetMap contributors</p>
+<p class="credit">Map data © OpenStreetMap contributors</p>
 <hr/>
 
 <script src="@routes.Assets.versioned("scripts/app.js")"></script>
