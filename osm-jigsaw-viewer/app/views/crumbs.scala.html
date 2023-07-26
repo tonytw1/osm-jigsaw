@@ -1,4 +1,8 @@
 @(crumbs: Seq[(String, Seq[Long])], point: (Double, Double))
-@crumbs.map{ c =>
-    <i class="fa fa-chevron-right" aria-hidden="true"></i> <a href="@routes.Application.show((c._2).mkString("/"), point._1, point._2)">@c._1</a>
+
+@for((c, i) <- crumbs.zipWithIndex) {
+    @if(i > 0) {
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+    }
+    <a href="@routes.Application.show((c._2).mkString("/"), point._1, point._2)">@c._1</a>
 }
