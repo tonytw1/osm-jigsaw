@@ -25,9 +25,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
     ws.url(Url.parse(apiUrl + "/show").addParam("q", q).addParam(
       "lat", lat.toString).addParam(
       "lon", lon.toString).toString).get.flatMap { r =>
-      implicit val er = Json.reads[Entity]
-      implicit val gnr = Json.reads[GraphNode]
-      val graphNodes: Seq[GraphNode] = Json.parse(r.body).as[Seq[GraphNode]]
+      val graphNodes = Json.parse(r.body).as[Seq[GraphNode]]
 
       val lastNode = graphNodes.lastOption
 
@@ -40,10 +38,8 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
           addParam("q", q).
           addParam("lat", lat.toString).
           addParam("lon", lon.toString).toString).get.map { psr =>
-          implicit val pr = Json.reads[Point]
           val points = Json.parse(psr.body).as[Seq[Point]]
-          val b: (Double, Double, Double, Double) = boundingBoxFor(points)
-          Some(b)
+          Some(boundingBoxFor(points))
         }
       }.getOrElse {
         Future.successful(None)
@@ -73,7 +69,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
 
       for {
         areaBoundingBox <- eventualAreaBoundingBox
-        tags: Map[String, String] <- eventualTagsForLastNode
+        tags <- eventualTagsForLastNode
       } yield {
         Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags))
       }
@@ -83,8 +79,6 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
   def click(lat: Double, lon: Double) = Action.async { request =>
     val reverseApiCallUrl = Url.parse(apiUrl + "/reverse").addParam("lat", lat.toString).addParam("lon", lon.toString)
     val eventualCrumbs = ws.url(reverseApiCallUrl.toString).get.map { r =>
-      implicit val er = Json.reads[Entity]
-      implicit val gnr = Json.reads[GraphNode]
       val crumbs = Json.parse(r.body).as[Seq[Seq[GraphNode]]].map(areasToCrumbs)
       val duration = r.headers.get("request-time").flatMap(_.headOption).map(d => d.toInt).getOrElse(0)
       (crumbs, duration)
