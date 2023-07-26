@@ -11,10 +11,11 @@ class NaiveNamingService @Inject()(tagService: TagService) {
 
   private val TagsWhichDoNotContributeToLocationNames = Set(
     "boundary" -> "eez",
-    "boundary" ->	"diocese",
+    "boundary" -> "diocese",
     "boundary" -> "fire",
+    "boundary" -> "fire_district",
     "boundary" -> "historic",
-    "boundary" ->	"historic_parish",
+    "boundary" -> "historic_parish",
     "boundary" -> "maritime",
     "boundary" -> "low_emission_zone",
     "boundary" -> "police",
@@ -22,12 +23,13 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "boundary" -> "timezone",
     "boundary" -> "vice_county",
     "historic" -> "yes",
-    "boundary" ->	"historic_administrative",
-    "boundary" ->	"historic_political",
+    "boundary" -> "historic_administrative",
+    "boundary" -> "historic_political",
     "political_division" -> "historical_local_const",
     "political_division" -> "euro_const",
     "political_division" -> "local_const",
-    "public_transport" ->	"pay_scale_area",
+    "public_transport" -> "pay_scale_area",
+    "type" -> "network",
     "type" -> "toll"
   )
 
@@ -49,7 +51,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     val adjacentPairs: mutable.ListBuffer[(OsmId, OsmId)] = mutable.ListBuffer[(OsmId, OsmId)]()
     pathsWithoutExcludedTags.map { path =>
       path.foldLeft(mutable.Stack[OsmId]()) { (i, a) =>
-        a.map { n =>  // TODO need to decide which name to take for an overlap
+        a.map { n => // TODO need to decide which name to take for an overlap
           val node = n
           i.headOption.map { l =>
             val pair: (OsmId, OsmId) = ((l, node))
