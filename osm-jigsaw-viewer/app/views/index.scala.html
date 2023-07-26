@@ -18,11 +18,11 @@
 
 <div id="mapid"></div>
 <style>
-    #mapid { height: 400px; }
+    #mapid { height: 600px; }
 </style>
 
 <script>
-    var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+    var mymap = L.map('mapid').setView([51.505, -0.09], 10);
     L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/emerald-v8/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 18,
@@ -38,7 +38,8 @@
 <div id="reverse"></div>
 
 <div id="node">
-    <p>Click on map to examine a point.</p>
+    <p>Click on the map to show which areas enclose a point.</p>
+    <p>These areas will be used to determine a placement for this point.</p>
 </div>
 
 <p>Map data © OpenStreetMap contributors</p>

@@ -22,14 +22,15 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
   }
 
   def show(q: String, lat: Double, lon: Double) = Action.async { request =>
-    ws.url(Url.parse(apiUrl + "/show").addParam("q", q).addParam(
+    val apiCallUrl = Url.parse(apiUrl + "/show").addParam("q", q).addParam(
       "lat", lat.toString).addParam(
-      "lon", lon.toString).toString).get.flatMap { r =>
+      "lon", lon.toString).toString
+    ws.url(apiCallUrl).get.flatMap { r =>
       val graphNodes = Json.parse(r.body).as[Seq[GraphNode]]
 
       val lastNode = graphNodes.lastOption
-
-      val crumbs = lastNode.map { ln =>
+      val crumbs = lastNode.map { _ =>
+        // Only show crumbs if there was a node found
         areasToCrumbs(graphNodes)
       }
 
@@ -71,7 +72,7 @@ class Application @Inject()(configuration: Configuration, ws: WSClient, cc: Cont
         areaBoundingBox <- eventualAreaBoundingBox
         tags <- eventualTagsForLastNode
       } yield {
-        Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags))
+        Ok(views.html.show(lastNode, crumbs, osmUrls, maxBoxApiKey, areaBoundingBox, tags, apiCallUrl))
       }
     }
   }

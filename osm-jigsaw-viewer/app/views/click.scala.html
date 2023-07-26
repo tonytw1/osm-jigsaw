@@ -2,11 +2,11 @@
 
 <h4>@name (<a href="@nameApiUrl" target="_blank">API</a>)</h4>
 
-<p>Latitude @point._1, Longitude @point._2 is enclosed by these areas:</p>
+<p>Latitude @point._1, Longitude @point._2 is enclosed by these areas: (<a href="@reverseApiUrl" target="_blank">API</a>)</p>
 <ul>
 @results.map { r =>
     <li>@crumbs(r, point)</li>
 }
 </ul>
 
-(took @crumbsDuration ms) (<a href="@reverseApiUrl" target="_blank">API</a>)
+(took @crumbsDuration ms)
