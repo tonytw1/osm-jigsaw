@@ -18,7 +18,7 @@
 
 <div id="mapid"></div>
 <style>
-    #mapid { height: 400px; }
+    #mapid { height: 600px; }
 </style>
 
 <script>
@@ -41,7 +41,7 @@
 <div id="node">
 @node.map { graphNode =>
     <h4>@graphNode.entities.map(_.name).mkString(" + ") (<a href="@apiUrl" target="_blank">API</a>)</h4>
-    <h6>OSM ids</h6>
+    <h6>These OSM elements have this area:</h6>
     @osmUrls.map { ous =>
         @ous.map { ou =>
             <a href="@ou._2" target="_blank">@ou._1</a>
