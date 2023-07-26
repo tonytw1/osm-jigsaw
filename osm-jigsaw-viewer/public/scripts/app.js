@@ -1,5 +1,5 @@
 function resolvePoint(lat, lon) {
-    $('#reverse').html("???")
+    $('#reverse').html("<i class=\"fa fa-spinner\" aria-hidden=\"true\"></i>")
     $('#node').html("")
     $.ajax({
         url: "/click?lat=" + lat + "&lon=" + lon
