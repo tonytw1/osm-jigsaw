@@ -69,7 +69,6 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
     eventualNodesFor.map { nodes =>
       nodes.lastOption.map { node =>
         val points = node.area.points // TODO simplify outline for quick rendering
-        implicit val pw = Json.writes[model.Point]
         Ok(Json.toJson(points))
       }.getOrElse {
         NotFound(Json.toJson("Not found"))
@@ -132,9 +131,6 @@ class Application @Inject()(graphService: GraphService, val tagService: TagServi
     }
 
     val outputNode = OutputNode(node.area.id, entities, node.children.size, node.area.area)
-
-    implicit val ew = Json.writes[OutputEntity]
-    implicit val nw = Json.writes[OutputNode]
     Json.toJson(outputNode)
   }
 
