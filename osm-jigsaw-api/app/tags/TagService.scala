@@ -16,8 +16,8 @@ import scala.collection.mutable
 @Singleton
 class TagService @Inject()(configuration: Configuration) extends OsmIdParsing with EntityNameTags {
 
-  private val dataUrl = configuration.getString("data.url").get
-  private val extractName = configuration.getString("extract.name").get
+  private val dataUrl = configuration.get[String]("data.url")
+  private val extractName = configuration.get[String]("extract.name")
 
   private val geohashResolution = 3
 

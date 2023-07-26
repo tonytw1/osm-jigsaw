@@ -15,8 +15,8 @@ import scala.concurrent.Future
 
 class GraphService @Inject()(configuration: Configuration, areasReader: AreasReader, val polygonCache: PolygonCache) extends AreaComparison {
 
-  private val dataUrl = configuration.getString("data.url").get
-  private val extractName = configuration.getString("extract.name").get
+  private val dataUrl = configuration.get[String]("data.url")
+  private val extractName = configuration.get[String]("extract.name")
 
   private val geohashResolution = 3
 
