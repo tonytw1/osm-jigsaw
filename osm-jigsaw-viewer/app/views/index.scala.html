@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@@0.67.0/dist/L.Control.Locate.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol@@0.67.0/dist/L.Control.Locate.min.js"></script>
 
-<script src="@routes.Assets.versioned("css/styles.css")"></script>
+<link rel="stylesheet" href="@routes.Assets.versioned("css/styles.css")" />
 
 <h2><a href="/">OpenStreetMap Jigsaw</a></h2>
 <a href="https://github.com/tonytw1/osm-jigsaw" target="_blank">Github</a>
@@ -40,8 +40,8 @@
 <div id="reverse"></div>
 
 <div id="node">
-    <p><i class="fa fa-mouse-pointer" aria-hidden="true"></i> Click on the map to show which areas enclose a point.</p>
-    <p>These areas will be used to determine a placement for this point.</p>
+    <p><i class="fa fa-mouse-pointer" aria-hidden="true"></i> Click on a point to show which areas enclose it.</p>
+    <p>These areas will be used to determine a place name for this point.</p>
 </div>
 
 <p>Map data © OpenStreetMap contributors</p>
