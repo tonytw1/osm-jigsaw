@@ -1,9 +1,10 @@
 function resolvePoint(lat, lon) {
+    $('#reverse').html("???")
+    $('#node').html("")
     $.ajax({
         url: "/click?lat=" + lat + "&lon=" + lon
     }).done(function(data) {
         $('#reverse').html(data);
-        $('#node').html("");
     });
 }
 
