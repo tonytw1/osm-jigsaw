@@ -9,7 +9,6 @@ import org.apache.commons.cli._
 import org.apache.logging.log4j.scala.Logging
 import org.openstreetmap.osmosis.core.domain.v0_6._
 import output.{AreaWriting, GraphWriting, OutputFiles}
-import outputgraphnode.OutputGraphNode
 import outputnode.OutputNode
 import outputresolvedarea.OutputResolvedArea
 import outputtagging.OutputTagging
@@ -241,8 +240,11 @@ object Main extends EntityRendering with Logging with PolygonBuilding
           tileTaggings.foreach { tagging: (String, Map[String, String]) =>
             val osmId = tagging._1
             val tags: Seq[(String, String)] = tagging._2.toSeq
-            val keys = tags.map(_._1) // TODO unzip?
-            val values = tags.map(_._2)
+
+            val unzippedTags = tags.unzip
+            val keys = unzippedTags._1
+            val values = unzippedTags._2
+
             OutputTagging(osmId = Some(osmId), keys = keys, values = values).writeDelimitedTo(tagsOutput)
           }
           tagsOutput.flush()
