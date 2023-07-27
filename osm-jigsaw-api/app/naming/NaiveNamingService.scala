@@ -20,6 +20,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "boundary" -> "maritime",
     "boundary" -> "low_emission_zone",
     "boundary" -> "police",
+    "boundary" -> "public_transport",
     "boundary" -> "proposed",
     "boundary" -> "timezone",
     "boundary" -> "vice_county",
