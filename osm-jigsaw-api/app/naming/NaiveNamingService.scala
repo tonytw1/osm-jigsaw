@@ -42,7 +42,12 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       excludedTags.nonEmpty
     }
 
-    val pathsWithoutExcludedTags: Seq[Seq[Seq[OsmId]]] = paths.map { path =>
+    // Use a fake node to get past the adjacentPairs problem we're made for ourselves below which excludes single node paths
+    val root = OsmId(-1, 'R')
+    val pathsWithoutExcludedTags: Seq[Seq[Seq[OsmId]]] = paths.map { path: Seq[(Seq[OsmId], Double)] =>
+      (Seq(root), 0.0) +: path
+
+    }.map { path: Seq[(Seq[OsmId], Double)] =>
       path.map { p =>
         p._1.filter(e => !hasExcludedTags(e))
       }.filter(_.nonEmpty)
@@ -78,23 +83,21 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       } else {
         i
       }
-    }
+    }.drop(1)
 
-    val areas: Map[OsmId, Double] = paths.flatten.map { i =>
-      val a: (Seq[OsmId], Double) = i
+    val areaSizesForOsmIds = paths.flatten.flatMap { i =>
       i._1.map { j =>
         (j, i._2)
       }
-    }.flatten.toMap
+    }.toMap
 
     val sortedByArea = combined.sortBy { o =>
-      -areas.get(o).getOrElse(0D)
+      -areaSizesForOsmIds.getOrElse(o, 0D)
     }
 
-    val names = sortedByArea.map { n =>
+    val names = sortedByArea.flatMap { n =>
       tagService.nameForOsmId(n, point, requestedLanguage)
-    }.flatten
-
+    }
 
     val withDeduplicatedNames = names.foldLeft(Seq[String]()) { (i, a) =>
       if (!i.contains(a)) {

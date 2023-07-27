@@ -211,6 +211,25 @@ class NaiveNamingServiceSpec extends Specification {
     name must equalTo("Almeria, Andalusia, Spain")
   }
 
+  "Paths with just 1 node should be named after that node" in {
+    // [[{"id":969026,"entities":[{"osmId":"7160849R","name":"Black Sea"}],"children":0,"area":46.741900103008575}]]
+    val blackSea = OsmId(7160849, R)
+    val path = Seq((Seq(blackSea), 46.741900103008575))
+    val point = new Point(0, 0)
+
+    val tagServiceMock = org.mockito.Mockito.mock(classOf[TagService])
+    Mockito.when(tagServiceMock.nameForOsmId(blackSea, point, None)).thenReturn(Some("Black Sea"))
+    Mockito.when(tagServiceMock.tagsFor(any[OsmId], Matchers.eq(point))).thenReturn(Some(Map(
+      "name:en" -> "Black Sea"
+    )))
+
+    val namingService = new NaiveNamingService(tagServiceMock)
+
+    val name = namingService.nameFor(Seq(path), point)
+
+    name must equalTo("Black Sea")
+  }
+
   /*
   "When naming an area with overlapping relations prefer localised name tags" in {
     //https://www.openstreetmap.org/relation/51477
