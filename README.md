@@ -14,6 +14,9 @@ As a side effect we output a list relations which cycle back on themselves (whic
 A [full planet demo is viewable here](https://osm-jigsaw.eelpieconsulting.co.uk).
 
 
+![Screen shot](screenshot.png)
+
+
 ### Background
 
 Gecoding is the art (not science!) of turning a location point into a human readable name (and vice versa).
