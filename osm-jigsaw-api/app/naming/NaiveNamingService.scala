@@ -18,6 +18,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
     "boundary" -> "historic",
     "boundary" -> "historic_parish",
     "boundary" -> "maritime",
+    "boundary" -> "military_district",
     "boundary" -> "low_emission_zone",
     "boundary" -> "police",
     "boundary" -> "public_transport",
