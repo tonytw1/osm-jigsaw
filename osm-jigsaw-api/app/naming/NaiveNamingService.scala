@@ -93,9 +93,7 @@ class NaiveNamingService @Inject()(tagService: TagService) {
       }
     }.toMap
 
-    val sortedByArea = combined.sortBy { o =>
-      -areaSizesForOsmIds.getOrElse(o, 0D)
-    }
+    val sortedByArea = combined.sortBy(osmId => areaSizesForOsmIds(osmId))
 
     val names = sortedByArea.flatMap { n =>
       tagService.nameForOsmId(n, point, requestedLanguage)
