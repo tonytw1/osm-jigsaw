@@ -63,12 +63,12 @@ Starting with a raw OSM extract file, preform a number of incremental transforma
 
 
 
-#### 1) Extract interesting entities
+#### 1) Extract interesting elements
 
-To get the dataset down to manageable size, extract any OSM entities which might represent shapes.
+To get the dataset down to manageable size, extract any OSM elements which might represent shapes.
 
 - Take all of the relations and the closed ways.
-- Discard any entities which do not have name tags.
+- Discard any elements which do not have name tags.
 - Collect the sub relations, ways and nodes which make up these elements.
 
 Some relations have sub relations which form circular references; we should ignore these.
@@ -76,7 +76,7 @@ Some relations have sub relations which form circular references; we should igno
 
 #### 2) Resolve relations and closed ways into areas
 
-Attempt to build closed shapes from the filtered entities.
+Attempt to build closed shapes from the filtered elements.
 
 - Relations may be composed of multiple ways and sub relations which will need to be resolved.
 - A single relation could represent multiple areas (ie. a group of islands).
@@ -122,7 +122,7 @@ Describes and areas extracted from an OSM relation or way.
 | Field      | Type           | Description                                                                                                                                                   |
 |------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | id         | Long           | A disposable id which can be used to reference this area when assembling the graph. This id is not likely to remain the same for a particular area over time. |
-| osm_ids    | List of String | A list of the OSM ids for entities which have this area. ie. 123W, 456W                                                                                       |
+| osm_ids    | List of String | A list of the OSM ids for elements which have this area. ie. 123W, 456W                                                                                       |
 | latitudes  | List of Double | A list of the latitudes of the points which form the outline for this area.                                                                                   |
 | longitudes | List of Double | A list of the longitudes of the points which form the outline for this area.                                                                                  |
 | area       | Double         | The relative size of the area.                                                                                                                                |
@@ -178,7 +178,7 @@ This should give a label for each node on the path.
 
 - Useful components of the name may come from more than one of the paths.
 
-- We can probably ignore adjacent entities with the same name.
+- We can probably ignore adjacent elements with the same name.
  ie. New Zealand, Wellington, Wellington
 
 - Transform the into a localised output
