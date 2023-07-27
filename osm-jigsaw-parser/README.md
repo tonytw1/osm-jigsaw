@@ -133,11 +133,13 @@ Untiled disk usage:
 2.3G Jul 13 11:44 planet-230703.tags.pbf
 ```
 
-Tilted disk usage:
+Tilted disk usage with a geohash resolution of 3 characters:
 ```
 du -h
 83G .
 ```
+
+Some of these are tiles are duplicates:
 
 ```
 -rw-rw-r-- 1 tony tony   4795094 Jul 22 09:06 planet-230703.areas-dws.pbf
@@ -145,16 +147,19 @@ du -h
 -rw-rw-r-- 1 tony tony   4795094 Jul 22 09:04 planet-230703.areas-dwu.pbf
 -rw-rw-r-- 1 tony tony   4795094 Jul 22 09:05 planet-230703.areas-dwv.pbf
 ```
-
 ```
 sha256sum planet-230703.areas-dws.pbf planet-230703.areas-dwt.pbf
 94dcd56575779c1a36e53a5f6364dcc6650269309a2b15bea4495f52535ef944  planet-230703.areas-dws.pbf
 94dcd56575779c1a36e53a5f6364dcc6650269309a2b15bea4495f52535ef944  planet-230703.areas-dwt.pbf
 ```
 
+But not a significant amount.
 ```
 rdfind .
 
 It seems like you have 40374 files that are not unique
 Totally, 12 GiB can be reduced.
 ```
+
+The tiled API is able to server full planet responses from a 4Gb heap.
+
