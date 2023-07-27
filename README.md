@@ -114,8 +114,6 @@ These 3 files should be placed in a location where they are accessible to the [O
 
 Protocol buffer was chosen for it's relatively small file size and fast import; it's also consistent with the OSM extract files.
 
-A collection of [prebuilt files](https://s3-eu-west-1.amazonaws.com/osm-jigsaw) is available.
-
 
 #### OutputArea
 
