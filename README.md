@@ -7,9 +7,9 @@ This system extracts every area shape from an OpenStreetMap extract and sorts th
 The graph of areas is used to [infer places name for points](#inferring-location-names).
 
 This graph is exported as a [set of Protocol buffer files](#output-files) and exposed as a [JSON API](osm-jigsaw-api).
-As a side effect we can detect broken relations in the extract file which cycle back on themselves.
-
 With tiling, the API can serve the full planet graph of ~15 million areas from 4Gb of memory.
+
+As a side effect we output a list relations which cycle back on themselves (which might be an actual data issue?)
 
 A [full planet demo is viewable here](https://osm-jigsaw.eelpieconsulting.co.uk).
 
