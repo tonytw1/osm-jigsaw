@@ -44,8 +44,9 @@
     <h4>@graphNode.entities.map(_.name).mkString(" + ") (<a href="@apiUrl" target="_blank">API</a>)</h4>
     <p>These OSM elements have this area:</p>
     @osmUrls.map { ous =>
-        @ous.map { ou =>
-            <a href="@ou._2" target="_blank">@ou._1</a>
+
+        @for((ou, i) <- ous.zipWithIndex) {
+            <a href="@ou._2" target="_blank">@ou._1</a>@if(i < ous.size - 1) {, }
         }
     }
     <h6>Tags for @taggedOsmId </h6>
