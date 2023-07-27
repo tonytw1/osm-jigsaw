@@ -21,13 +21,13 @@ Gecoding is the art (not science!) of turning a location point into a human read
 
 [Nominatim](https://wiki.openstreetmap.org/wiki/Nominatim) is the default OpenStreetMap geocoding solution.
 
-It does are really great job of inferring structure from the geometry and tagging of Open Street Map elements.
+It does a really great job of inferring structure from the geometry and tagging of Open Street Map elements.
 
 Nominatim uses a Postgres database which indexes the entire planet extract.
-It is a serious pick of infrastructure, using TB's of disk and 10s of Gbs of memory.
+It's a serious pick of infrastructure, using TB's of disk and 10s of Gbs of memory.
 
 What would happen if we approached this problem from a solely shape based angle?
-Is there enough structure to the shapes of the OSM map to infer meaningful location names?
+Do the shapes of the elements in the OSM have enough structure to infer meaningful location names?
 
 Can we transform a raw OSM data extract directly into a structured graph without having to import it into a database?
 
@@ -35,7 +35,7 @@ Can we transform a raw OSM data extract directly into a structured graph without
 ### Considerations
 
 The OpenStreetMap data model is a fairly unstructured, flat format. 
-It consists of primitive elements: nodes (points), ways (paths of points) and relations (composites of nodes, ways and other relations)
+It consists of primitive elements: nodes (points), ways (paths of points) and relations (compositions of nodes, ways and other relations)
 
 The full dataset contains around 5 billion elements and is in the region of 70Gb compressed.
 
@@ -44,7 +44,7 @@ These considerations come to mind:
 - Minimise preprocessing by using the existing OSM extract format as input (likely the compressed .pbf format)
 
 - Try not to use local knowledge. 
-ie. The system should infer that England and Wales are inside the United Kingdom and that Yosemite National Park is in California from the shape of the data only.
+ie. The system should infer that England and Wales are inside the United Kingdom and that Yosemite National Park is in California from the shapes of these elements only.
 
 - Try to defer decisions. Avoid discarding information or baking decisions into the structure too early. Try to produce a structure which allows for the rendering to vary at runtime.
 
@@ -59,7 +59,7 @@ ie. The system should infer that England and Wales are inside the United Kingdom
 
 ### Proposed approach
 
-Starting with a raw OSM extract file, preform a number of independent transformations until we have a sorted graph of areas which fit inside their parents.
+Starting with a raw OSM extract file, preform a number of incremental transformations until we have a sorted graph of areas which fit inside their parents.
 
 
 
@@ -67,9 +67,9 @@ Starting with a raw OSM extract file, preform a number of independent transforma
 
 To get the dataset down to manageable size, extract any OSM entities which might represent shapes.
 
-- Take all of the relations and the ways which are marked as closed.
+- Take all of the relations and the closed ways.
 - Discard any entities which do not have name tags.
-- Collect the sub relations, ways and nodes which make up these entities.
+- Collect the sub relations, ways and nodes which make up these elements.
 
 Some relations have sub relations which form circular references; we should ignore these.
 
@@ -83,12 +83,12 @@ Attempt to build closed shapes from the filtered entities.
 - Ways within a relation might not always be in sequential order. 
 - Ways within an relation outline may be pointing in different directions. A certain amount of trail and error might be needed.
 
-Output the resolved areas in an unsorted file.
+Output the resolved areas into an unsorted file.
 
 
-#### 3) Sort the areas into a hierarchy
+#### 3) Sort the areas into a graph
 
-Much like a child's sort sorting game. Smaller areas should fall down into larger areas. 
+Much like a child's shape sorting game. Smaller areas should fall down into larger areas with they fit inside. 
 More important relations like countries should float to the top.
 The resulting structure will look vaguely like a heap with each child node representing an area which fits inside it's parent.
 
@@ -108,7 +108,7 @@ The [OSM Jigsaw parser](osm-jigsaw-parser) takes an OSM protocol buffer extract 
 
 ### Output files
 
-The 3 output files are in protocol buffer format and contain [OutputArea](osm-jigsaw-parser/src/main/protobuf/outputarea.proto), [OutputGraphNode](osm-jigsaw-parser/src/main/protobuf/outputgraphnode.proto) and [OutputTagging](osm-jigsaw-parser/src/main/protobuf/outputtagging.proto) objects.
+The 3 output files are in protocol buffer format and contain [OutputArea](osm-jigsaw-parser/src/main/protobuf/outputarea.proto), [OutputGraphNodeV2](osm-jigsaw-parser/src/main/protobuf/outputgraphnodev2.proto) and [OutputTagging](osm-jigsaw-parser/src/main/protobuf/outputtagging.proto) objects.
 These formats are described below.
 These 3 files should be placed in a location where they are accessible to the [OSM Jigsaw API](osm-jigsaw-api).
 
@@ -127,7 +127,7 @@ Describes and areas extracted from an OSM relation or way.
 | osm_ids    | List of String | A list of the OSM ids for entities which have this area. ie. 123W, 456W                                                                                       |
 | latitudes  | List of Double | A list of the latitudes of the points which form the outline for this area.                                                                                   |
 | longitudes | List of Double | A list of the longitudes of the points which form the outline for this area.                                                                                  |
-| area       | Double         | The size of the area.                                                                                                                                         |
+| area       | Double         | The relative size of the area.                                                                                                                                |
 
 
 #### OutputGraphNodeV2
@@ -144,16 +144,20 @@ Describes a graph node in node with children format.
 
 Represents the OSM tags for an OSM id.
 
-| Field   | Type           | Description                                   |
-|---------|----------------|-----------------------------------------------|
-| osm_id  | String         | The OSM id<br/> these tags apply to. ie. 123R |
-| keys    | List of String | The tag keys. ie. name:en                     |
-| osm_ids | List of String | The tag values. ie. England                   |
+| Field  | Type           | Description                                   |
+|--------|----------------|-----------------------------------------------|
+| osm_id | String         | The OSM id<br/> these tags apply to. ie. 123R |
+| keys   | List of String | The tag keys. ie. name:en                     |
+| values | List of String | The tag values. ie. England                   |
 
 
 ### Execution
 
-A full extract runs to completion on a machine with 64Gb of heap space in approximately 12 hours, producing a graph of 15 million areas.
+A full extract runs to completion on a machine with 64Gb of heap space in approximately 14 hours, producing a graph of 15 million areas.
+
+The graph sorting algorithm has a n*m cost. It works very well when most nodes fall down into a larger node.
+Some problematic nodes collect large numbers of children (>100,000) at the top level which will not drop down.
+These nodes waste alot of run time but do (just barely) run to compilation.
 
 This graph is then exposed via a [JSON API](osm-jigsaw-api).
 The full graph can be loaded into a JVM with 64Gb of heap. If tiled it will run from a 4Gb heap.
@@ -164,8 +168,8 @@ The [API](osm-jigsaw-api) can typically resolve the areas enclosing a point in ~
 
 ### Inferring location names
 
-Given a point, it is a fairly fast operation start at the root of the graph to step down the hierarchy of nested areas,
-extracting all of the possible paths down to the smallest areas enclosing the point of interest.
+Given a point, it is a fairly fast operation start at the root of the graph and step down the hierarchy of nested areas,
+gathering all the possible paths down to the smallest areas enclosing the point.
 
 We can try to infer a place name from this collection of paths.
 
